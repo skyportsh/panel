@@ -1,6 +1,12 @@
 import { Link } from '@inertiajs/react';
 import { ChevronRight, Pin } from 'lucide-react';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import {
+    useCallback,
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useState,
+} from 'react';
 import type { SetStateAction } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -119,19 +125,20 @@ function NavMainItem({ item, index }: { item: NavItem; index: number }) {
         }
     });
     const isEffectivelyOpen = isOpen || hasActiveChild || isPinned;
-    const scheduleActiveIndicator = (
-        updater: SetStateAction<typeof activeIndicator>,
-    ): number | null => {
-        if (typeof window === 'undefined') {
-            return null;
-        }
+    const scheduleActiveIndicator = useCallback(
+        (updater: SetStateAction<typeof activeIndicator>): number | null => {
+            if (typeof window === 'undefined') {
+                return null;
+            }
 
-        return window.requestAnimationFrame(() => {
-            setActiveIndicator(updater);
-        });
-    };
+            return window.requestAnimationFrame(() => {
+                setActiveIndicator(updater);
+            });
+        },
+        [],
+    );
 
-    const getStoredSubIndicator = (): {
+    const getStoredSubIndicator = useCallback((): {
         height: number;
         opacity: number;
         top: number;
@@ -157,7 +164,7 @@ function NavMainItem({ item, index }: { item: NavItem; index: number }) {
         } catch {
             return null;
         }
-    };
+    }, [subIndicatorStorageKey]);
 
     useLayoutEffect(() => {
         if (!isEffectivelyOpen || !item.items) {
@@ -273,9 +280,11 @@ function NavMainItem({ item, index }: { item: NavItem; index: number }) {
             }
         };
     }, [
+        getStoredSubIndicator,
         isCurrentUrl,
         isEffectivelyOpen,
         item.items,
+        scheduleActiveIndicator,
         subIndexStorageKey,
         subIndicatorStorageKey,
     ]);
@@ -326,7 +335,13 @@ function NavMainItem({ item, index }: { item: NavItem; index: number }) {
         return () => {
             window.removeEventListener('resize', updateIndicator);
         };
-    }, [isCurrentUrl, isEffectivelyOpen, item.items, subIndicatorStorageKey]);
+    }, [
+        isCurrentUrl,
+        isEffectivelyOpen,
+        item.items,
+        scheduleActiveIndicator,
+        subIndicatorStorageKey,
+    ]);
 
     if (!hasChildren && item.href) {
         return (
@@ -588,17 +603,18 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
             };
         }
     });
-    const scheduleActiveIndicator = (
-        updater: SetStateAction<typeof activeIndicator>,
-    ): number | null => {
-        if (typeof window === 'undefined') {
-            return null;
-        }
+    const scheduleActiveIndicator = useCallback(
+        (updater: SetStateAction<typeof activeIndicator>): number | null => {
+            if (typeof window === 'undefined') {
+                return null;
+            }
 
-        return window.requestAnimationFrame(() => {
-            setActiveIndicator(updater);
-        });
-    };
+            return window.requestAnimationFrame(() => {
+                setActiveIndicator(updater);
+            });
+        },
+        [],
+    );
 
     useLayoutEffect(() => {
         const activeIndex = items.findIndex((item) => {
@@ -699,7 +715,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                 window.cancelAnimationFrame(frame);
             }
         };
-    }, [currentUrl, isCurrentOrParentUrl, items]);
+    }, [currentUrl, isCurrentOrParentUrl, items, scheduleActiveIndicator]);
 
     useEffect(() => {
         const activeIndex = items.findIndex((item) => {
@@ -752,7 +768,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
             window.removeEventListener('resize', updateIndicator);
             observer.disconnect();
         };
-    }, [currentUrl, isCurrentOrParentUrl, items]);
+    }, [currentUrl, isCurrentOrParentUrl, items, scheduleActiveIndicator]);
 
     return (
         <SidebarGroup className="px-2 py-0">
