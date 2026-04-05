@@ -1,7 +1,13 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { Ellipsis, Globe2, MapPinned, Plus, Trash2 } from 'lucide-react';
+import { Ellipsis, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
-import { bulkDestroy, destroy, index as adminLocations, store, update } from '@/actions/App/Http/Controllers/Admin/LocationsController';
+import {
+    bulkDestroy,
+    destroy,
+    index as adminLocations,
+    store,
+    update,
+} from '@/actions/App/Http/Controllers/Admin/LocationsController';
 import { ConfirmDeleteDialog, DataTable } from '@/components/admin/data-table';
 import type { Column, PaginatedData } from '@/components/admin/data-table';
 import { CountryFlagIcon, CountryFlagOption } from '@/components/country-flag';
@@ -66,7 +72,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const countryOptions = countryFlags
     .map((country) => country.name)
-    .sort((left, right) => left.localeCompare(right));
+    .toSorted((left, right) => left.localeCompare(right));
 
 const tabs: Tab[] = [
     { id: 'overview', label: 'Overview' },
@@ -91,7 +97,9 @@ function StackedStatCard({
                 </span>
             </div>
             <div className="rounded-lg border border-border/70 bg-background p-5">
-                <p className="text-3xl font-semibold text-foreground">{value}</p>
+                <p className="text-3xl font-semibold text-foreground">
+                    {value}
+                </p>
                 {description ? (
                     <p className="mt-1 text-xs text-muted-foreground">
                         {description}
@@ -112,7 +120,12 @@ function CountrySelect({
     return (
         <Select value={value} onValueChange={onChange}>
             <SelectTrigger className="w-full">
-                <span className={cn('truncate', !value && 'text-muted-foreground')}>
+                <span
+                    className={cn(
+                        'truncate',
+                        !value && 'text-muted-foreground',
+                    )}
+                >
                     {value || 'Choose a country'}
                 </span>
             </SelectTrigger>
@@ -133,7 +146,10 @@ function LocationFormFields({
     errors,
 }: {
     data: LocationFormData;
-    setData: <K extends keyof LocationFormData>(key: K, value: LocationFormData[K]) => void;
+    setData: <K extends keyof LocationFormData>(
+        key: K,
+        value: LocationFormData[K],
+    ) => void;
     errors: Partial<Record<keyof LocationFormData, string>>;
 }) {
     return (
@@ -180,7 +196,8 @@ function CreateLocationModal({ onClose }: { onClose: () => void }) {
                 setSubmitting(true);
             },
             onFinish: () => {
-                const remaining = minimumMs - (Date.now() - submitStart.current);
+                const remaining =
+                    minimumMs - (Date.now() - submitStart.current);
                 setTimeout(() => setSubmitting(false), Math.max(0, remaining));
             },
             onSuccess: () => {
@@ -188,7 +205,9 @@ function CreateLocationModal({ onClose }: { onClose: () => void }) {
                 onClose();
             },
             onError: (errors) => {
-                Object.values(errors).forEach((message) => toast.error(message));
+                Object.values(errors).forEach((message) =>
+                    toast.error(message),
+                );
             },
         });
     };
@@ -211,7 +230,10 @@ function CreateLocationModal({ onClose }: { onClose: () => void }) {
                     />
 
                     <div className="flex justify-end">
-                        <Button type="submit" disabled={submitting || form.processing}>
+                        <Button
+                            type="submit"
+                            disabled={submitting || form.processing}
+                        >
                             {(submitting || form.processing) && <Spinner />}
                             Create location
                         </Button>
@@ -249,14 +271,17 @@ function LocationModal({
                 setSubmitting(true);
             },
             onFinish: () => {
-                const remaining = minimumMs - (Date.now() - submitStart.current);
+                const remaining =
+                    minimumMs - (Date.now() - submitStart.current);
                 setTimeout(() => setSubmitting(false), Math.max(0, remaining));
             },
             onSuccess: () => {
                 toast.success('Location updated');
             },
             onError: (errors) => {
-                Object.values(errors).forEach((message) => toast.error(message));
+                Object.values(errors).forEach((message) =>
+                    toast.error(message),
+                );
             },
         });
     };
@@ -267,10 +292,15 @@ function LocationModal({
                 <div className="px-8 pt-8 pb-4">
                     <div className="flex items-center gap-4">
                         <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted/60">
-                            <CountryFlagIcon countryName={location.country} className="[&_svg]:size-6" />
+                            <CountryFlagIcon
+                                countryName={location.country}
+                                className="[&_svg]:size-6"
+                            />
                         </div>
                         <div className="min-w-0 flex-1">
-                            <DialogTitle className="text-lg">{location.name}</DialogTitle>
+                            <DialogTitle className="text-lg">
+                                {location.name}
+                            </DialogTitle>
                             <DialogDescription className="sr-only">
                                 View and manage details for {location.name}.
                             </DialogDescription>
@@ -281,7 +311,11 @@ function LocationModal({
                     </div>
 
                     <div className="mt-6">
-                        <SlidingTabs tabs={tabs} active={tab} onChange={setTab} />
+                        <SlidingTabs
+                            tabs={tabs}
+                            active={tab}
+                            onChange={setTab}
+                        />
                     </div>
                 </div>
 
@@ -292,16 +326,28 @@ function LocationModal({
                         <div className="flex gap-6">
                             <div className="min-w-0 flex-1 space-y-1">
                                 {[
-                                    { label: 'Location ID', value: `#${location.id}` },
+                                    {
+                                        label: 'Location ID',
+                                        value: `#${location.id}`,
+                                    },
                                     { label: 'Name', value: location.name },
-                                    { label: 'Country', value: location.country },
+                                    {
+                                        label: 'Country',
+                                        value: location.country,
+                                    },
                                     {
                                         label: 'Created',
-                                        value: formatDate(location.created_at, true),
+                                        value: formatDate(
+                                            location.created_at,
+                                            true,
+                                        ),
                                     },
                                     {
                                         label: 'Last updated',
-                                        value: formatDate(location.updated_at, true),
+                                        value: formatDate(
+                                            location.updated_at,
+                                            true,
+                                        ),
                                     },
                                 ].map((item) => (
                                     <div
@@ -322,7 +368,11 @@ function LocationModal({
                                 <StackedStatCard
                                     label="Nodes"
                                     value={String(location.nodes_count)}
-                                    description={location.nodes_count === 1 ? 'Attached node' : 'Attached nodes'}
+                                    description={
+                                        location.nodes_count === 1
+                                            ? 'Attached node'
+                                            : 'Attached nodes'
+                                    }
                                 />
                                 <StackedStatCard
                                     label="Region"
@@ -335,9 +385,12 @@ function LocationModal({
 
                     {tab === 'edit' ? (
                         <div className="max-w-xl">
-                            <h3 className="text-sm font-semibold text-foreground">Details</h3>
+                            <h3 className="text-sm font-semibold text-foreground">
+                                Details
+                            </h3>
                             <p className="mt-1 text-xs text-muted-foreground">
-                                Update this location's name and regional metadata.
+                                Update this location's name and regional
+                                metadata.
                             </p>
 
                             <form onSubmit={submit} className="mt-6 space-y-4">
@@ -348,8 +401,13 @@ function LocationModal({
                                 />
 
                                 <div className="flex justify-end">
-                                    <Button type="submit" disabled={submitting || form.processing}>
-                                        {(submitting || form.processing) && <Spinner />}
+                                    <Button
+                                        type="submit"
+                                        disabled={submitting || form.processing}
+                                    >
+                                        {(submitting || form.processing) && (
+                                            <Spinner />
+                                        )}
                                         Save changes
                                     </Button>
                                 </div>
@@ -372,7 +430,8 @@ function LocationModal({
                                                 Delete location
                                             </h3>
                                             <p className="mt-1 text-sm text-muted-foreground">
-                                                Permanently remove this location and any nodes assigned to it.
+                                                Permanently remove this location
+                                                and any nodes assigned to it.
                                             </p>
                                         </div>
                                         <Button
@@ -396,9 +455,11 @@ function LocationModal({
 
 export default function Locations({ locations, filters }: Props) {
     const [search, setSearch] = useState(filters.search);
-    const [viewingLocation, setViewingLocation] = useState<AdminLocation | null>(null);
+    const [viewingLocation, setViewingLocation] =
+        useState<AdminLocation | null>(null);
     const [creatingLocation, setCreatingLocation] = useState(false);
-    const [deletingLocation, setDeletingLocation] = useState<AdminLocation | null>(null);
+    const [deletingLocation, setDeletingLocation] =
+        useState<AdminLocation | null>(null);
     const [singleDeleting, setSingleDeleting] = useState(false);
 
     const navigate = (params: Record<string, string | undefined>) => {
@@ -414,7 +475,8 @@ export default function Locations({ locations, filters }: Props) {
     };
 
     const locationMap = useMemo(
-        () => new Map(locations.data.map((location) => [location.id, location])),
+        () =>
+            new Map(locations.data.map((location) => [location.id, location])),
         [locations.data],
     );
 
@@ -493,13 +555,20 @@ export default function Locations({ locations, filters }: Props) {
                     columns={columns}
                     searchValue={search}
                     onSearch={handleSearch}
-                    onRowClick={(location) => setViewingLocation(locationMap.get(location.id) ?? location)}
+                    onRowClick={(location) =>
+                        setViewingLocation(
+                            locationMap.get(location.id) ?? location,
+                        )
+                    }
                     rowMenu={rowMenu}
                     bulkDeleteUrl={bulkDestroy.url()}
                     entityName="location"
                     emptyMessage="No locations found"
                     actions={
-                        <Button size="table" onClick={() => setCreatingLocation(true)}>
+                        <Button
+                            size="table"
+                            onClick={() => setCreatingLocation(true)}
+                        >
                             <Plus className="h-3.5 w-3.5" />
                             Create new
                         </Button>
@@ -508,7 +577,9 @@ export default function Locations({ locations, filters }: Props) {
             </AdminLayout>
 
             {creatingLocation ? (
-                <CreateLocationModal onClose={() => setCreatingLocation(false)} />
+                <CreateLocationModal
+                    onClose={() => setCreatingLocation(false)}
+                />
             ) : null}
 
             {viewingLocation ? (

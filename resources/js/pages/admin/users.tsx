@@ -1,4 +1,4 @@
-import { Form, Head, Link, router, usePage } from '@inertiajs/react';
+import { Form, Head, router, usePage } from '@inertiajs/react';
 import {
     Crown,
     Ellipsis,
@@ -20,10 +20,7 @@ import {
     update,
 } from '@/actions/App/Http/Controllers/Admin/UsersController';
 import { bulkDestroy } from '@/actions/App/Http/Controllers/Admin/UsersController';
-import {
-    ConfirmDeleteDialog,
-    DataTable,
-} from '@/components/admin/data-table';
+import { ConfirmDeleteDialog, DataTable } from '@/components/admin/data-table';
 import type { Column, PaginatedData } from '@/components/admin/data-table';
 import InputError from '@/components/input-error';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -217,16 +214,15 @@ function UserModal({
                                                 ? 'Suspended'
                                                 : 'Active'}
                                         </p>
-                                        {isSuspended &&
-                                            user.suspended_at && (
-                                                <p className="mt-1 text-xs text-muted-foreground">
-                                                    Since{' '}
-                                                    {formatDate(
-                                                        user.suspended_at,
-                                                        true,
-                                                    )}
-                                                </p>
-                                            )}
+                                        {isSuspended && user.suspended_at && (
+                                            <p className="mt-1 text-xs text-muted-foreground">
+                                                Since{' '}
+                                                {formatDate(
+                                                    user.suspended_at,
+                                                    true,
+                                                )}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
 
@@ -268,8 +264,7 @@ function UserModal({
                                     onFinish={() => {
                                         const rem =
                                             MIN_MS -
-                                            (Date.now() -
-                                                submitStart.current);
+                                            (Date.now() - submitStart.current);
                                         setTimeout(
                                             () => setSubmitting(false),
                                             Math.max(0, rem),
@@ -351,8 +346,7 @@ function UserModal({
                                             (Date.now() -
                                                 passwordStart.current);
                                         setTimeout(
-                                            () =>
-                                                setPasswordSubmitting(false),
+                                            () => setPasswordSubmitting(false),
                                             Math.max(0, rem),
                                         );
                                     }}
@@ -435,9 +429,7 @@ function UserModal({
                                         {...(isSuspended
                                             ? unsuspend.form(user.id)
                                             : suspend.form(user.id))}
-                                        onStart={() =>
-                                            setActioning('suspend')
-                                        }
+                                        onStart={() => setActioning('suspend')}
                                         onFinish={() => setActioning(null)}
                                         onSuccess={() =>
                                             toast.success(
@@ -447,8 +439,8 @@ function UserModal({
                                             )
                                         }
                                         onError={(errors) =>
-                                            Object.values(errors).forEach(
-                                                (m) => toast.error(m),
+                                            Object.values(errors).forEach((m) =>
+                                                toast.error(m),
                                             )
                                         }
                                     >
@@ -487,8 +479,7 @@ function UserModal({
                                 </div>
                                 <div className="flex items-center justify-between rounded-lg border border-border/70 bg-background p-4">
                                     <p className="text-sm text-muted-foreground">
-                                        Log in as this user to debug
-                                        issues.
+                                        Log in as this user to debug issues.
                                     </p>
                                     <Form
                                         {...impersonate.form(user.id)}
@@ -497,8 +488,8 @@ function UserModal({
                                         }
                                         onFinish={() => setActioning(null)}
                                         onError={(errors) =>
-                                            Object.values(errors).forEach(
-                                                (m) => toast.error(m),
+                                            Object.values(errors).forEach((m) =>
+                                                toast.error(m),
                                             )
                                         }
                                     >
@@ -509,8 +500,7 @@ function UserModal({
                                                 size="sm"
                                                 disabled={
                                                     isSelf ||
-                                                    actioning ===
-                                                        'impersonate'
+                                                    actioning === 'impersonate'
                                                 }
                                             >
                                                 {actioning ===
@@ -560,8 +550,7 @@ function CreateUserModal({ onClose }: { onClose: () => void }) {
                         setSubmitting(true);
                     }}
                     onFinish={() => {
-                        const rem =
-                            MIN_MS - (Date.now() - submitStart.current);
+                        const rem = MIN_MS - (Date.now() - submitStart.current);
                         setTimeout(
                             () => setSubmitting(false),
                             Math.max(0, rem),
@@ -844,9 +833,7 @@ export default function Users({ users, filters }: Props) {
             )}
 
             {creatingUser && (
-                <CreateUserModal
-                    onClose={() => setCreatingUser(false)}
-                />
+                <CreateUserModal onClose={() => setCreatingUser(false)} />
             )}
 
             <ConfirmDeleteDialog

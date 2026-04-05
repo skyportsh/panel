@@ -2,15 +2,19 @@ import { Head, router, useForm } from '@inertiajs/react';
 import {
     Ellipsis,
     Globe,
-    Lock,
-    LockOpen,
     Plus,
     ShieldCheck,
     ShieldX,
     Trash2,
 } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
-import { bulkDestroy, destroy, index as adminNodes, store, update } from '@/actions/App/Http/Controllers/Admin/NodesController';
+import {
+    bulkDestroy,
+    destroy,
+    index as adminNodes,
+    store,
+    update,
+} from '@/actions/App/Http/Controllers/Admin/NodesController';
 import { ConfirmDeleteDialog, DataTable } from '@/components/admin/data-table';
 import type { Column, PaginatedData } from '@/components/admin/data-table';
 import { CountryFlagIcon, CountryFlagOption } from '@/components/country-flag';
@@ -43,10 +47,14 @@ import { SlidingTabs } from '@/components/ui/sliding-tabs';
 import type { Tab } from '@/components/ui/sliding-tabs';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import AdminLayout from '@/layouts/admin/layout';
 import AppLayout from '@/layouts/app-layout';
-import { formatDate, formatRelativeTime } from '@/lib/format';
+import { formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
 
@@ -113,11 +121,18 @@ function StackedStatCard({
                 </span>
             </div>
             <div className="rounded-lg border border-border/70 bg-background p-5">
-                <p className={cn('text-3xl font-semibold text-foreground', valueClassName)}>
+                <p
+                    className={cn(
+                        'text-3xl font-semibold text-foreground',
+                        valueClassName,
+                    )}
+                >
                     {value}
                 </p>
                 {description ? (
-                    <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        {description}
+                    </p>
                 ) : null}
             </div>
         </div>
@@ -133,7 +148,9 @@ function LocationSelect({
     onChange: (value: number) => void;
     locations: LocationOption[];
 }) {
-    const selectedLocation = locations.find((location) => location.id === value);
+    const selectedLocation = locations.find(
+        (location) => location.id === value,
+    );
 
     return (
         <Select
@@ -141,8 +158,15 @@ function LocationSelect({
             onValueChange={(selected) => onChange(Number(selected))}
         >
             <SelectTrigger className="w-full">
-                <span className={cn('truncate', !selectedLocation && 'text-muted-foreground')}>
-                    {selectedLocation ? selectedLocation.name : 'Choose a location'}
+                <span
+                    className={cn(
+                        'truncate',
+                        !selectedLocation && 'text-muted-foreground',
+                    )}
+                >
+                    {selectedLocation
+                        ? selectedLocation.name
+                        : 'Choose a location'}
                 </span>
             </SelectTrigger>
             <SelectContent>
@@ -167,7 +191,10 @@ function NodeFormFields({
     locations,
 }: {
     data: NodeFormData;
-    setData: <K extends keyof NodeFormData>(key: K, value: NodeFormData[K]) => void;
+    setData: <K extends keyof NodeFormData>(
+        key: K,
+        value: NodeFormData[K],
+    ) => void;
     errors: Partial<Record<keyof NodeFormData, string>>;
     locations: LocationOption[];
 }) {
@@ -214,7 +241,9 @@ function NodeFormFields({
                         id="node-daemon-port"
                         type="number"
                         value={data.daemon_port}
-                        onChange={(event) => setData('daemon_port', Number(event.target.value))}
+                        onChange={(event) =>
+                            setData('daemon_port', Number(event.target.value))
+                        }
                         min={1}
                         max={65535}
                         required
@@ -228,7 +257,9 @@ function NodeFormFields({
                         id="node-sftp-port"
                         type="number"
                         value={data.sftp_port}
-                        onChange={(event) => setData('sftp_port', Number(event.target.value))}
+                        onChange={(event) =>
+                            setData('sftp_port', Number(event.target.value))
+                        }
                         min={1}
                         max={65535}
                         required
@@ -282,7 +313,8 @@ function CreateNodeModal({
                 setSubmitting(true);
             },
             onFinish: () => {
-                const remaining = minimumMs - (Date.now() - submitStart.current);
+                const remaining =
+                    minimumMs - (Date.now() - submitStart.current);
                 setTimeout(() => setSubmitting(false), Math.max(0, remaining));
             },
             onSuccess: () => {
@@ -290,7 +322,9 @@ function CreateNodeModal({
                 onClose();
             },
             onError: (errors: Record<string, string>) => {
-                Object.values(errors).forEach((message) => toast.error(message));
+                Object.values(errors).forEach((message) =>
+                    toast.error(message),
+                );
             },
         });
     };
@@ -314,7 +348,10 @@ function CreateNodeModal({
                     />
 
                     <div className="flex justify-end">
-                        <Button type="submit" disabled={submitting || form.processing}>
+                        <Button
+                            type="submit"
+                            disabled={submitting || form.processing}
+                        >
                             {(submitting || form.processing) && <Spinner />}
                             Create node
                         </Button>
@@ -358,14 +395,17 @@ function NodeModal({
                 setSubmitting(true);
             },
             onFinish: () => {
-                const remaining = minimumMs - (Date.now() - submitStart.current);
+                const remaining =
+                    minimumMs - (Date.now() - submitStart.current);
                 setTimeout(() => setSubmitting(false), Math.max(0, remaining));
             },
             onSuccess: () => {
                 toast.success('Node updated');
             },
             onError: (errors: Record<string, string>) => {
-                Object.values(errors).forEach((message) => toast.error(message));
+                Object.values(errors).forEach((message) =>
+                    toast.error(message),
+                );
             },
         });
     };
@@ -379,16 +419,24 @@ function NodeModal({
                             <Globe className="h-5 w-5 text-muted-foreground" />
                         </div>
                         <div className="min-w-0 flex-1">
-                            <DialogTitle className="text-lg">{node.name}</DialogTitle>
+                            <DialogTitle className="text-lg">
+                                {node.name}
+                            </DialogTitle>
                             <DialogDescription className="sr-only">
                                 View and manage details for {node.name}.
                             </DialogDescription>
-                            <p className="text-sm text-muted-foreground">{node.fqdn}</p>
+                            <p className="text-sm text-muted-foreground">
+                                {node.fqdn}
+                            </p>
                         </div>
                     </div>
 
                     <div className="mt-6">
-                        <SlidingTabs tabs={tabs} active={tab} onChange={setTab} />
+                        <SlidingTabs
+                            tabs={tabs}
+                            active={tab}
+                            onChange={setTab}
+                        />
                     </div>
                 </div>
 
@@ -401,26 +449,48 @@ function NodeModal({
                                 {[
                                     { label: 'Node ID', value: `#${node.id}` },
                                     { label: 'Name', value: node.name },
-                                    { label: 'Location', value: node.location.name },
-                                    { label: 'Country', value: node.location.country },
+                                    {
+                                        label: 'Location',
+                                        value: node.location.name,
+                                    },
+                                    {
+                                        label: 'Country',
+                                        value: node.location.country,
+                                    },
                                     { label: 'FQDN', value: node.fqdn },
-                                    { label: 'Daemon port', value: String(node.daemon_port) },
-                                    { label: 'SFTP port', value: String(node.sftp_port) },
+                                    {
+                                        label: 'Daemon port',
+                                        value: String(node.daemon_port),
+                                    },
+                                    {
+                                        label: 'SFTP port',
+                                        value: String(node.sftp_port),
+                                    },
                                     {
                                         label: 'Created',
-                                        value: formatDate(node.created_at, true),
+                                        value: formatDate(
+                                            node.created_at,
+                                            true,
+                                        ),
                                     },
                                     {
                                         label: 'Last updated',
-                                        value: formatDate(node.updated_at, true),
+                                        value: formatDate(
+                                            node.updated_at,
+                                            true,
+                                        ),
                                     },
                                 ].map((item) => (
                                     <div
                                         key={item.label}
                                         className="flex items-center justify-between rounded-md px-3 py-2.5"
                                     >
-                                        <span className="text-sm text-muted-foreground">{item.label}</span>
-                                        <span className="text-sm font-medium text-foreground">{item.value}</span>
+                                        <span className="text-sm text-muted-foreground">
+                                            {item.label}
+                                        </span>
+                                        <span className="text-sm font-medium text-foreground">
+                                            {item.value}
+                                        </span>
                                     </div>
                                 ))}
                             </div>
@@ -428,9 +498,19 @@ function NodeModal({
                             <div className="w-[300px] shrink-0 space-y-3">
                                 <StackedStatCard
                                     label="SSL"
-                                    value={node.use_ssl ? 'Enabled' : 'Disabled'}
-                                    valueClassName={node.use_ssl ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}
-                                    description={node.use_ssl ? 'Secure daemon connections are active.' : 'Daemon connections use plain HTTP.'}
+                                    value={
+                                        node.use_ssl ? 'Enabled' : 'Disabled'
+                                    }
+                                    valueClassName={
+                                        node.use_ssl
+                                            ? 'text-emerald-600 dark:text-emerald-400'
+                                            : 'text-muted-foreground'
+                                    }
+                                    description={
+                                        node.use_ssl
+                                            ? 'Secure daemon connections are active.'
+                                            : 'Daemon connections use plain HTTP.'
+                                    }
                                 />
                                 <StackedStatCard
                                     label="Ports"
@@ -443,9 +523,12 @@ function NodeModal({
 
                     {tab === 'edit' ? (
                         <div className="max-w-2xl">
-                            <h3 className="text-sm font-semibold text-foreground">Configuration</h3>
+                            <h3 className="text-sm font-semibold text-foreground">
+                                Configuration
+                            </h3>
                             <p className="mt-1 text-xs text-muted-foreground">
-                                Update this node's connectivity, ports, and assigned location.
+                                Update this node's connectivity, ports, and
+                                assigned location.
                             </p>
 
                             <form onSubmit={submit} className="mt-6 space-y-4">
@@ -457,8 +540,13 @@ function NodeModal({
                                 />
 
                                 <div className="flex justify-end">
-                                    <Button type="submit" disabled={submitting || form.processing}>
-                                        {(submitting || form.processing) && <Spinner />}
+                                    <Button
+                                        type="submit"
+                                        disabled={submitting || form.processing}
+                                    >
+                                        {(submitting || form.processing) && (
+                                            <Spinner />
+                                        )}
                                         Save changes
                                     </Button>
                                 </div>
@@ -470,7 +558,9 @@ function NodeModal({
                         <div className="max-w-xl space-y-4">
                             <div className="overflow-hidden rounded-lg bg-muted/40">
                                 <div className="px-4 py-2.5">
-                                    <span className="text-xs font-medium text-muted-foreground">Danger zone</span>
+                                    <span className="text-xs font-medium text-muted-foreground">
+                                        Danger zone
+                                    </span>
                                 </div>
                                 <div className="rounded-lg border border-border/70 bg-background p-5">
                                     <div className="flex items-center justify-between gap-4">
@@ -479,7 +569,8 @@ function NodeModal({
                                                 Delete node
                                             </h3>
                                             <p className="mt-1 text-sm text-muted-foreground">
-                                                Permanently remove this node from the platform.
+                                                Permanently remove this node
+                                                from the platform.
                                             </p>
                                         </div>
                                         <Button
@@ -520,7 +611,10 @@ export default function Nodes({ nodes, locations, filters }: Props) {
         navigate({ search: value || undefined });
     };
 
-    const nodeMap = useMemo(() => new Map(nodes.data.map((node) => [node.id, node])), [nodes.data]);
+    const nodeMap = useMemo(
+        () => new Map(nodes.data.map((node) => [node.id, node])),
+        [nodes.data],
+    );
 
     const columns: Column<AdminNode>[] = [
         {
@@ -528,8 +622,12 @@ export default function Nodes({ nodes, locations, filters }: Props) {
             width: 'w-[34%] shrink-0',
             render: (node) => (
                 <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">{node.name}</p>
-                    <p className="truncate text-xs text-muted-foreground">{node.fqdn}</p>
+                    <p className="truncate text-sm font-medium text-foreground">
+                        {node.name}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                        {node.fqdn}
+                    </p>
                 </div>
             ),
         },
@@ -538,7 +636,10 @@ export default function Nodes({ nodes, locations, filters }: Props) {
             width: 'w-[22%] shrink-0',
             render: (node) => (
                 <div className="flex items-center gap-2">
-                    <CountryFlagIcon countryName={node.location.country} className="[&_svg]:size-4" />
+                    <CountryFlagIcon
+                        countryName={node.location.country}
+                        className="[&_svg]:size-4"
+                    />
                     <div className="min-w-0">
                         <p className="truncate text-sm font-medium text-foreground">
                             {node.location.name}
@@ -586,7 +687,10 @@ export default function Nodes({ nodes, locations, filters }: Props) {
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuItem className="cursor-pointer" onSelect={() => setDeletingNode(node)}>
+                <DropdownMenuItem
+                    className="cursor-pointer"
+                    onSelect={() => setDeletingNode(node)}
+                >
                     <Trash2 className="mr-2 h-4 w-4" />
                     Delete
                 </DropdownMenuItem>
@@ -607,7 +711,9 @@ export default function Nodes({ nodes, locations, filters }: Props) {
                     columns={columns}
                     searchValue={search}
                     onSearch={handleSearch}
-                    onRowClick={(node) => setViewingNode(nodeMap.get(node.id) ?? node)}
+                    onRowClick={(node) =>
+                        setViewingNode(nodeMap.get(node.id) ?? node)
+                    }
                     rowMenu={rowMenu}
                     bulkDeleteUrl={bulkDestroy.url()}
                     entityName="node"
