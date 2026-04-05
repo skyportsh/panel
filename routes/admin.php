@@ -27,6 +27,7 @@ Route::middleware(['auth', EnsureUserIsAdmin::class])
 
         Route::get('nodes', [NodesController::class, 'index'])->name('nodes.index');
         Route::post('nodes', [NodesController::class, 'store'])->name('nodes.store');
+        Route::post('nodes/{node}/configure-token', [NodesController::class, 'generateConfigurationToken'])->name('nodes.configure-token');
         Route::patch('nodes/{node}', [NodesController::class, 'update'])->name('nodes.update');
         Route::delete('nodes/bulk-destroy', [NodesController::class, 'bulkDestroy'])->name('nodes.bulk-destroy');
         Route::delete('nodes/{node}', [NodesController::class, 'destroy'])->name('nodes.destroy');
