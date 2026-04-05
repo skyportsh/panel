@@ -459,10 +459,7 @@ export function DataTable<T extends { id: number }>({
                         ref={tableBodyRef}
                         className="overflow-hidden rounded-lg border border-border/70 bg-background"
                     >
-                        <div
-                            ref={innerRef}
-                            className="flex flex-col gap-1 p-1"
-                        >
+                        <div ref={innerRef} className="flex flex-col gap-1 p-1">
                             {data.data.length > 0 ? (
                                 data.data.map((item) => (
                                     <DataTableRow

@@ -21,11 +21,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Profile({
-    status,
-}: {
-    status?: string;
-}) {
+export default function Profile({ status }: { status?: string }) {
     const { auth } = usePage().props;
     const [submitting, setSubmitting] = useState(false);
     const submitStart = useRef(0);

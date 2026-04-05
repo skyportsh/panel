@@ -2,7 +2,6 @@ import { Head, Link } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import Heading from '@/components/heading';
-import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -197,7 +196,9 @@ export default function Activity({ activities, links, meta }: Props) {
                                                     <div className="relative flex items-center gap-3 px-3 py-3 transition-transform duration-150 ease-out active:scale-[0.99] active:duration-0">
                                                         <div className="w-[42%] shrink-0 pr-4">
                                                             <p className="truncate text-sm font-medium text-foreground">
-                                                                {activity.action}
+                                                                {
+                                                                    activity.action
+                                                                }
                                                             </p>
                                                             <p className="mt-0.5 truncate text-xs text-muted-foreground">
                                                                 {activity.path}
@@ -212,10 +213,14 @@ export default function Activity({ activities, links, meta }: Props) {
                                                         </div>
                                                         <div className="min-w-0 flex-1 pr-2">
                                                             <p className="text-sm text-foreground">
-                                                                {timestamp.relative}
+                                                                {
+                                                                    timestamp.relative
+                                                                }
                                                             </p>
                                                             <p className="truncate text-xs text-muted-foreground">
-                                                                {timestamp.absolute}
+                                                                {
+                                                                    timestamp.absolute
+                                                                }
                                                             </p>
                                                         </div>
                                                     </div>
@@ -228,7 +233,8 @@ export default function Activity({ activities, links, meta }: Props) {
                                                 No activity yet
                                             </p>
                                             <p className="mt-1 text-sm text-muted-foreground">
-                                                Sign-ins and important account updates will appear here.
+                                                Sign-ins and important account
+                                                updates will appear here.
                                             </p>
                                         </div>
                                     )}
@@ -239,7 +245,8 @@ export default function Activity({ activities, links, meta }: Props) {
                         {meta.lastPage > 1 ? (
                             <div className="flex flex-wrap items-center justify-between gap-4">
                                 <p className="text-sm text-muted-foreground">
-                                    Showing {meta.from ?? 0}-{meta.to ?? 0} of {meta.total.toLocaleString()}
+                                    Showing {meta.from ?? 0}-{meta.to ?? 0} of{' '}
+                                    {meta.total.toLocaleString()}
                                 </p>
 
                                 <nav
@@ -304,7 +311,9 @@ export default function Activity({ activities, links, meta }: Props) {
                                     })}
 
                                     <Link
-                                        href={links[links.length - 1]?.url ?? '#'}
+                                        href={
+                                            links[links.length - 1]?.url ?? '#'
+                                        }
                                         preserveScroll
                                         className={cn(
                                             'flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-all duration-150 ease-out active:scale-95 active:duration-0',

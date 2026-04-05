@@ -258,7 +258,10 @@ export default function SettingsLayout({
                                 key={`${toUrl(item.href)}-${index}`}
                                 href={item.href}
                                 className={cn(
-                                    buttonVariants({ size: 'sm', variant: 'ghost' }),
+                                    buttonVariants({
+                                        size: 'sm',
+                                        variant: 'ghost',
+                                    }),
                                     'relative z-10 w-full justify-start bg-transparent text-muted-foreground hover:bg-transparent hover:text-foreground active:bg-transparent',
                                     isCurrentOrParentUrl(item.href)
                                         ? 'bg-transparent font-medium text-foreground'
