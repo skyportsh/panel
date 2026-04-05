@@ -222,3 +222,42 @@
         opacity: 0;
     }
 }
+
+@keyframes node-heartbeat {
+    0%,
+    42%,
+    100% {
+        transform: scale(1);
+    }
+    14% {
+        transform: scale(1.14);
+    }
+    24% {
+        transform: scale(0.96);
+    }
+    32% {
+        transform: scale(1.08);
+    }
+}
+
+@keyframes node-heartbeat-glow {
+    0%,
+    42%,
+    100% {
+        opacity: 0.2;
+        transform: scale(0.9);
+    }
+    14% {
+        opacity: 0.42;
+        transform: scale(1.2);
+    }
+    24% {
+        opacity: 0.16;
+        transform: scale(0.96);
+    }
+    32% {
+        opacity: 0.34;
+        transform: scale(1.1);
+    }
+}
+

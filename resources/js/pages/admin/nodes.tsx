@@ -3,12 +3,13 @@ import {
     Copy,
     Ellipsis,
     Globe,
+    Heart,
     Plus,
     ShieldCheck,
     ShieldX,
     Trash2,
 } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     bulkDestroy,
     destroy,
@@ -21,6 +22,16 @@ import type { Column, PaginatedData } from '@/components/admin/data-table';
 import { CountryFlagIcon, CountryFlagOption } from '@/components/country-flag';
 import InputError from '@/components/input-error';
 import { toast } from '@/components/ui/sonner';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -144,6 +155,99 @@ function StackedStatCard({
                 ) : null}
             </div>
         </div>
+    );
+}
+
+function resolveNodePresence(
+    node: AdminNode,
+): 'online' | 'offline' | 'unconfigured' {
+    const status = node.connection_status ?? node.status ?? 'draft';
+
+    if (!node.daemon_uuid || status === 'draft' || status === 'configured') {
+        return 'unconfigured';
+    }
+
+    return status === 'online' ? 'online' : 'offline';
+}
+
+function formatDetailedRelativeTime(
+    value: string | null | undefined,
+    now: number,
+): string {
+    if (!value) {
+        return 'never';
+    }
+
+    const seconds = Math.max(0, Math.round((now - new Date(value).getTime()) / 1000));
+
+    if (seconds < 60) {
+        return 'just now';
+    }
+
+    const minutes = Math.round(seconds / 60);
+    if (minutes < 60) {
+        return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+    }
+
+    const hours = Math.round(minutes / 60);
+    if (hours < 24) {
+        return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+    }
+
+    const days = Math.round(hours / 24);
+    return `${days} day${days === 1 ? '' : 's'} ago`;
+}
+
+function NodeConnectionIndicator({
+    node,
+    now,
+}: {
+    node: AdminNode;
+    now: number;
+}) {
+    const presence = resolveNodePresence(node);
+    const isOnline = presence === 'online';
+
+    return (
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <span className="relative inline-flex size-5 shrink-0 items-center justify-center">
+                    {isOnline ? (
+                        <span className="absolute inset-1 rounded-full bg-emerald-400/20 blur-[3px] animate-[node-heartbeat-glow_1.6s_ease-in-out_infinite] dark:bg-emerald-300/20" />
+                    ) : null}
+                    <Heart
+                        className={cn(
+                            'relative size-4 origin-center transition-colors',
+                            isOnline
+                                ? 'fill-emerald-700 text-emerald-700 animate-[node-heartbeat_1.6s_ease-in-out_infinite] dark:fill-emerald-600 dark:text-emerald-600'
+                                : 'fill-transparent text-muted-foreground/60',
+                        )}
+                        aria-hidden="true"
+                    />
+                </span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="px-3 py-2 text-left">
+                {presence === 'online' ? (
+                    <div className="space-y-0.5">
+                        <p className="text-sm font-medium">Online</p>
+                        <p className="text-xs text-muted-foreground">
+                            {node.daemon_version
+                                ? `skyportd ${node.daemon_version}`
+                                : 'skyportd unknown'}
+                        </p>
+                    </div>
+                ) : presence === 'offline' ? (
+                    <div className="space-y-0.5">
+                        <p className="text-sm font-medium">Offline</p>
+                        <p className="text-xs text-muted-foreground">
+                            Last seen {formatDetailedRelativeTime(node.last_seen_at, now)}
+                        </p>
+                    </div>
+                ) : (
+                    <p className="text-sm font-medium">Not configured yet</p>
+                )}
+            </TooltipContent>
+        </Tooltip>
     );
 }
 
@@ -317,9 +421,13 @@ function ConfigureTab({
         useState<ConfigurationData | null>(null);
     const [generating, setGenerating] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [showReconfigureWarning, setShowReconfigureWarning] =
+        useState(false);
     const connectionStatus = node.connection_status ?? node.status ?? 'draft';
 
     const currentStatus = node.daemon_uuid ? connectionStatus : 'draft';
+    const requiresReconfigureWarning =
+        currentStatus === 'online' || currentStatus === 'offline';
 
     const generateConfigurationToken = async () => {
         setGenerating(true);
@@ -353,6 +461,15 @@ function ConfigureTab({
         } finally {
             setGenerating(false);
         }
+    };
+
+    const requestConfigurationToken = () => {
+        if (requiresReconfigureWarning) {
+            setShowReconfigureWarning(true);
+            return;
+        }
+
+        void generateConfigurationToken();
     };
 
     const copyToClipboard = async () => {
@@ -398,7 +515,7 @@ function ConfigureTab({
                                   ? 'Offline'
                                   : currentStatus === 'configured'
                                     ? 'Configured'
-                                    : 'Draft'}
+                                    : 'Not configured yet'}
                         </span>
                     </div>
 
@@ -480,7 +597,7 @@ function ConfigureTab({
 
             <div className="flex justify-start">
                 <Button
-                    onClick={generateConfigurationToken}
+                    onClick={requestConfigurationToken}
                     disabled={generating}
                     className="cursor-pointer"
                 >
@@ -494,6 +611,40 @@ function ConfigureTab({
                     )}
                 </Button>
             </div>
+
+            <AlertDialog
+                open={showReconfigureWarning}
+                onOpenChange={setShowReconfigureWarning}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            Refresh configuration token?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            A daemon is already running for this node. If you
+                            continue, you will need to reconfigure skyportd with
+                            the new token before it can connect again.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={generating}>
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            disabled={generating}
+                            onClick={(event) => {
+                                event.preventDefault();
+                                setShowReconfigureWarning(false);
+                                void generateConfigurationToken();
+                            }}
+                        >
+                            {generating ? <Spinner /> : null}
+                            Continue
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
@@ -820,6 +971,7 @@ export default function Nodes({ nodes, locations, filters }: Props) {
     const [creatingNode, setCreatingNode] = useState(false);
     const [deletingNode, setDeletingNode] = useState<AdminNode | null>(null);
     const [singleDeleting, setSingleDeleting] = useState(false);
+    const [now, setNow] = useState(() => Date.now());
 
     const navigate = (params: Record<string, string | undefined>) => {
         router.get(adminNodes.url(), params as Record<string, string>, {
@@ -838,53 +990,62 @@ export default function Nodes({ nodes, locations, filters }: Props) {
         [nodes.data],
     );
 
+    useEffect(() => {
+        const timer = window.setInterval(() => {
+            setNow(Date.now());
+        }, 1000);
+
+        return () => window.clearInterval(timer);
+    }, []);
+
+    useEffect(() => {
+        const poller = window.setInterval(() => {
+            router.get(
+                window.location.pathname + window.location.search,
+                {},
+                {
+                    only: ['nodes'],
+                    preserveScroll: true,
+                    preserveState: true,
+                    replace: true,
+                },
+            );
+        }, 5000);
+
+        return () => window.clearInterval(poller);
+    }, []);
+
+    useEffect(() => {
+        setViewingNode((current) => {
+            if (!current) {
+                return current;
+            }
+
+            return nodeMap.get(current.id) ?? null;
+        });
+    }, [nodeMap]);
+
     const columns: Column<AdminNode>[] = [
         {
             label: 'Node',
-            width: 'w-[35%]',
+            width: 'w-[34%]',
             render: (node) => (
-                <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">
-                        {node.name}
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                        {node.fqdn}
-                    </p>
+                <div className="flex min-w-0 items-center gap-2.5">
+                    <NodeConnectionIndicator node={node} now={now} />
+                    <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-foreground">
+                            {node.name}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                            {node.fqdn}
+                        </p>
+                    </div>
                 </div>
             ),
         },
         {
-            label: 'Status',
-            width: 'w-[18%]',
-            render: (node) => {
-                const status = node.connection_status ?? node.status ?? 'draft';
-                const statusColors: Record<string, string> = {
-                    online: 'text-emerald-600 dark:text-emerald-400',
-                    offline: 'text-red-600 dark:text-red-400',
-                    configured: 'text-amber-600 dark:text-amber-400',
-                    draft: 'text-muted-foreground',
-                };
-                const statusLabels: Record<string, string> = {
-                    online: 'Online',
-                    offline: 'Offline',
-                    configured: 'Configured',
-                    draft: 'Draft',
-                };
-                return (
-                    <span
-                        className={cn(
-                            'text-sm font-medium',
-                            statusColors[status],
-                        )}
-                    >
-                        {statusLabels[status]}
-                    </span>
-                );
-            },
-        },
-        {
             label: 'Location',
-            width: 'w-[18%]',
+            width: 'w-[20%]',
             render: (node) => (
                 <div className="flex items-center gap-2">
                     <CountryFlagIcon
@@ -904,7 +1065,7 @@ export default function Nodes({ nodes, locations, filters }: Props) {
         },
         {
             label: 'SSL',
-            width: 'flex-1',
+            width: 'w-[8%]',
             render: (node) => (
                 <div className="flex items-center">
                     {node.use_ssl ? (

@@ -323,7 +323,7 @@ function DataTableRow<T extends { id: number }>({
 
                 {menu && (
                     <div
-                        className="flex items-center"
+                        className="ml-auto flex items-center"
                         onClick={(e) => e.stopPropagation()}
                         onMouseDown={(e) => e.stopPropagation()}
                     >
@@ -432,14 +432,16 @@ export function DataTable<T extends { id: number }>({
                             <span
                                 key={i}
                                 className={cn(
-                                    'text-xs font-medium text-muted-foreground',
+                                    'block text-xs font-medium text-muted-foreground',
                                     col.width,
                                 )}
                             >
                                 {col.label}
                             </span>
                         ))}
-                        <div className="flex items-center gap-2">
+                        <div className="w-7 shrink-0" />
+
+                        <div className="absolute top-1/2 right-4 flex -translate-y-1/2 items-center gap-2">
                             <div className="relative">
                                 <Search className="absolute top-1/2 left-2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
                                 <Input
