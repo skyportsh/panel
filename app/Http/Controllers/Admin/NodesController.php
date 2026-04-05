@@ -7,6 +7,9 @@ use App\Http\Requests\Admin\StoreNodeRequest;
 use App\Http\Requests\Admin\UpdateNodeRequest;
 use App\Models\Location;
 use App\Models\Node;
+use App\Services\NodeConfigurationService;
+use Carbon\CarbonInterface;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,6 +17,8 @@ use Inertia\Response;
 
 class NodesController extends Controller
 {
+    public function __construct(private NodeConfigurationService $nodeConfigurationService) {}
+
     public function index(Request $request): Response
     {
         $nodes = Node::query()
@@ -30,6 +35,27 @@ class NodesController extends Controller
             })
             ->orderByDesc('updated_at')
             ->paginate(10)
+            ->through(fn (Node $node): array => [
+                'connection_status' => $this->connectionStatus($node),
+                'created_at' => $node->created_at?->toIso8601String(),
+                'daemon_port' => $node->daemon_port,
+                'daemon_uuid' => $node->daemon_uuid,
+                'daemon_version' => $node->daemon_version,
+                'enrolled_at' => $node->enrolled_at?->toIso8601String(),
+                'fqdn' => $node->fqdn,
+                'id' => $node->id,
+                'last_seen_at' => $node->last_seen_at?->toIso8601String(),
+                'location' => [
+                    'country' => $node->location->country,
+                    'id' => $node->location->id,
+                    'name' => $node->location->name,
+                ],
+                'name' => $node->name,
+                'sftp_port' => $node->sftp_port,
+                'status' => $node->status,
+                'updated_at' => $node->updated_at?->toIso8601String(),
+                'use_ssl' => $node->use_ssl,
+            ])
             ->withQueryString();
 
         $locations = Location::query()
@@ -53,6 +79,17 @@ class NodesController extends Controller
         ]);
 
         return back()->with('success', 'Node created.');
+    }
+
+    public function generateConfigurationToken(Node $node): JsonResponse
+    {
+        $issued = $this->nodeConfigurationService->issue($node);
+
+        return response()->json([
+            'expires_at' => $issued['expires_at']->toIso8601String(),
+            'status' => 'configured',
+            'token' => $issued['token'],
+        ]);
     }
 
     public function update(UpdateNodeRequest $request, Node $node): RedirectResponse
@@ -85,5 +122,18 @@ class NodesController extends Controller
         Node::whereIn('id', $ids)->delete();
 
         return back()->with('success', $count.' '.str('node')->plural($count).' deleted.');
+    }
+
+    private function connectionStatus(Node $node): string
+    {
+        if ($node->status === 'draft' || $node->status === 'configured') {
+            return $node->status;
+        }
+
+        if ($node->last_seen_at instanceof CarbonInterface && $node->last_seen_at->isAfter(now()->subSeconds(15))) {
+            return 'online';
+        }
+
+        return 'offline';
     }
 }
