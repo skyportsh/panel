@@ -1,5 +1,6 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import {
+    Copy,
     Ellipsis,
     Globe,
     Plus,
@@ -74,6 +75,12 @@ type AdminNode = {
     created_at: string;
     updated_at: string;
     location: LocationOption;
+    status?: string;
+    connection_status?: 'online' | 'offline' | 'configured' | 'draft';
+    last_seen_at?: string;
+    daemon_uuid?: string;
+    daemon_version?: string;
+    enrolled_at?: string;
 };
 
 type Props = {
@@ -99,6 +106,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 const tabs: Tab[] = [
     { id: 'overview', label: 'Overview' },
     { id: 'edit', label: 'Edit' },
+    { id: 'configure', label: 'Configure' },
     { id: 'danger', label: 'Danger' },
 ];
 
@@ -285,6 +293,201 @@ function NodeFormFields({
     );
 }
 
+function csrfToken(): string {
+    return (
+        document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
+            ?.content ?? ''
+    );
+}
+
+type ConfigurationData = {
+    token: string;
+    expires_at: string;
+    status: string;
+};
+
+function ConfigureTab({
+    node,
+    onUpdateStatus,
+}: {
+    node: AdminNode;
+    onUpdateStatus: (status: string) => void;
+}) {
+    const [configurationData, setConfigurationData] = useState<ConfigurationData | null>(null);
+    const [generating, setGenerating] = useState(false);
+    const [copied, setCopied] = useState(false);
+    const connectionStatus = node.connection_status ?? node.status ?? 'draft';
+
+    const currentStatus = node.daemon_uuid ? connectionStatus : 'draft';
+
+    const generateConfigurationToken = async () => {
+        setGenerating(true);
+        try {
+            const response = await fetch(`/admin/nodes/${node.id}/configure-token`, {
+                credentials: 'same-origin',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': csrfToken(),
+                },
+                method: 'POST',
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to generate configuration token');
+            }
+
+            const data = await response.json();
+            setConfigurationData(data);
+            onUpdateStatus(data.status);
+            toast.success('Configuration token generated');
+        } catch (error) {
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : 'Failed to generate configuration token';
+            toast.error(message);
+        } finally {
+            setGenerating(false);
+        }
+    };
+
+    const copyToClipboard = async () => {
+        if (configurationData?.token) {
+            await navigator.clipboard.writeText(configurationData.token);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
+    };
+
+    return (
+        <div className="max-w-2xl space-y-6">
+            <div>
+                <h3 className="text-sm font-semibold text-foreground">
+                    Daemon Configuration
+                </h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                    Manage node configuration status and generate configuration tokens
+                    for daemon registration.
+                </p>
+            </div>
+
+            <div className="rounded-lg border border-border/70 bg-background p-4">
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Status</span>
+                        <span
+                            className={`text-sm font-medium ${
+                                currentStatus === 'online'
+                                    ? 'text-emerald-600 dark:text-emerald-400'
+                                    : currentStatus === 'offline'
+                                      ? 'text-red-600 dark:text-red-400'
+                                : currentStatus === 'configured'
+                                      ? 'text-amber-600 dark:text-amber-400'
+                                      : 'text-muted-foreground'
+                            }`}
+                        >
+                            {currentStatus === 'online'
+                                ? 'Online'
+                                : currentStatus === 'offline'
+                                  ? 'Offline'
+                                : currentStatus === 'configured'
+                                    ? 'Configured'
+                                    : 'Draft'}
+                        </span>
+                    </div>
+
+                    {node.daemon_uuid && node.last_seen_at && (
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">
+                                Last Seen
+                            </span>
+                            <span className="text-sm text-foreground">
+                                {formatDate(node.last_seen_at, true)}
+                            </span>
+                        </div>
+                    )}
+
+                    {node.daemon_uuid && (
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">
+                                Daemon UUID
+                            </span>
+                            <span className="text-sm font-mono text-foreground">
+                                {node.daemon_uuid}
+                            </span>
+                        </div>
+                    )}
+
+                    {node.daemon_version && (
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">
+                                Daemon Version
+                            </span>
+                            <span className="text-sm font-medium text-foreground">
+                                {node.daemon_version}
+                            </span>
+                        </div>
+                    )}
+
+                    {node.enrolled_at && (
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">
+                                Enrolled At
+                            </span>
+                            <span className="text-sm text-foreground">
+                                {formatDate(node.enrolled_at, true)}
+                            </span>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {configurationData ? (
+                <div className="rounded-lg border border-border/70 bg-muted/30 p-4">
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Token</span>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={copyToClipboard}
+                                className="h-7 cursor-pointer"
+                            >
+                                <Copy className="mr-1.5 h-3.5 w-3.5" />
+                                {copied ? 'Copied!' : 'Copy'}
+                            </Button>
+                        </div>
+                        <div className="break-all rounded bg-muted/60 px-3 py-2 font-mono text-xs text-foreground">
+                            {configurationData.token}
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Expires</span>
+                            <span>{formatDate(configurationData.expires_at, true)}</span>
+                        </div>
+                    </div>
+                </div>
+            ) : null}
+
+            <div className="flex justify-start">
+                <Button
+                    onClick={generateConfigurationToken}
+                    disabled={generating}
+                    className="cursor-pointer"
+                >
+                    {generating ? (
+                        <>
+                            <Spinner />
+                            Generating...
+                        </>
+                    ) : (
+                        'Generate Configuration Token'
+                    )}
+                </Button>
+            </div>
+        </div>
+    );
+}
+
 function CreateNodeModal({
     onClose,
     locations,
@@ -322,9 +525,9 @@ function CreateNodeModal({
                 onClose();
             },
             onError: (errors: Record<string, string>) => {
-                Object.values(errors).forEach((message) =>
-                    toast.error(message),
-                );
+                Object.values(errors).forEach((message) => {
+                    toast.error(message);
+                });
             },
         });
     };
@@ -403,9 +606,9 @@ function NodeModal({
                 toast.success('Node updated');
             },
             onError: (errors: Record<string, string>) => {
-                Object.values(errors).forEach((message) =>
-                    toast.error(message),
-                );
+                Object.values(errors).forEach((message) => {
+                    toast.error(message);
+                });
             },
         });
     };
@@ -552,6 +755,15 @@ function NodeModal({
                                 </div>
                             </form>
                         </div>
+                            ) : null}
+
+                    {tab === 'configure' ? (
+                        <ConfigureTab
+                            node={node}
+                            onUpdateStatus={(status) => {
+                                node.status = status;
+                            }}
+                        />
                     ) : null}
 
                     {tab === 'danger' ? (
@@ -619,7 +831,7 @@ export default function Nodes({ nodes, locations, filters }: Props) {
     const columns: Column<AdminNode>[] = [
         {
             label: 'Node',
-            width: 'w-[42%]',
+            width: 'w-[35%]',
             render: (node) => (
                 <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-foreground">
@@ -630,6 +842,30 @@ export default function Nodes({ nodes, locations, filters }: Props) {
                     </p>
                 </div>
             ),
+        },
+        {
+            label: 'Status',
+            width: 'w-[18%]',
+            render: (node) => {
+                const status = node.connection_status ?? node.status ?? 'draft';
+                const statusColors: Record<string, string> = {
+                    online: 'text-emerald-600 dark:text-emerald-400',
+                    offline: 'text-red-600 dark:text-red-400',
+                    configured: 'text-amber-600 dark:text-amber-400',
+                    draft: 'text-muted-foreground',
+                };
+                const statusLabels: Record<string, string> = {
+                    online: 'Online',
+                    offline: 'Offline',
+                    configured: 'Configured',
+                    draft: 'Draft',
+                };
+                return (
+                    <span className={cn('text-sm font-medium', statusColors[status])}>
+                        {statusLabels[status]}
+                    </span>
+                );
+            },
         },
         {
             label: 'Location',
