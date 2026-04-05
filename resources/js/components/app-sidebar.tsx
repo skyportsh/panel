@@ -58,7 +58,7 @@ export function AppSidebar() {
                         <SidebarMenuButton size="lg" asChild>
                             <Link href={home()} prefetch>
                                 <div className="relative flex h-8 w-full items-center overflow-hidden group-data-[collapsible=icon]:justify-center">
-                                    <span className="text-lg tracking-tight font-semibold">
+                                    <span className="text-lg tracking-tight font-semibold group-data-[collapsible=icon]:hidden">
                                         Skyport
                                     </span>
                                     <img
