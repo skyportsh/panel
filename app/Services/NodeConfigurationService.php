@@ -27,6 +27,7 @@ class NodeConfigurationService
             'enrollment_used_at' => null,
             'daemon_secret_hash' => null,
             'daemon_secret_issued_at' => null,
+            'daemon_callback_token' => null,
         ]);
         $credential->save();
 
@@ -46,7 +47,7 @@ class NodeConfigurationService
     public function enroll(array $payload): array
     {
         $credential = NodeCredential::query()
-            ->with('node')
+            ->with('node.location')
             ->where('enrollment_token_hash', $this->hash($payload['token']))
             ->first();
 
@@ -66,6 +67,7 @@ class NodeConfigurationService
 
         $issuedAt = CarbonImmutable::now();
         $secret = Str::random(64);
+        $callbackToken = Str::random(64);
         $node = $credential->node;
         $daemonUuid = $this->resolveDaemonUuid($payload['uuid'], $node);
 
@@ -73,6 +75,7 @@ class NodeConfigurationService
             'enrollment_used_at' => $issuedAt,
             'daemon_secret_hash' => $this->hash($secret),
             'daemon_secret_issued_at' => $issuedAt,
+            'daemon_callback_token' => $callbackToken,
         ]);
         $credential->save();
 
@@ -83,7 +86,11 @@ class NodeConfigurationService
             'enrolled_at' => $issuedAt,
         ])->save();
 
+        $node = $node->fresh('location') ?? $node;
+
         return [
+            'configuration' => $this->configurationPayload($node),
+            'daemon_callback_token' => $callbackToken,
             'daemon_secret' => $secret,
             'daemon_uuid' => $daemonUuid,
             'heartbeat_interval_seconds' => 30,
@@ -92,6 +99,34 @@ class NodeConfigurationService
             'panel_time' => $issuedAt->toIso8601String(),
             'panel_version' => $this->panelVersionService->current(),
             'task_poll_interval_seconds' => 5,
+        ];
+    }
+
+    /**
+     * @return array{
+     *     daemon_port: int,
+     *     fqdn: string,
+     *     location_country: string,
+     *     location_name: string,
+     *     name: string,
+     *     sftp_port: int,
+     *     updated_at: string,
+     *     use_ssl: bool
+     * }
+     */
+    public function configurationPayload(Node $node): array
+    {
+        $node->loadMissing('location');
+
+        return [
+            'daemon_port' => $node->daemon_port,
+            'fqdn' => $node->fqdn,
+            'location_country' => $node->location->country,
+            'location_name' => $node->location->name,
+            'name' => $node->name,
+            'sftp_port' => $node->sftp_port,
+            'updated_at' => $node->updated_at?->toIso8601String() ?? now()->toIso8601String(),
+            'use_ssl' => $node->use_ssl,
         ];
     }
 

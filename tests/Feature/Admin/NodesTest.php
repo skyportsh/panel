@@ -4,6 +4,7 @@ use App\Models\Location;
 use App\Models\Node;
 use App\Models\NodeCredential;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
@@ -89,23 +90,48 @@ test('admin can create a node', function () {
     expect($node?->use_ssl)->toBeTrue();
 });
 
-test('admin can update a node', function () {
+test('admin can update a node and push the new config to skyportd', function () {
+    Http::fake([
+        'http://node-01.example.com:2800/api/daemon/configuration/sync' => Http::response([
+            'ok' => true,
+        ]),
+    ]);
+
     $admin = User::factory()->create(['is_admin' => true]);
     $location = Location::factory()->create();
     $otherLocation = Location::factory()->create();
-    $node = Node::factory()->create(['location_id' => $location->id]);
+    $node = Node::factory()->create([
+        'daemon_port' => 2800,
+        'daemon_uuid' => '550e8400-e29b-41d4-a716-446655440000',
+        'fqdn' => 'node-01.example.com',
+        'location_id' => $location->id,
+        'status' => 'online',
+        'use_ssl' => false,
+    ]);
+    NodeCredential::factory()->create([
+        'daemon_callback_token' => 'callback-token',
+        'node_id' => $node->id,
+    ]);
 
     actingAs($admin);
 
     patch("/admin/nodes/{$node->id}", [
         'name' => 'Updated Node',
         'location_id' => $otherLocation->id,
-        'fqdn' => 'updated-node.example.com',
+        'fqdn' => 'node-01.example.com',
         'daemon_port' => 2900,
         'sftp_port' => 3228,
         'use_ssl' => false,
     ])
-        ->assertRedirect();
+        ->assertRedirect()
+        ->assertSessionHas('success', 'Node updated. skyportd applied the new configuration.');
+
+    Http::assertSent(function ($request) {
+        return $request->url() === 'http://node-01.example.com:2800/api/daemon/configuration/sync'
+            && $request->hasHeader('Authorization', 'Bearer callback-token')
+            && $request['daemon_port'] === 2900
+            && $request['sftp_port'] === 3228;
+    });
 
     $node->refresh();
 
@@ -114,6 +140,41 @@ test('admin can update a node', function () {
     expect($node->daemon_port)->toBe(2900);
     expect($node->sftp_port)->toBe(3228);
     expect($node->use_ssl)->toBeFalse();
+});
+
+test('admin update warns when skyportd could not be updated automatically', function () {
+    Http::fake([
+        '*' => Http::response([], 500),
+    ]);
+
+    $admin = User::factory()->create(['is_admin' => true]);
+    $location = Location::factory()->create();
+    $node = Node::factory()->create([
+        'daemon_port' => 2800,
+        'daemon_uuid' => '550e8400-e29b-41d4-a716-446655440000',
+        'fqdn' => 'node-01.example.com',
+        'location_id' => $location->id,
+        'status' => 'online',
+        'use_ssl' => false,
+    ]);
+    NodeCredential::factory()->create([
+        'daemon_callback_token' => 'callback-token',
+        'node_id' => $node->id,
+    ]);
+
+    actingAs($admin);
+
+    patch("/admin/nodes/{$node->id}", [
+        'name' => 'Updated Node',
+        'location_id' => $location->id,
+        'fqdn' => 'node-01.example.com',
+        'daemon_port' => 2900,
+        'sftp_port' => 3228,
+        'use_ssl' => false,
+    ])
+        ->assertRedirect()
+        ->assertSessionHas('success', 'Node updated.')
+        ->assertSessionHas('warning', 'skyportd could not be updated automatically. This node will need to be reconfigured.');
 });
 
 test('admin can generate a configuration token', function () {

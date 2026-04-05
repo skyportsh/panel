@@ -41,6 +41,11 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'flash' => [
+                'info' => fn (): ?string => $request->session()->get('info'),
+                'success' => fn (): ?string => $request->session()->get('success'),
+                'warning' => fn (): ?string => $request->session()->get('warning'),
+            ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'impersonating' => $request->session()->has('impersonator_id'),
         ];

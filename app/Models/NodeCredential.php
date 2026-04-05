@@ -19,6 +19,7 @@ class NodeCredential extends Model
         'enrollment_used_at',
         'daemon_secret_hash',
         'daemon_secret_issued_at',
+        'daemon_callback_token',
     ];
 
     protected function casts(): array
@@ -27,6 +28,7 @@ class NodeCredential extends Model
             'enrollment_expires_at' => 'datetime',
             'enrollment_used_at' => 'datetime',
             'daemon_secret_issued_at' => 'datetime',
+            'daemon_callback_token' => 'encrypted',
         ];
     }
 

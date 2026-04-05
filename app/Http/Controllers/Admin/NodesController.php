@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UpdateNodeRequest;
 use App\Models\Location;
 use App\Models\Node;
 use App\Services\NodeConfigurationService;
+use App\Services\NodeRemoteUpdateService;
 use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -17,7 +18,10 @@ use Inertia\Response;
 
 class NodesController extends Controller
 {
-    public function __construct(private NodeConfigurationService $nodeConfigurationService) {}
+    public function __construct(
+        private NodeConfigurationService $nodeConfigurationService,
+        private NodeRemoteUpdateService $nodeRemoteUpdateService,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -94,12 +98,23 @@ class NodesController extends Controller
 
     public function update(UpdateNodeRequest $request, Node $node): RedirectResponse
     {
+        $node->loadMissing('credential', 'location');
+        $targetNode = clone $node;
+
         $node->update([
             ...$request->validated(),
             'use_ssl' => $request->boolean('use_ssl'),
         ]);
 
-        return back()->with('success', 'Node updated.');
+        $node->refresh()->loadMissing('location');
+
+        if ($this->nodeRemoteUpdateService->push($targetNode, $node)) {
+            return back()->with('success', 'Node updated. skyportd applied the new configuration.');
+        }
+
+        return back()
+            ->with('success', 'Node updated.')
+            ->with('warning', 'skyportd could not be updated automatically. This node will need to be reconfigured.');
     }
 
     public function destroy(Node $node): RedirectResponse

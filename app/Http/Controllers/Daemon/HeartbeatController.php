@@ -24,7 +24,7 @@ class HeartbeatController extends Controller
         }
 
         try {
-            $node = $this->nodeHeartbeatService->record($daemonSecret, $request->validated());
+            $payload = $this->nodeHeartbeatService->record($daemonSecret, $request->validated());
         } catch (InvalidArgumentException $exception) {
             return response()->json([
                 'message' => $exception->getMessage(),
@@ -33,7 +33,8 @@ class HeartbeatController extends Controller
 
         return response()->json([
             'ok' => true,
-            'last_seen_at' => $node->last_seen_at?->toIso8601String(),
+            'configuration' => $payload['configuration'],
+            'last_seen_at' => $payload['node']->last_seen_at?->toIso8601String(),
         ]);
     }
 }
