@@ -9,12 +9,30 @@ use InvalidArgumentException;
 
 class NodeHeartbeatService
 {
-    public function __construct(private PanelVersionService $panelVersionService) {}
+    public function __construct(
+        private NodeConfigurationService $nodeConfigurationService,
+        private PanelVersionService $panelVersionService,
+    ) {}
 
-    public function record(string $daemonSecret, array $payload): Node
+    /**
+     * @return array{
+     *     configuration: array{
+     *         daemon_port: int,
+     *         fqdn: string,
+     *         location_country: string,
+     *         location_name: string,
+     *         name: string,
+     *         sftp_port: int,
+     *         updated_at: string,
+     *         use_ssl: bool
+     *     },
+     *     node: Node
+     * }
+     */
+    public function record(string $daemonSecret, array $payload): array
     {
         $credential = NodeCredential::query()
-            ->with('node')
+            ->with('node.location')
             ->where('daemon_secret_hash', hash('sha256', $daemonSecret))
             ->first();
 
@@ -36,6 +54,11 @@ class NodeHeartbeatService
             'last_seen_at' => Carbon::now(),
         ])->save();
 
-        return $node->fresh() ?? $node;
+        $node = $node->fresh(['location']) ?? $node;
+
+        return [
+            'configuration' => $this->nodeConfigurationService->configurationPayload($node),
+            'node' => $node,
+        ];
     }
 }

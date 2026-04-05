@@ -29,6 +29,17 @@ test('daemon can enroll with a valid token', function () {
     $response
         ->assertCreated()
         ->assertJsonStructure([
+            'configuration' => [
+                'daemon_port',
+                'fqdn',
+                'location_country',
+                'location_name',
+                'name',
+                'sftp_port',
+                'updated_at',
+                'use_ssl',
+            ],
+            'daemon_callback_token',
             'daemon_secret',
             'daemon_uuid',
             'heartbeat_interval_seconds',
@@ -39,6 +50,7 @@ test('daemon can enroll with a valid token', function () {
         ]);
 
     expect($response->json('panel_version'))->toBe(config('app.version'));
+    expect($response->json('daemon_callback_token'))->not->toBeEmpty();
 
     $node->refresh();
 
@@ -125,7 +137,18 @@ test('daemon heartbeat updates last seen time', function () {
         ->assertSuccessful()
         ->assertJson([
             'ok' => true,
+            'configuration' => [
+                'daemon_port' => $node->daemon_port,
+                'fqdn' => $node->fqdn,
+                'location_country' => $node->location->country,
+                'location_name' => $node->location->name,
+                'name' => $node->name,
+                'sftp_port' => $node->sftp_port,
+                'use_ssl' => $node->use_ssl,
+            ],
         ]);
+
+    expect($response->json('configuration.updated_at'))->not->toBeNull();
 
     $node->refresh();
 

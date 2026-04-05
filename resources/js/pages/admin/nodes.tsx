@@ -763,8 +763,22 @@ function NodeModal({
                     minimumMs - (Date.now() - submitStart.current);
                 setTimeout(() => setSubmitting(false), Math.max(0, remaining));
             },
-            onSuccess: () => {
-                toast.success('Node updated');
+            onSuccess: (page) => {
+                const flash = (page.props as {
+                    flash?: { info?: string; success?: string; warning?: string };
+                }).flash;
+
+                if (flash?.success) {
+                    toast.success(flash.success);
+                }
+
+                if (flash?.warning) {
+                    toast.info(flash.warning);
+                }
+
+                if (flash?.info) {
+                    toast.info(flash.info);
+                }
             },
             onError: (errors: Record<string, string>) => {
                 Object.values(errors).forEach((message) => {
