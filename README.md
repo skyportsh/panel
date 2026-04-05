@@ -1,4 +1,4 @@
-![Skyport Panel Logo](https://i.imgur.com/SU7QypZ.png)
+![Skyport Panel Logo](https://i.ibb.co/ksXNfYKD/The-next-step-for-Arc-Code-98.png)
 
 ![GitHub contributors](https://img.shields.io/github/contributors/skyportsh/panel?style=for-the-badge)
 ![GitHub forks](https://img.shields.io/github/forks/skyportsh/panel?style=for-the-badge)
