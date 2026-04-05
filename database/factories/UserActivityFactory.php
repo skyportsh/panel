@@ -20,13 +20,10 @@ class UserActivityFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'action' => fake()->randomElement(['Viewed profile settings', 'Updated billing settings', 'Visited home']),
-            'route_name' => fake()->randomElement(['profile.edit', 'billing.update', 'home']),
+            'action' => fake()->randomElement(['Viewed profile settings', 'Updated profile', 'Visited home']),
+            'route_name' => fake()->randomElement(['profile.edit', 'profile.update', 'home']),
             'method' => fake()->randomElement(['GET', 'PATCH']),
-            'path' => fake()->randomElement(['/settings/profile', '/settings/billing', '/home']),
-            'ip_address' => fake()->ipv4(),
-            'country_code' => fake()->randomElement(['US', 'GB', 'CA']),
-            'country_name' => fake()->randomElement(['United States', 'United Kingdom', 'Canada']),
+            'path' => fake()->randomElement(['/settings/profile', '/home']),
             'status_code' => fake()->randomElement([200, 302]),
             'user_agent' => fake()->userAgent(),
             'context' => [

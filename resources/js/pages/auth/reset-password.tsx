@@ -1,5 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/sonner';
 import PasswordInput from '@/components/password-input';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

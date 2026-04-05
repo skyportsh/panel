@@ -3,8 +3,6 @@
 namespace App\Http\Middleware;
 
 use App\Models\UserActivity;
-use App\Support\Countries;
-use App\Support\IpCountryResolver;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -32,21 +30,12 @@ class RecordUserActivity
             return $response;
         }
 
-        $ipCountryResolver = app(IpCountryResolver::class);
-        $countryCode = $ipCountryResolver->resolve($request->ip());
-        $country = $countryCode
-            ? collect(Countries::all())->firstWhere('code', $countryCode)
-            : null;
-
         UserActivity::create([
             'user_id' => $user->id,
             'action' => $this->action($request),
             'route_name' => $request->route()->getName(),
             'method' => $request->method(),
             'path' => '/'.$request->path(),
-            'ip_address' => $request->ip(),
-            'country_code' => $countryCode,
-            'country_name' => is_array($country) ? $country['name'] : null,
             'status_code' => $response->getStatusCode(),
             'user_agent' => $request->userAgent(),
             'context' => [
@@ -69,7 +58,6 @@ class RecordUserActivity
         }
 
         return in_array($routeName, [
-            'billing.update',
             'login.store',
             'logout',
             'password.confirm.store',
@@ -80,8 +68,6 @@ class RecordUserActivity
             'two-factor.login.store',
             'two-factor.regenerate-recovery-codes',
             'user-password.update',
-            'verification.send',
-            'verification.verify',
         ], true);
     }
 
@@ -94,7 +80,6 @@ class RecordUserActivity
         }
 
         return match ($routeName) {
-            'billing.update' => 'Updated billing settings',
             'login.store' => 'Logged in',
             'logout' => 'Logged out',
             'password.confirm.store' => 'Confirmed password',
@@ -105,8 +90,6 @@ class RecordUserActivity
             'two-factor.login.store' => 'Completed two-factor login',
             'two-factor.regenerate-recovery-codes' => 'Regenerated recovery codes',
             'user-password.update' => 'Changed password',
-            'verification.send' => 'Sent verification email',
-            'verification.verify' => 'Verified email address',
             default => str($routeName)
                 ->replace('.', ' ')
                 ->replace('-', ' ')
@@ -115,5 +98,4 @@ class RecordUserActivity
                 ->toString(),
         };
     }
-
 }

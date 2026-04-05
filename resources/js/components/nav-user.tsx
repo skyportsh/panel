@@ -27,11 +27,11 @@ export function NavUser() {
                     <DropdownMenuTrigger asChild>
                         <SidebarMenuButton
                             size="lg"
-                            className="group h-auto min-h-12 items-start py-2 text-sidebar-accent-foreground group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:min-h-8 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:py-2 data-[state=open]:bg-sidebar-accent"
+                            className="group h-auto min-h-12 items-center py-2 text-sidebar-accent-foreground group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:min-h-8 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:py-2 data-[state=open]:bg-sidebar-accent"
                             data-test="sidebar-menu-button"
                         >
-                            <UserInfo user={auth.user} showBalances={true} />
-                            <ChevronsUpDown className="mt-1 ml-auto size-4 group-data-[collapsible=icon]:mt-0" />
+                            <UserInfo user={auth.user} />
+                            <ChevronsUpDown className="ml-auto size-4" />
                         </SidebarMenuButton>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent

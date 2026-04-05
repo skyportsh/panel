@@ -41,7 +41,7 @@ router.on('finish', (event) => {
     }
 });
 
-const appName = import.meta.env.VITE_APP_NAME || 'Altare';
+const appName = import.meta.env.VITE_APP_NAME || 'Skyport';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),

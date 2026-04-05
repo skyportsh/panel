@@ -23,9 +23,6 @@ class UpdateUserRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
-            'coins_balance' => ['required', 'integer', 'min:0'],
-            'credit_balance' => ['required', 'integer', 'min:0'],
-            'preferred_currency' => ['required', 'string', 'max:3'],
         ];
     }
 }

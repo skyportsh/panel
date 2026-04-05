@@ -119,7 +119,7 @@ class CoseKey
             $segment = '';
 
             do {
-                $segment = chr($part & 0x7f).$segment;
+                $segment = chr($part & 0x7F).$segment;
                 $part >>= 7;
             } while ($part > 0);
 
@@ -143,7 +143,7 @@ class CoseKey
         $bytes = '';
 
         while ($length > 0) {
-            $bytes = chr($length & 0xff).$bytes;
+            $bytes = chr($length & 0xFF).$bytes;
             $length >>= 8;
         }
 

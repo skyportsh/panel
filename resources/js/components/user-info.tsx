@@ -2,59 +2,27 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useInitials } from '@/hooks/use-initials';
 import type { User } from '@/types';
 
-const currencyLocaleMap: Record<string, string> = {
-    AUD: 'en-AU',
-    CAD: 'en-CA',
-    EUR: 'en-IE',
-    GBP: 'en-GB',
-    JPY: 'ja-JP',
-    USD: 'en-US',
-};
-
-function formatBalance(user: User): string {
-    const locale = currencyLocaleMap[user.preferred_currency] ?? 'en-GB';
-
-    return new Intl.NumberFormat(locale, {
-        style: 'currency',
-        currency: user.preferred_currency,
-    }).format(user.credit_balance / 100);
-}
-
 export function UserInfo({
     user,
     showEmail = false,
-    showBalances = false,
 }: {
     user: User;
     showEmail?: boolean;
-    showBalances?: boolean;
 }) {
     const getInitials = useInitials();
 
     return (
         <>
-            <Avatar className="h-8 w-8 overflow-hidden rounded-full">
+            <Avatar className="h-7 w-7 overflow-hidden rounded">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
+                <AvatarFallback className="rounded-lg bg-neutral-200 text-black text-xs dark:bg-neutral-700 dark:text-white">
                     {getInitials(user.name)}
                 </AvatarFallback>
             </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                {showBalances && (
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-sidebar-foreground/80 transition-colors group-hover:text-sidebar-accent-foreground group-data-[state=open]:text-sidebar-accent-foreground">
-                        <span className="truncate">
-                            {user.coins_balance.toLocaleString()} credits
-                        </span>
-                        <span
-                            aria-hidden="true"
-                            className="h-3 w-px shrink-0 rounded-full bg-white/15 transition-colors"
-                        />
-                        <span className="truncate">
-                            {formatBalance(user)} {user.preferred_currency}
-                        </span>
-                    </div>
-                )}
+            <div className="flex min-h-7 flex-1 flex-col justify-center text-left leading-tight">
+                <span className="truncate text-sm font-medium">
+                    {user.name}
+                </span>
                 {showEmail && (
                     <span className="truncate text-xs text-muted-foreground">
                         {user.email}

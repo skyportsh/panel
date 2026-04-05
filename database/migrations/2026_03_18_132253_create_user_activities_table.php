@@ -18,9 +18,6 @@ return new class extends Migration
             $table->string('route_name')->nullable();
             $table->string('method', 10);
             $table->string('path');
-            $table->string('ip_address', 45)->nullable();
-            $table->string('country_code', 2)->nullable();
-            $table->string('country_name')->nullable();
             $table->unsignedSmallInteger('status_code')->nullable();
             $table->text('user_agent')->nullable();
             $table->json('context')->nullable();

@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { cn } from '@/lib/utils';
@@ -25,14 +27,8 @@ type ActivityItem = {
     };
     createdAt: string | null;
     id: number;
-    ipAddress: string | null;
     method: string;
     path: string;
-    region: {
-        code: string | null;
-        iconSvg: string | null;
-        name: string;
-    } | null;
     routeName: string | null;
     statusCode: number | null;
     userAgent: string | null;
@@ -130,18 +126,6 @@ function deviceLabel(userAgent: string | null): string {
     return 'Desktop browser';
 }
 
-function friendlyStatus(statusCode: number | null): string {
-    if (statusCode !== null && statusCode >= 400) {
-        return 'Needs attention';
-    }
-
-    if (statusCode !== null && statusCode >= 300) {
-        return 'Completed';
-    }
-
-    return 'Successful';
-}
-
 function DetailRow({ label, value }: { label: string; value: string | null }) {
     if (!value) {
         return null;
@@ -173,120 +157,168 @@ export default function Activity({ activities, links, meta }: Props) {
                         description="A simple history of sign-ins and important account changes"
                     />
 
-                    <div className="overflow-hidden rounded-xl border border-border/70 bg-background">
-                        {activities.length > 0 ? (
-                            <div className="divide-y divide-border/70">
-                                {activities.map((activity) => {
-                                    const timestamp = formatTimestamp(
-                                        activity.createdAt,
-                                    );
+                    <div className="space-y-4">
+                        <div className="overflow-hidden rounded-lg bg-muted/40">
+                            <div className="relative flex items-center gap-3 px-4 py-2.5">
+                                <span className="w-[42%] shrink-0 text-xs font-medium text-muted-foreground">
+                                    Activity
+                                </span>
+                                <span className="w-[20%] shrink-0 text-xs font-medium text-muted-foreground">
+                                    Device
+                                </span>
+                                <span className="flex-1 text-xs font-medium text-muted-foreground">
+                                    Time
+                                </span>
+                            </div>
 
-                                    return (
-                                        <div
-                                            key={activity.id}
-                                            className="flex items-start justify-between gap-4 px-4 py-4"
-                                        >
-                                            <div className="min-w-0 flex-1 space-y-2">
-                                                <p className="truncate text-sm font-medium text-foreground">
-                                                    {activity.action}
-                                                </p>
+                            <div className="overflow-hidden rounded-lg border border-border/70 bg-background">
+                                <div className="flex flex-col gap-1 p-1">
+                                    {activities.length > 0 ? (
+                                        activities.map((activity) => {
+                                            const timestamp = formatTimestamp(
+                                                activity.createdAt,
+                                            );
 
-                                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-                                                    <span>
-                                                        {activity.region
-                                                            ?.name ??
-                                                            'Unknown location'}
-                                                    </span>
-                                                    <span>
-                                                        {deviceLabel(
-                                                            activity.userAgent,
-                                                        )}
-                                                    </span>
-                                                    <span>
-                                                        {friendlyStatus(
-                                                            activity.statusCode,
-                                                        )}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex shrink-0 flex-col items-end gap-2 text-right">
-                                                <div>
-                                                    <p className="text-sm text-foreground">
-                                                        {timestamp.relative}
-                                                    </p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {timestamp.absolute}
-                                                    </p>
-                                                </div>
-
-                                                <Button
+                                            return (
+                                                <button
+                                                    key={activity.id}
                                                     type="button"
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-auto px-2 py-1 text-xs"
+                                                    className="group relative overflow-hidden rounded-md text-left transition-colors duration-150 ease-out hover:bg-muted/40"
                                                     onClick={() => {
                                                         setSelectedActivity(
                                                             activity,
                                                         );
                                                     }}
                                                 >
-                                                    Details
-                                                </Button>
-                                            </div>
+                                                    <PlaceholderPattern
+                                                        patternSize={6}
+                                                        className="absolute inset-0 size-full stroke-neutral-900/10 opacity-0 transition-opacity group-hover:opacity-100 dark:stroke-neutral-100/10"
+                                                    />
+                                                    <div className="relative flex items-center gap-3 px-3 py-3 transition-transform duration-150 ease-out active:scale-[0.99] active:duration-0">
+                                                        <div className="w-[42%] shrink-0 pr-4">
+                                                            <p className="truncate text-sm font-medium text-foreground">
+                                                                {activity.action}
+                                                            </p>
+                                                            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                                                                {activity.path}
+                                                            </p>
+                                                        </div>
+                                                        <div className="w-[20%] shrink-0 pr-4">
+                                                            <p className="truncate text-xs text-muted-foreground">
+                                                                {deviceLabel(
+                                                                    activity.userAgent,
+                                                                )}
+                                                            </p>
+                                                        </div>
+                                                        <div className="min-w-0 flex-1 pr-2">
+                                                            <p className="text-sm text-foreground">
+                                                                {timestamp.relative}
+                                                            </p>
+                                                            <p className="truncate text-xs text-muted-foreground">
+                                                                {timestamp.absolute}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            );
+                                        })
+                                    ) : (
+                                        <div className="px-4 py-12 text-center">
+                                            <p className="text-sm font-medium text-foreground">
+                                                No activity yet
+                                            </p>
+                                            <p className="mt-1 text-sm text-muted-foreground">
+                                                Sign-ins and important account updates will appear here.
+                                            </p>
                                         </div>
-                                    );
-                                })}
+                                    )}
+                                </div>
                             </div>
-                        ) : (
-                            <div className="px-4 py-12 text-center">
-                                <p className="text-sm font-medium text-foreground">
-                                    No activity yet
-                                </p>
-                                <p className="mt-1 text-sm text-muted-foreground">
-                                    Sign-ins and important account updates will
-                                    appear here.
-                                </p>
-                            </div>
-                        )}
-                    </div>
+                        </div>
 
-                    {meta.lastPage > 1 ? (
-                        <div className="flex flex-wrap items-center justify-between gap-4">
-                            <p className="text-sm text-muted-foreground">
-                                Showing {meta.from ?? 0}-{meta.to ?? 0} of{' '}
-                                {meta.total.toLocaleString()}
-                            </p>
+                        {meta.lastPage > 1 ? (
+                            <div className="flex flex-wrap items-center justify-between gap-4">
+                                <p className="text-sm text-muted-foreground">
+                                    Showing {meta.from ?? 0}-{meta.to ?? 0} of {meta.total.toLocaleString()}
+                                </p>
 
-                            <nav
-                                className="flex flex-wrap items-center gap-2"
-                                aria-label="Activity pagination"
-                            >
-                                {links.map((link, index) => (
+                                <nav
+                                    className="flex items-center justify-center gap-0.5"
+                                    aria-label="Activity pagination"
+                                >
                                     <Link
-                                        key={`${link.label}-${index}`}
-                                        href={link.url ?? '#'}
+                                        href={links[0]?.url ?? '#'}
                                         preserveScroll
                                         className={cn(
-                                            'rounded-md border px-3 py-2 text-sm transition-colors',
-                                            link.active
-                                                ? 'border-transparent bg-foreground text-background'
-                                                : 'border-border/80 bg-background hover:bg-muted',
-                                            link.url === null
-                                                ? 'pointer-events-none opacity-40'
-                                                : null,
+                                            'flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-all duration-150 ease-out active:scale-95 active:duration-0',
+                                            links[0]?.url
+                                                ? 'hover:bg-muted hover:text-foreground'
+                                                : 'pointer-events-none opacity-30',
                                         )}
                                     >
-                                        <span
-                                            dangerouslySetInnerHTML={{
-                                                __html: link.label,
-                                            }}
-                                        />
+                                        <ChevronLeft className="h-3.5 w-3.5" />
                                     </Link>
-                                ))}
-                            </nav>
-                        </div>
-                    ) : null}
+
+                                    {links.slice(1, -1).map((link, index) => {
+                                        const page = index + 1;
+                                        const current = meta.currentPage;
+                                        const last = meta.lastPage;
+                                        const isVisible =
+                                            page === 1 ||
+                                            page === last ||
+                                            Math.abs(page - current) <= 1;
+                                        const isEllipsis =
+                                            !isVisible &&
+                                            (page === 2 || page === last - 1);
+
+                                        if (!isVisible && !isEllipsis) {
+                                            return null;
+                                        }
+
+                                        if (isEllipsis) {
+                                            return (
+                                                <span
+                                                    key={`ellipsis-${index}`}
+                                                    className="flex h-7 w-7 items-center justify-center text-[11px] text-muted-foreground"
+                                                >
+                                                    …
+                                                </span>
+                                            );
+                                        }
+
+                                        return (
+                                            <Link
+                                                key={`page-${page}`}
+                                                href={link.url ?? '#'}
+                                                preserveScroll
+                                                className={cn(
+                                                    'flex h-7 w-7 items-center justify-center rounded-md text-[11px] font-medium transition-all duration-150 ease-out active:scale-95 active:duration-0',
+                                                    link.active
+                                                        ? 'bg-muted text-foreground'
+                                                        : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+                                                )}
+                                            >
+                                                {page}
+                                            </Link>
+                                        );
+                                    })}
+
+                                    <Link
+                                        href={links[links.length - 1]?.url ?? '#'}
+                                        preserveScroll
+                                        className={cn(
+                                            'flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-all duration-150 ease-out active:scale-95 active:duration-0',
+                                            links[links.length - 1]?.url
+                                                ? 'hover:bg-muted hover:text-foreground'
+                                                : 'pointer-events-none opacity-30',
+                                        )}
+                                    >
+                                        <ChevronRight className="h-3.5 w-3.5" />
+                                    </Link>
+                                </nav>
+                            </div>
+                        ) : null}
+                    </div>
                 </div>
 
                 <Dialog
@@ -319,30 +351,10 @@ export default function Activity({ activities, links, meta }: Props) {
                                         }
                                     />
                                     <DetailRow
-                                        label="Location"
-                                        value={
-                                            selectedActivity.region?.name ??
-                                            'Unknown location'
-                                        }
-                                    />
-                                    <DetailRow
                                         label="Device"
                                         value={deviceLabel(
                                             selectedActivity.userAgent,
                                         )}
-                                    />
-                                    <DetailRow
-                                        label="Status"
-                                        value={friendlyStatus(
-                                            selectedActivity.statusCode,
-                                        )}
-                                    />
-                                    <DetailRow
-                                        label="IP address"
-                                        value={
-                                            selectedActivity.ipAddress ??
-                                            'Unknown IP'
-                                        }
                                     />
                                     <DetailRow
                                         label="Browser details"

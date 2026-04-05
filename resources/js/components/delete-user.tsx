@@ -4,7 +4,7 @@ import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileCo
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
     Dialog,
     DialogClose,
@@ -35,13 +35,11 @@ export default function DeleteUser() {
                 </div>
 
                 <Dialog>
-                    <DialogTrigger asChild>
-                        <Button
-                            variant="destructive"
-                            data-test="delete-user-button"
-                        >
-                            Delete account
-                        </Button>
+                    <DialogTrigger
+                        className={buttonVariants({ variant: 'destructive' })}
+                        data-test="delete-user-button"
+                    >
+                        Delete account
                     </DialogTrigger>
                     <DialogContent>
                         <DialogTitle>
@@ -85,28 +83,24 @@ export default function DeleteUser() {
                                     </div>
 
                                     <DialogFooter className="gap-2">
-                                        <DialogClose asChild>
-                                            <Button
-                                                variant="secondary"
-                                                onClick={() =>
-                                                    resetAndClearErrors()
-                                                }
-                                            >
-                                                Cancel
-                                            </Button>
+                                        <DialogClose
+                                            className={buttonVariants({
+                                                variant: 'secondary',
+                                            })}
+                                            onClick={() =>
+                                                resetAndClearErrors()
+                                            }
+                                        >
+                                            Cancel
                                         </DialogClose>
 
                                         <Button
+                                            type="submit"
                                             variant="destructive"
                                             disabled={processing}
-                                            asChild
+                                            data-test="confirm-delete-user-button"
                                         >
-                                            <button
-                                                type="submit"
-                                                data-test="confirm-delete-user-button"
-                                            >
-                                                Delete account
-                                            </button>
+                                            Delete account
                                         </Button>
                                     </DialogFooter>
                                 </>

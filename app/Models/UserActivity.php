@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Database\Factories\UserActivityFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserActivity extends Model
 {
-    /** @use HasFactory<\Database\Factories\UserActivityFactory> */
+    /** @use HasFactory<UserActivityFactory> */
     use HasFactory;
 
     /**
@@ -17,9 +18,6 @@ class UserActivity extends Model
     protected $fillable = [
         'action',
         'context',
-        'country_code',
-        'country_name',
-        'ip_address',
         'method',
         'path',
         'route_name',

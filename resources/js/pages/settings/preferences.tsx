@@ -1,6 +1,6 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/sonner';
 import AppearanceTabs from '@/components/appearance-tabs';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,12 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import {
+    DEFAULT_LANDING_URL,
+    getLandingOptions,
+    resolveLandingUrl,
+    type LandingOption,
+} from '@/lib/default-landing-pages';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { edit as editPreferences } from '@/routes/preferences';
@@ -26,41 +32,18 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-type LandingOption = {
-    label: string;
-    group: string;
-    url: string;
-};
-
-const landingOptions: LandingOption[] = [
-    { group: 'General', label: 'Home', url: '/home' },
-    {
-        group: 'Compute',
-        label: 'Virtual servers',
-        url: '/compute/virtual-servers',
-    },
-    { group: 'Compute', label: 'Settings', url: '/compute/settings' },
-    { group: 'Game hosting', label: 'Servers', url: '/game-hosting/servers' },
-    { group: 'Game hosting', label: 'Domains', url: '/game-hosting/domains' },
-    {
-        group: 'Game hosting',
-        label: 'Resources',
-        url: '/game-hosting/resources',
-    },
-    {
-        group: 'Game hosting',
-        label: 'Earn credits',
-        url: '/game-hosting/earn-credits',
-    },
-];
-
 const STORAGE_KEY = 'default-landing-url';
 
 function DefaultLandingPage() {
+    const { auth } = usePage().props;
+    const landingOptions = getLandingOptions(auth.user.is_admin);
     const [selected, setSelected] = useState<string>(() =>
         typeof window !== 'undefined'
-            ? (localStorage.getItem(STORAGE_KEY) ?? '/home')
-            : '/home',
+            ? resolveLandingUrl(
+                  localStorage.getItem(STORAGE_KEY),
+                  auth.user.is_admin,
+              )
+            : DEFAULT_LANDING_URL,
     );
     const [saving, setSaving] = useState(false);
 
@@ -121,7 +104,7 @@ export default function Preferences() {
                     <Heading
                         variant="small"
                         title="Appearance"
-                        description="Choose how Altare looks for you"
+                        description="Choose how Skyport looks for you"
                     />
                     <AppearanceTabs />
 

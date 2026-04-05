@@ -1,5 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect } from 'react';
+import { resolveLandingUrl } from '@/lib/default-landing-pages';
 import { home, login, register } from '@/routes';
 
 export default function Welcome({
@@ -18,7 +19,7 @@ export default function Welcome({
             typeof window !== 'undefined'
                 ? localStorage.getItem('default-landing-url')
                 : null;
-        const target = preferred ?? '/home';
+        const target = resolveLandingUrl(preferred, auth.user.is_admin);
 
         router.visit(target, { replace: true });
     }, [auth?.user]);
@@ -66,11 +67,11 @@ export default function Welcome({
                     <main className="flex w-full max-w-[335px] flex-col-reverse lg:max-w-4xl lg:flex-row">
                         <div className="flex-1 rounded-br-lg rounded-bl-lg bg-white p-6 pb-12 text-[13px] leading-[20px] lg:rounded-tl-lg lg:rounded-br-none lg:p-20 dark:bg-[#161615] dark:text-[#EDEDEC]">
                             <h1 className="mb-1 text-lg font-semibold">
-                                Welcome to the Altare Console
+                                Welcome to the Skyport Console
                             </h1>
                             <p className="mb-2 text-[#706f6c] dark:text-[#A1A09A]">
-                                This is where you can manage your compute
-                                resources, balance, game servers, and more.
+                                This is where you can manage your account,
+                                security, preferences, and administration.
                             </p>
                             <ul className="mb-4 flex flex-col lg:mb-6">
                                 <li className="relative flex items-center gap-4 py-2 before:absolute before:top-1/2 before:bottom-0 before:left-[0.4rem] before:border-l before:border-[#e3e3e0] dark:before:border-[#3E3E3A]">
@@ -111,7 +112,7 @@ export default function Welcome({
                                         </span>
                                     </span>
                                     <span>
-                                        Join Altare's
+                                        Join Skyport's
                                         <a
                                             href="https://discord.gg/altare"
                                             target="_blank"

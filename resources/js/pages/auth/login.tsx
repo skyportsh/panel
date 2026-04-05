@@ -1,7 +1,7 @@
 import { Form, Head } from '@inertiajs/react';
 import { KeyRound } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/sonner';
 import PasskeyAuthenticationController from '@/actions/App/Http/Controllers/Auth/PasskeyAuthenticationController';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';

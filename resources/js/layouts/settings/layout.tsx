@@ -2,12 +2,11 @@ import { Link } from '@inertiajs/react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { PropsWithChildren } from 'react';
 import Heading from '@/components/heading';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
 import { edit as editActivity } from '@/routes/activity';
-import { edit as editBilling } from '@/routes/billing';
 import { edit as editPreferences } from '@/routes/preferences';
 import { edit } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
@@ -23,11 +22,6 @@ const sidebarNavItems: Array<NavItem & { href: NonNullable<NavItem['href']> }> =
         {
             title: 'Security',
             href: editSecurity(),
-            icon: null,
-        },
-        {
-            title: 'Billing',
-            href: editBilling(),
             icon: null,
         },
         {
@@ -260,12 +254,11 @@ export default function SettingsLayout({
                             }}
                         />
                         {sidebarNavItems.map((item, index) => (
-                            <Button
+                            <Link
                                 key={`${toUrl(item.href)}-${index}`}
-                                size="sm"
-                                variant="ghost"
-                                asChild
+                                href={item.href}
                                 className={cn(
+                                    buttonVariants({ size: 'sm', variant: 'ghost' }),
                                     'relative z-10 w-full justify-start bg-transparent text-muted-foreground hover:bg-transparent hover:text-foreground active:bg-transparent',
                                     isCurrentOrParentUrl(item.href)
                                         ? 'bg-transparent font-medium text-foreground'
@@ -273,13 +266,9 @@ export default function SettingsLayout({
                                 )}
                                 data-settings-nav-item-index={index}
                             >
-                                <Link href={item.href}>
-                                    {item.icon && (
-                                        <item.icon className="h-4 w-4" />
-                                    )}
-                                    {item.title}
-                                </Link>
-                            </Button>
+                                {item.icon && <item.icon className="h-4 w-4" />}
+                                {item.title}
+                            </Link>
                         ))}
                     </nav>
                 </aside>

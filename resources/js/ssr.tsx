@@ -4,7 +4,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import ReactDOMServer from 'react-dom/server';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Altare';
+const appName = import.meta.env.VITE_APP_NAME || 'Skyport';
 
 createServer((page) =>
     createInertiaApp({

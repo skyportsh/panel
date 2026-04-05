@@ -1,7 +1,7 @@
 // Components
 import { Form, Head } from '@inertiajs/react';
 import { useEffect } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/sonner';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

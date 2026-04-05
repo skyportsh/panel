@@ -1,0 +1,54 @@
+{
+    "$schema": "./node_modules/oxlint/configuration_schema.json",
+    "plugins": [
+        "oxc",
+        "typescript",
+        "unicorn",
+        "react",
+        "import"
+    ],
+    "categories": {
+        "correctness": "error",
+        "suspicious": "error"
+    },
+    "env": {
+        "builtin": true,
+        "browser": true
+    },
+    "settings": {
+        "react": {
+            "version": "19.2.0"
+        }
+    },
+    "ignorePatterns": [
+        "vendor",
+        "node_modules",
+        "public",
+        "bootstrap/ssr",
+        "tailwind.config.js",
+        "vite.config.ts",
+        "resources/js/actions/**",
+        "resources/js/components/ui/*",
+        "resources/js/routes/**",
+        "resources/js/wayfinder/**"
+    ],
+    "rules": {
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/consistent-type-imports": [
+            "error",
+            {
+                "prefer": "type-imports",
+                "fixStyle": "separate-type-imports"
+            }
+        ],
+        "no-shadow": "off",
+        "import/no-named-as-default-member": "off",
+        "import/no-unassigned-import": "off",
+        "react/react-in-jsx-scope": "off",
+        "react/prop-types": "off",
+        "react/no-unescaped-entities": "off",
+        "unicorn/no-useless-fallback-in-spread": "off",
+        "react-hooks/rules-of-hooks": "error",
+        "react-hooks/exhaustive-deps": "error"
+    }
+}

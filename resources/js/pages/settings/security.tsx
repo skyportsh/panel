@@ -1,7 +1,7 @@
 import { Form, Head } from '@inertiajs/react';
 import { KeyRound, ShieldCheck, Trash2 } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/sonner';
 import PasskeyController from '@/actions/App/Http/Controllers/Settings/PasskeyController';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
 import Heading from '@/components/heading';

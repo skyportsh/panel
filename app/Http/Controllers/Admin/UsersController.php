@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -22,27 +23,37 @@ class UsersController extends Controller
                         ->orWhere('email', 'like', "%{$search}%");
                 });
             })
-            ->orderByDesc('created_at')
-            ->paginate(20)
+            ->when($request->boolean('admin_only'), function ($query) {
+                $query->where('is_admin', true);
+            })
+            ->orderByDesc('updated_at')
+            ->paginate(10)
             ->withQueryString();
 
         return Inertia::render('admin/users', [
             'users' => $users,
             'filters' => [
                 'search' => $request->input('search', ''),
+                'admin_only' => $request->boolean('admin_only'),
             ],
         ]);
     }
 
+    public function store(StoreUserRequest $request): RedirectResponse
+    {
+        User::create([
+            'name' => $request->validated('name'),
+            'email' => $request->validated('email'),
+            'password' => $request->validated('password'),
+            'is_admin' => $request->boolean('is_admin'),
+        ]);
+
+        return back()->with('success', 'User created.');
+    }
+
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
-        $validated = $request->validated();
-
-        if (array_key_exists('preferred_currency', $validated)) {
-            $validated['preferred_currency_overridden'] = true;
-        }
-
-        $user->update($validated);
+        $user->update($request->validated());
 
         return back()->with('success', 'User updated.');
     }
@@ -65,13 +76,6 @@ class UsersController extends Controller
         return back()->with('success', "{$user->name} has been unsuspended.");
     }
 
-    public function verifyEmail(User $user): RedirectResponse
-    {
-        $user->forceFill(['email_verified_at' => now()])->save();
-
-        return back()->with('success', "{$user->name}'s email has been verified.");
-    }
-
     public function impersonate(Request $request, User $user): RedirectResponse
     {
         if ($user->is($request->user())) {
@@ -83,6 +87,34 @@ class UsersController extends Controller
         Auth::login($user);
 
         return redirect()->route('home');
+    }
+
+    public function destroy(Request $request, User $user): RedirectResponse
+    {
+        if ($user->is($request->user())) {
+            return back()->withErrors(['delete' => 'You cannot delete yourself.']);
+        }
+
+        $user->delete();
+
+        return back()->with('success', "{$user->name} has been deleted.");
+    }
+
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['required', 'integer', 'exists:users,id'],
+        ]);
+
+        $ids = collect($request->input('ids'))
+            ->reject(fn (int $id) => $id === $request->user()->id);
+
+        User::whereIn('id', $ids)->delete();
+
+        $count = $ids->count();
+
+        return back()->with('success', "{$count} ".str('user')->plural($count).' deleted.');
     }
 
     public function stopImpersonating(Request $request): RedirectResponse

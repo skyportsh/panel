@@ -28,7 +28,7 @@ class CborDecoder
         $offset++;
 
         $majorType = $initialByte >> 5;
-        $additionalInformation = $initialByte & 0x1f;
+        $additionalInformation = $initialByte & 0x1F;
         $length = self::readLength($payload, $offset, $additionalInformation);
 
         return match ($majorType) {

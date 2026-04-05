@@ -525,7 +525,7 @@ function NavMainItem({ item, index }: { item: NavItem; index: number }) {
                             Pin &ldquo;{item.title}&rdquo;?
                         </DialogTitle>
                         <DialogDescription>
-                            If you frequently use this service from Altare, you
+                            If you frequently use this service from Skyport, you
                             can also change the default page you&apos;ll be
                             redirected to upon login.{' '}
                             <Link
@@ -552,7 +552,13 @@ function NavMainItem({ item, index }: { item: NavItem; index: number }) {
     );
 }
 
-export function NavMain({ items = [] }: { items: NavItem[] }) {
+export function NavMain({
+    items = [],
+    label = 'Platform',
+}: {
+    items: NavItem[];
+    label?: string;
+}) {
     const { currentUrl, isCurrentOrParentUrl } = useCurrentUrl();
     const menuRef = useRef<HTMLDivElement | null>(null);
     const hasActiveItem = items.some((item) => {
@@ -772,7 +778,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
 
     return (
         <SidebarGroup className="px-2 py-0">
-            <SidebarGroupLabel>Platform</SidebarGroupLabel>
+            <SidebarGroupLabel>{label}</SidebarGroupLabel>
             <div ref={menuRef} className="relative">
                 <div
                     aria-hidden="true"

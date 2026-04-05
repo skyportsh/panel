@@ -3,7 +3,6 @@
 namespace App\Concerns;
 
 use App\Models\User;
-use App\Support\Countries;
 use Illuminate\Validation\Rule;
 
 trait ProfileValidationRules
@@ -18,12 +17,6 @@ trait ProfileValidationRules
         return [
             'name' => $this->nameRules(),
             'email' => $this->emailRules($userId),
-            'account_region' => [
-                'nullable',
-                'string',
-                'size:2',
-                Rule::in(Countries::codes()),
-            ],
         ];
     }
 

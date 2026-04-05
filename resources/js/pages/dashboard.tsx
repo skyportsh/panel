@@ -3,7 +3,6 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
 import { home } from '@/routes';
-import { edit as billingEdit } from '@/routes/billing';
 import type { BreadcrumbItem } from '@/types';
 
 const usageData = [
@@ -36,7 +35,7 @@ function UsageTooltip({
     return (
         <div className="rounded-md border border-sidebar-accent bg-background px-2.5 py-1.5 shadow-md">
             <p className="text-xs font-medium text-foreground">
-                ${amount.toFixed(2)} USD
+                {amount.toFixed(1)} hrs
             </p>
             <p className="text-xs text-muted-foreground">{day}</p>
         </div>
@@ -142,22 +141,28 @@ export default function Home() {
                                                 Your recent usage
                                             </h1>
                                             <span className="text-xs text-muted-foreground">
-                                                Last 30 days
+                                                Last 30 days of activity
                                             </span>
                                         </div>
                                         <span className="relative z-20 text-sm font-semibold text-foreground">
-                                            $4.00 USD
+                                            4.0 hours
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="pl-2 text-xs font-medium text-muted-foreground">
-                                            $0.00 remaining
+                                            Resource usage is steady
                                         </span>
                                         <Link
-                                            href={billingEdit.url()}
+                                            href={
+                                                auth.user.is_admin
+                                                    ? '/admin/users'
+                                                    : '/settings/profile'
+                                            }
                                             className="rounded-md border border-sidebar-accent bg-background px-2 py-1 text-xs font-medium text-foreground transition-colors hover:bg-sidebar-accent"
                                         >
-                                            View usage
+                                            {auth.user.is_admin
+                                                ? 'Manage users'
+                                                : 'Manage account'}
                                         </Link>
                                     </div>
                                 </div>

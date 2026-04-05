@@ -1,33 +1,65 @@
 import { Form, Head, Link, router, usePage } from '@inertiajs/react';
-import { Search } from 'lucide-react';
-import { useRef, useState } from 'react';
-import { toast } from 'sonner';
 import {
+    Crown,
+    Ellipsis,
+    Lock,
+    LockOpen,
+    Plus,
+    Trash2,
+    UserRoundCog,
+} from 'lucide-react';
+import { useRef, useState } from 'react';
+import { toast } from '@/components/ui/sonner';
+import {
+    destroy,
     impersonate,
     index as adminUsers,
+    store,
     suspend,
     unsuspend,
     update,
-    verifyEmail,
 } from '@/actions/App/Http/Controllers/Admin/UsersController';
+import { bulkDestroy } from '@/actions/App/Http/Controllers/Admin/UsersController';
+import {
+    ConfirmDeleteDialog,
+    DataTable,
+} from '@/components/admin/data-table';
+import type { Column, PaginatedData } from '@/components/admin/data-table';
 import InputError from '@/components/input-error';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
+    DialogContentFull,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SlidingTabs } from '@/components/ui/sliding-tabs';
+import type { Tab } from '@/components/ui/sliding-tabs';
 import { Spinner } from '@/components/ui/spinner';
+import { Switch } from '@/components/ui/switch';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useInitials } from '@/hooks/use-initials';
 import AdminLayout from '@/layouts/admin/layout';
 import AppLayout from '@/layouts/app-layout';
+import { formatDate, formatRelativeTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { BreadcrumbItem, User } from '@/types';
+
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 type AdminUser = User & {
     suspended_at: string | null;
@@ -35,106 +67,15 @@ type AdminUser = User & {
     two_factor_confirmed_at: string | null;
 };
 
-type PaginationLink = {
-    active: boolean;
-    label: string;
-    url: string | null;
-};
-
 type Props = {
-    users: {
-        data: AdminUser[];
-        links: PaginationLink[];
-        current_page: number;
-        from: number | null;
-        last_page: number;
-        per_page: number;
-        to: number | null;
-        total: number;
-    };
-    filters: { search: string };
+    users: PaginatedData<AdminUser>;
+    filters: { search: string; admin_only: boolean };
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Admin', href: adminUsers.url() },
     { title: 'Users', href: adminUsers.url() },
 ];
-
-function formatDate(value: string | null, withTime = false): string {
-    if (!value) {
-        return '—';
-    }
-
-    return new Intl.DateTimeFormat('en-GB', {
-        dateStyle: 'medium',
-        ...(withTime ? { timeStyle: 'short' } : {}),
-    }).format(new Date(value));
-}
-
-// ─── Simple tab component ────────────────────────────────────────────────────
-
-type Tab = { id: string; label: string };
-
-function Tabs({
-    tabs,
-    active,
-    onChange,
-}: {
-    tabs: Tab[];
-    active: string;
-    onChange: (id: string) => void;
-}) {
-    return (
-        <div className="flex gap-1 border-b border-border/60">
-            {tabs.map((tab) => (
-                <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => onChange(tab.id)}
-                    className={cn(
-                        'px-4 py-2.5 text-sm font-medium transition-colors',
-                        active === tab.id
-                            ? 'border-b-2 border-foreground text-foreground'
-                            : 'text-muted-foreground hover:text-foreground',
-                    )}
-                >
-                    {tab.label}
-                </button>
-            ))}
-        </div>
-    );
-}
-
-// ─── Action card ─────────────────────────────────────────────────────────────
-
-function ActionCard({
-    title,
-    description,
-    children,
-    danger,
-}: {
-    title: string;
-    description: string;
-    children: React.ReactNode;
-    danger?: boolean;
-}) {
-    return (
-        <div
-            className={cn(
-                'flex items-center justify-between gap-4 rounded-lg p-4',
-                danger ? 'bg-destructive/5' : 'bg-muted/30',
-            )}
-        >
-            <div>
-                <p className="text-sm font-medium text-foreground">{title}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                    {description}
-                </p>
-            </div>
-            <div className="shrink-0">{children}</div>
-        </div>
-    );
-}
 
 // ─── User detail modal ────────────────────────────────────────────────────────
 
@@ -149,18 +90,19 @@ function UserModal({
     const getInitials = useInitials();
     const [tab, setTab] = useState('overview');
     const isSuspended = user.suspended_at !== null;
-    const isVerified = user.email_verified_at !== null;
     const isSelf = user.id === auth.user.id;
 
     const MIN_MS = 600;
     const submitStart = useRef(0);
     const [submitting, setSubmitting] = useState(false);
+    const passwordStart = useRef(0);
+    const [passwordSubmitting, setPasswordSubmitting] = useState(false);
     const [actioning, setActioning] = useState<string | null>(null);
 
     const tabs: Tab[] = [
         { id: 'overview', label: 'Overview' },
-        { id: 'billing', label: 'Billing' },
-        { id: 'actions', label: 'Actions' },
+        { id: 'edit', label: 'Edit' },
+        { id: 'danger', label: 'Danger' },
     ];
 
     return (
@@ -172,13 +114,13 @@ function UserModal({
                 }
             }}
         >
-            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+            <DialogContentFull>
                 {/* Header */}
-                <DialogHeader className="pb-0">
+                <div className="px-8 pt-8 pb-4">
                     <div className="flex items-center gap-4">
-                        <Avatar className="h-14 w-14 shrink-0 overflow-hidden rounded-full">
+                        <Avatar className="h-12 w-12 shrink-0 overflow-hidden rounded-lg">
                             <AvatarImage src={user.avatar} alt={user.name} />
-                            <AvatarFallback className="rounded-full bg-neutral-200 text-lg text-black dark:bg-neutral-700 dark:text-white">
+                            <AvatarFallback className="rounded bg-neutral-200 text-base text-black dark:bg-neutral-700 dark:text-white">
                                 {getInitials(user.name)}
                             </AvatarFallback>
                         </Avatar>
@@ -189,374 +131,515 @@ function UserModal({
                             <p className="text-sm text-muted-foreground">
                                 {user.email}
                             </p>
-                            <div className="mt-1.5 flex flex-wrap gap-1.5">
-                                {user.is_admin && (
-                                    <Badge
-                                        variant="secondary"
-                                        className="border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-800 dark:bg-violet-950 dark:text-violet-400"
-                                    >
-                                        Admin
-                                    </Badge>
-                                )}
-                                {isSuspended ? (
-                                    <Badge variant="destructive">
-                                        Suspended
-                                    </Badge>
-                                ) : (
-                                    <Badge
-                                        variant="secondary"
-                                        className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
-                                    >
-                                        Active
-                                    </Badge>
-                                )}
-                                {isVerified ? (
-                                    <Badge
-                                        variant="secondary"
-                                        className="border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950 dark:text-sky-400"
-                                    >
-                                        Verified
-                                    </Badge>
-                                ) : (
-                                    <Badge
-                                        variant="outline"
-                                        className="text-muted-foreground"
-                                    >
-                                        Unverified
-                                    </Badge>
-                                )}
-                            </div>
                         </div>
                     </div>
+                    <div className="mt-6">
+                        <SlidingTabs
+                            tabs={tabs}
+                            active={tab}
+                            onChange={setTab}
+                        />
+                    </div>
+                </div>
+
+                <div className="border-t border-border/60" />
+
+                <div className="flex-1 overflow-y-auto px-6 py-6">
+                    {/* Overview tab */}
+                    {tab === 'overview' && (
+                        <div className="flex gap-6">
+                            {/* Left — user info list */}
+                            <div className="min-w-0 flex-1 space-y-1">
+                                {[
+                                    { label: 'User ID', value: `#${user.id}` },
+                                    { label: 'Name', value: user.name },
+                                    { label: 'Email', value: user.email },
+                                    {
+                                        label: 'Role',
+                                        value: user.is_admin
+                                            ? 'Administrator'
+                                            : 'User',
+                                    },
+                                    {
+                                        label: 'Joined',
+                                        value: formatDate(
+                                            user.created_at,
+                                            true,
+                                        ),
+                                    },
+                                    {
+                                        label: 'Last updated',
+                                        value: formatDate(
+                                            user.updated_at,
+                                            true,
+                                        ),
+                                    },
+                                    {
+                                        label: 'Two-factor',
+                                        value: user.two_factor_confirmed_at
+                                            ? `Enabled ${formatDate(user.two_factor_confirmed_at)}`
+                                            : 'Disabled',
+                                    },
+                                ].map(({ label, value }) => (
+                                    <div
+                                        key={label}
+                                        className="flex items-center justify-between rounded-md px-3 py-2.5"
+                                    >
+                                        <span className="text-sm text-muted-foreground">
+                                            {label}
+                                        </span>
+                                        <span className="text-sm font-medium text-foreground">
+                                            {value}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Right — stat cards (table style) */}
+                            <div className="w-[300px] shrink-0 space-y-3">
+                                {/* Status card */}
+                                <div className="overflow-hidden rounded-lg bg-muted/40">
+                                    <div className="px-4 py-2.5">
+                                        <span className="text-xs font-medium text-muted-foreground">
+                                            Status
+                                        </span>
+                                    </div>
+                                    <div className="rounded-lg border border-border/70 bg-background p-5">
+                                        <p
+                                            className={cn(
+                                                'text-3xl font-semibold',
+                                                isSuspended
+                                                    ? 'text-destructive'
+                                                    : 'text-emerald-600 dark:text-emerald-400',
+                                            )}
+                                        >
+                                            {isSuspended
+                                                ? 'Suspended'
+                                                : 'Active'}
+                                        </p>
+                                        {isSuspended &&
+                                            user.suspended_at && (
+                                                <p className="mt-1 text-xs text-muted-foreground">
+                                                    Since{' '}
+                                                    {formatDate(
+                                                        user.suspended_at,
+                                                        true,
+                                                    )}
+                                                </p>
+                                            )}
+                                    </div>
+                                </div>
+
+                                {/* Servers card */}
+                                <div className="overflow-hidden rounded-lg bg-muted/40">
+                                    <div className="px-4 py-2.5">
+                                        <span className="text-xs font-medium text-muted-foreground">
+                                            Servers
+                                        </span>
+                                    </div>
+                                    <div className="rounded-lg border border-border/70 bg-background p-5">
+                                        <p className="text-3xl font-semibold text-foreground">
+                                            0
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Edit tab */}
+                    {tab === 'edit' && (
+                        <div className="grid grid-cols-2 gap-8">
+                            {/* Update profile */}
+                            <div>
+                                <h3 className="text-sm font-semibold text-foreground">
+                                    Profile
+                                </h3>
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                    Update this user's name and email address.
+                                </p>
+                                <Form
+                                    {...update.form(user.id)}
+                                    options={{ preserveScroll: true }}
+                                    onStart={() => {
+                                        submitStart.current = Date.now();
+                                        setSubmitting(true);
+                                    }}
+                                    onFinish={() => {
+                                        const rem =
+                                            MIN_MS -
+                                            (Date.now() -
+                                                submitStart.current);
+                                        setTimeout(
+                                            () => setSubmitting(false),
+                                            Math.max(0, rem),
+                                        );
+                                    }}
+                                    onSuccess={() =>
+                                        toast.success('Profile updated')
+                                    }
+                                    onError={(errors) =>
+                                        Object.values(errors).forEach((m) =>
+                                            toast.error(m),
+                                        )
+                                    }
+                                    className="mt-4 space-y-4"
+                                >
+                                    {({ errors }) => (
+                                        <>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="edit-name">
+                                                    Name
+                                                </Label>
+                                                <Input
+                                                    id="edit-name"
+                                                    name="name"
+                                                    defaultValue={user.name}
+                                                    required
+                                                />
+                                                <InputError
+                                                    message={errors.name}
+                                                />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="edit-email">
+                                                    Email
+                                                </Label>
+                                                <Input
+                                                    id="edit-email"
+                                                    name="email"
+                                                    type="email"
+                                                    defaultValue={user.email}
+                                                    required
+                                                />
+                                                <InputError
+                                                    message={errors.email}
+                                                />
+                                            </div>
+                                            <div className="flex justify-end">
+                                                <Button
+                                                    type="submit"
+                                                    disabled={submitting}
+                                                >
+                                                    {submitting && <Spinner />}
+                                                    Save profile
+                                                </Button>
+                                            </div>
+                                        </>
+                                    )}
+                                </Form>
+                            </div>
+
+                            {/* Update password */}
+                            <div>
+                                <h3 className="text-sm font-semibold text-foreground">
+                                    Password
+                                </h3>
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                    Set a new password for this user.
+                                </p>
+                                <Form
+                                    {...update.form(user.id)}
+                                    options={{ preserveScroll: true }}
+                                    onStart={() => {
+                                        passwordStart.current = Date.now();
+                                        setPasswordSubmitting(true);
+                                    }}
+                                    onFinish={() => {
+                                        const rem =
+                                            MIN_MS -
+                                            (Date.now() -
+                                                passwordStart.current);
+                                        setTimeout(
+                                            () =>
+                                                setPasswordSubmitting(false),
+                                            Math.max(0, rem),
+                                        );
+                                    }}
+                                    onSuccess={() =>
+                                        toast.success('Password updated')
+                                    }
+                                    onError={(errors) =>
+                                        Object.values(errors).forEach((m) =>
+                                            toast.error(m),
+                                        )
+                                    }
+                                    className="mt-4 space-y-4"
+                                >
+                                    {({ errors }) => (
+                                        <>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="edit-password">
+                                                    New password
+                                                </Label>
+                                                <Input
+                                                    id="edit-password"
+                                                    name="password"
+                                                    type="password"
+                                                    placeholder="Minimum 8 characters"
+                                                />
+                                                <InputError
+                                                    message={errors.password}
+                                                />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="edit-password-confirm">
+                                                    Confirm password
+                                                </Label>
+                                                <Input
+                                                    id="edit-password-confirm"
+                                                    name="password_confirmation"
+                                                    type="password"
+                                                    placeholder="Repeat password"
+                                                />
+                                            </div>
+                                            <div className="flex justify-end">
+                                                <Button
+                                                    type="submit"
+                                                    disabled={
+                                                        passwordSubmitting
+                                                    }
+                                                >
+                                                    {passwordSubmitting && (
+                                                        <Spinner />
+                                                    )}
+                                                    Update password
+                                                </Button>
+                                            </div>
+                                        </>
+                                    )}
+                                </Form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Danger tab */}
+                    {tab === 'danger' && (
+                        <div className="space-y-3">
+                            {/* Suspend / Unsuspend */}
+                            <div className="overflow-hidden rounded-lg bg-muted/40">
+                                <div className="flex items-center justify-between px-4 py-2.5">
+                                    <span className="text-xs font-medium text-muted-foreground">
+                                        {isSuspended
+                                            ? 'Unsuspend account'
+                                            : 'Suspend account'}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between rounded-lg border border-border/70 bg-background p-4">
+                                    <p className="text-sm text-muted-foreground">
+                                        {isSuspended
+                                            ? 'Allow this user to access the platform again.'
+                                            : 'Prevent this user from logging in.'}
+                                    </p>
+                                    <Form
+                                        {...(isSuspended
+                                            ? unsuspend.form(user.id)
+                                            : suspend.form(user.id))}
+                                        onStart={() =>
+                                            setActioning('suspend')
+                                        }
+                                        onFinish={() => setActioning(null)}
+                                        onSuccess={() =>
+                                            toast.success(
+                                                isSuspended
+                                                    ? 'User unsuspended'
+                                                    : 'User suspended',
+                                            )
+                                        }
+                                        onError={(errors) =>
+                                            Object.values(errors).forEach(
+                                                (m) => toast.error(m),
+                                            )
+                                        }
+                                    >
+                                        {() => (
+                                            <Button
+                                                type="submit"
+                                                variant={
+                                                    isSuspended
+                                                        ? 'outline'
+                                                        : 'destructive'
+                                                }
+                                                size="sm"
+                                                disabled={
+                                                    isSelf ||
+                                                    actioning === 'suspend'
+                                                }
+                                            >
+                                                {actioning === 'suspend' && (
+                                                    <Spinner />
+                                                )}
+                                                {isSuspended
+                                                    ? 'Unsuspend'
+                                                    : 'Suspend'}
+                                            </Button>
+                                        )}
+                                    </Form>
+                                </div>
+                            </div>
+
+                            {/* Impersonate */}
+                            <div className="overflow-hidden rounded-lg bg-muted/40">
+                                <div className="flex items-center justify-between px-4 py-2.5">
+                                    <span className="text-xs font-medium text-muted-foreground">
+                                        Impersonate user
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between rounded-lg border border-border/70 bg-background p-4">
+                                    <p className="text-sm text-muted-foreground">
+                                        Log in as this user to debug
+                                        issues.
+                                    </p>
+                                    <Form
+                                        {...impersonate.form(user.id)}
+                                        onStart={() =>
+                                            setActioning('impersonate')
+                                        }
+                                        onFinish={() => setActioning(null)}
+                                        onError={(errors) =>
+                                            Object.values(errors).forEach(
+                                                (m) => toast.error(m),
+                                            )
+                                        }
+                                    >
+                                        {() => (
+                                            <Button
+                                                type="submit"
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={
+                                                    isSelf ||
+                                                    actioning ===
+                                                        'impersonate'
+                                                }
+                                            >
+                                                {actioning ===
+                                                    'impersonate' && (
+                                                    <Spinner />
+                                                )}
+                                                Impersonate
+                                            </Button>
+                                        )}
+                                    </Form>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </DialogContentFull>
+        </Dialog>
+    );
+}
+
+// ─── Create user modal ────────────────────────────────────────────────────────
+
+function CreateUserModal({ onClose }: { onClose: () => void }) {
+    const MIN_MS = 600;
+    const submitStart = useRef(0);
+    const [submitting, setSubmitting] = useState(false);
+
+    return (
+        <Dialog
+            open
+            onOpenChange={(open) => {
+                if (!open) {
+                    onClose();
+                }
+            }}
+        >
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Create user</DialogTitle>
                 </DialogHeader>
 
-                <Tabs tabs={tabs} active={tab} onChange={setTab} />
-
-                {/* Overview tab */}
-                {tab === 'overview' && (
-                    <div className="grid gap-2 sm:grid-cols-2">
-                        {[
-                            { label: 'User ID', value: `#${user.id}` },
-                            {
-                                label: 'Joined',
-                                value: formatDate(user.created_at, true),
-                            },
-                            {
-                                label: 'Email verified',
-                                value: isVerified
-                                    ? formatDate(user.email_verified_at, true)
-                                    : 'Not verified',
-                            },
-                            {
-                                label: 'Two-factor',
-                                value: user.two_factor_confirmed_at
-                                    ? `Enabled ${formatDate(user.two_factor_confirmed_at)}`
-                                    : 'Disabled',
-                            },
-                            {
-                                label: 'Registration IP',
-                                value: user.registration_ip ?? '—',
-                            },
-                            {
-                                label: 'Last seen IP',
-                                value: user.last_seen_ip ?? '—',
-                            },
-                            {
-                                label: 'Region',
-                                value: user.account_region ?? '—',
-                            },
-                            {
-                                label: 'Currency',
-                                value: user.preferred_currency,
-                            },
-                        ].map(({ label, value }) => (
-                            <div
-                                key={label}
-                                className="rounded-md bg-muted/30 px-3 py-2.5"
-                            >
-                                <p className="text-xs text-muted-foreground">
-                                    {label}
-                                </p>
-                                <p className="text-sm font-medium text-foreground">
-                                    {value}
-                                </p>
+                <Form
+                    {...store.form()}
+                    options={{ preserveScroll: true }}
+                    onStart={() => {
+                        submitStart.current = Date.now();
+                        setSubmitting(true);
+                    }}
+                    onFinish={() => {
+                        const rem =
+                            MIN_MS - (Date.now() - submitStart.current);
+                        setTimeout(
+                            () => setSubmitting(false),
+                            Math.max(0, rem),
+                        );
+                    }}
+                    onSuccess={() => {
+                        toast.success('User created');
+                        onClose();
+                    }}
+                    onError={(errors) =>
+                        Object.values(errors).forEach((m) => toast.error(m))
+                    }
+                    className="space-y-4"
+                >
+                    {({ errors }) => (
+                        <>
+                            <div className="grid gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="create-name">Name</Label>
+                                    <Input
+                                        id="create-name"
+                                        name="name"
+                                        placeholder="John Doe"
+                                        required
+                                        autoFocus
+                                    />
+                                    <InputError message={errors.name} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="create-email">Email</Label>
+                                    <Input
+                                        id="create-email"
+                                        name="email"
+                                        type="email"
+                                        placeholder="john@example.com"
+                                        required
+                                    />
+                                    <InputError message={errors.email} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="create-password">
+                                        Password
+                                    </Label>
+                                    <Input
+                                        id="create-password"
+                                        name="password"
+                                        type="password"
+                                        placeholder="Minimum 8 characters"
+                                        required
+                                    />
+                                    <InputError message={errors.password} />
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <Label htmlFor="create-admin">
+                                            Administrator
+                                        </Label>
+                                        <p className="text-xs text-muted-foreground">
+                                            Grant full admin access
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        id="create-admin"
+                                        name="is_admin"
+                                        value="1"
+                                    />
+                                </div>
                             </div>
-                        ))}
-                    </div>
-                )}
 
-                {/* Billing tab */}
-                {tab === 'billing' && (
-                    <Form
-                        {...update.form(user.id)}
-                        options={{ preserveScroll: true }}
-                        onStart={() => {
-                            submitStart.current = Date.now();
-                            setSubmitting(true);
-                        }}
-                        onFinish={() => {
-                            const rem =
-                                MIN_MS - (Date.now() - submitStart.current);
-                            setTimeout(
-                                () => setSubmitting(false),
-                                Math.max(0, rem),
-                            );
-                        }}
-                        onSuccess={() => toast.success('Billing updated')}
-                        onError={(errors) =>
-                            Object.values(errors).forEach((m) => toast.error(m))
-                        }
-                        className="space-y-4"
-                    >
-                        {({ errors }) => (
-                            <>
-                                <div className="grid gap-4 sm:grid-cols-2">
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="billing-name">
-                                            Name
-                                        </Label>
-                                        <Input
-                                            id="billing-name"
-                                            name="name"
-                                            defaultValue={user.name}
-                                            required
-                                        />
-                                        <InputError message={errors.name} />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="billing-email">
-                                            Email
-                                        </Label>
-                                        <Input
-                                            id="billing-email"
-                                            name="email"
-                                            type="email"
-                                            defaultValue={user.email}
-                                            required
-                                        />
-                                        <InputError message={errors.email} />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4 rounded-md bg-muted/30 p-4">
-                                    <p className="text-sm font-medium text-foreground">
-                                        Balances
-                                    </p>
-                                    <div className="grid gap-4 sm:grid-cols-2">
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="billing-coins">
-                                                Coins balance
-                                            </Label>
-                                            <Input
-                                                id="billing-coins"
-                                                name="coins_balance"
-                                                type="number"
-                                                min={0}
-                                                defaultValue={
-                                                    user.coins_balance
-                                                }
-                                                required
-                                            />
-                                            <InputError
-                                                message={errors.coins_balance}
-                                            />
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="billing-credit">
-                                                Credit balance
-                                                <span className="ml-1 text-xs text-muted-foreground">
-                                                    (pence)
-                                                </span>
-                                            </Label>
-                                            <Input
-                                                id="billing-credit"
-                                                name="credit_balance"
-                                                type="number"
-                                                min={0}
-                                                defaultValue={
-                                                    user.credit_balance
-                                                }
-                                                required
-                                            />
-                                            <InputError
-                                                message={errors.credit_balance}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="billing-currency">
-                                            Preferred currency
-                                        </Label>
-                                        <select
-                                            id="billing-currency"
-                                            name="preferred_currency"
-                                            defaultValue={
-                                                user.preferred_currency
-                                            }
-                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background transition-[color,box-shadow] outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                        >
-                                            {[
-                                                'AUD',
-                                                'CAD',
-                                                'EUR',
-                                                'GBP',
-                                                'JPY',
-                                                'USD',
-                                            ].map((c) => (
-                                                <option key={c} value={c}>
-                                                    {c}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <InputError
-                                            message={errors.preferred_currency}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-end">
-                                    <Button type="submit" disabled={submitting}>
-                                        {submitting && <Spinner />}
-                                        Save changes
-                                    </Button>
-                                </div>
-                            </>
-                        )}
-                    </Form>
-                )}
-
-                {/* Actions tab */}
-                {tab === 'actions' && (
-                    <div className="space-y-3">
-                        {/* Verify email */}
-                        <ActionCard
-                            title="Email verification"
-                            description={
-                                isVerified
-                                    ? `Verified on ${formatDate(user.email_verified_at, true)}`
-                                    : 'This user has not verified their email address.'
-                            }
-                        >
-                            <Form
-                                {...verifyEmail.form(user.id)}
-                                onStart={() => setActioning('verify')}
-                                onFinish={() => setActioning(null)}
-                                onSuccess={() =>
-                                    toast.success('Email marked as verified')
-                                }
-                                onError={(errors) =>
-                                    Object.values(errors).forEach((m) =>
-                                        toast.error(m),
-                                    )
-                                }
-                            >
-                                {() => (
-                                    <Button
-                                        type="submit"
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={
-                                            isVerified || actioning === 'verify'
-                                        }
-                                    >
-                                        {actioning === 'verify' && <Spinner />}
-                                        {isVerified
-                                            ? 'Already verified'
-                                            : 'Bypass verification'}
-                                    </Button>
-                                )}
-                            </Form>
-                        </ActionCard>
-
-                        {/* Suspend / Unsuspend */}
-                        <ActionCard
-                            title={
-                                isSuspended
-                                    ? 'Unsuspend account'
-                                    : 'Suspend account'
-                            }
-                            description={
-                                isSuspended
-                                    ? `Suspended on ${formatDate(user.suspended_at, true)}. Restoring access will allow this user to log in.`
-                                    : 'Suspending this account will prevent the user from accessing the platform.'
-                            }
-                            danger={!isSuspended}
-                        >
-                            <Form
-                                {...(isSuspended
-                                    ? unsuspend.form(user.id)
-                                    : suspend.form(user.id))}
-                                onStart={() => setActioning('suspend')}
-                                onFinish={() => setActioning(null)}
-                                onSuccess={() =>
-                                    toast.success(
-                                        isSuspended
-                                            ? 'User unsuspended'
-                                            : 'User suspended',
-                                    )
-                                }
-                                onError={(errors) =>
-                                    Object.values(errors).forEach((m) =>
-                                        toast.error(m),
-                                    )
-                                }
-                            >
-                                {() => (
-                                    <Button
-                                        type="submit"
-                                        variant={
-                                            isSuspended
-                                                ? 'outline'
-                                                : 'destructive'
-                                        }
-                                        size="sm"
-                                        disabled={
-                                            isSelf || actioning === 'suspend'
-                                        }
-                                    >
-                                        {actioning === 'suspend' && <Spinner />}
-                                        {isSuspended ? 'Unsuspend' : 'Suspend'}
-                                    </Button>
-                                )}
-                            </Form>
-                        </ActionCard>
-
-                        {/* Impersonate */}
-                        <ActionCard
-                            title="Impersonate user"
-                            description="Log in as this user to debug issues. A banner will appear so you can stop at any time."
-                            danger
-                        >
-                            <Form
-                                {...impersonate.form(user.id)}
-                                onStart={() => setActioning('impersonate')}
-                                onFinish={() => setActioning(null)}
-                                onError={(errors) =>
-                                    Object.values(errors).forEach((m) =>
-                                        toast.error(m),
-                                    )
-                                }
-                            >
-                                {() => (
-                                    <Button
-                                        type="submit"
-                                        variant="destructive"
-                                        size="sm"
-                                        disabled={
-                                            isSelf ||
-                                            actioning === 'impersonate'
-                                        }
-                                    >
-                                        {actioning === 'impersonate' && (
-                                            <Spinner />
-                                        )}
-                                        Impersonate
-                                    </Button>
-                                )}
-                            </Form>
-                        </ActionCard>
-                    </div>
-                )}
+                            <div className="flex justify-end">
+                                <Button type="submit" disabled={submitting}>
+                                    {submitting && <Spinner />}
+                                    Create user
+                                </Button>
+                            </div>
+                        </>
+                    )}
+                </Form>
             </DialogContent>
         </Dialog>
     );
@@ -565,16 +648,161 @@ function UserModal({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function Users({ users, filters }: Props) {
+    const { auth } = usePage().props;
     const getInitials = useInitials();
     const [viewingUser, setViewingUser] = useState<AdminUser | null>(null);
+    const [creatingUser, setCreatingUser] = useState(false);
     const [search, setSearch] = useState(filters.search);
+    const [adminOnly, setAdminOnly] = useState(filters.admin_only);
+    const [deletingUser, setDeletingUser] = useState<AdminUser | null>(null);
+    const [singleDeleting, setSingleDeleting] = useState(false);
+
+    const navigate = (params: Record<string, string | boolean | undefined>) => {
+        router.get(adminUsers.url(), params as Record<string, string>, {
+            preserveState: true,
+            replace: true,
+        });
+    };
 
     const handleSearch = (value: string) => {
         setSearch(value);
-        router.get(
-            adminUsers.url(),
-            { search: value },
-            { preserveState: true, replace: true },
+        navigate({ search: value, admin_only: adminOnly || undefined });
+    };
+
+    const toggleAdminOnly = () => {
+        const next = !adminOnly;
+        setAdminOnly(next);
+        navigate({ search, admin_only: next || undefined });
+    };
+
+    const columns: Column<AdminUser>[] = [
+        {
+            label: 'User',
+            width: 'w-[45%]',
+            render: (user) => (
+                <div className="flex items-center gap-3">
+                    <Avatar className="h-7 w-7 shrink-0 overflow-hidden rounded">
+                        <AvatarImage src={user.avatar} alt={user.name} />
+                        <AvatarFallback className="rounded-lg bg-neutral-200 text-xs text-black dark:bg-neutral-700 dark:text-white">
+                            {getInitials(user.name)}
+                        </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                            <p className="truncate text-sm font-medium text-foreground">
+                                {user.name}
+                            </p>
+                            {user.is_admin && (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleAdminOnly();
+                                            }}
+                                            className="-m-1.5 cursor-pointer rounded-md p-1.5 transition-transform duration-150 ease-out hover:bg-yellow-500/10 active:scale-90 active:duration-0"
+                                        >
+                                            <Crown
+                                                className={cn(
+                                                    'h-3.5 w-3.5 shrink-0 text-yellow-500',
+                                                    adminOnly && 'fill-current',
+                                                )}
+                                            />
+                                        </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {adminOnly
+                                            ? 'Show all users'
+                                            : 'Filter admins'}
+                                    </TooltipContent>
+                                </Tooltip>
+                            )}
+                        </div>
+                        <p className="truncate text-xs text-muted-foreground">
+                            {user.email}
+                        </p>
+                    </div>
+                </div>
+            ),
+        },
+        {
+            label: 'Last updated',
+            width: 'w-[20%]',
+            render: (user) => (
+                <div className="text-xs text-muted-foreground">
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <span className="cursor-default">
+                                {formatRelativeTime(user.updated_at)}
+                            </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            {formatDate(user.updated_at, true)}
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
+            ),
+        },
+        {
+            label: '2FA',
+            width: 'flex-1',
+            render: (user) => (
+                <div className="flex items-center">
+                    {user.two_factor_confirmed_at ? (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Lock className="h-3.5 w-3.5 text-emerald-500" />
+                            </TooltipTrigger>
+                            <TooltipContent>2FA enabled</TooltipContent>
+                        </Tooltip>
+                    ) : (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <LockOpen className="h-3.5 w-3.5 text-muted-foreground/50" />
+                            </TooltipTrigger>
+                            <TooltipContent>2FA disabled</TooltipContent>
+                        </Tooltip>
+                    )}
+                </div>
+            ),
+        },
+    ];
+
+    const rowMenu = (user: AdminUser) => {
+        const isSelf = user.id === auth.user.id;
+
+        return (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <button
+                        type="button"
+                        className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground opacity-0 transition-all duration-150 ease-out hover:bg-muted hover:text-foreground group-hover:opacity-100 data-[state=open]:opacity-100"
+                    >
+                        <Ellipsis className="h-4 w-4" />
+                    </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem
+                        disabled={isSelf}
+                        className="cursor-pointer"
+                        onSelect={() => {
+                            router.post(impersonate.url(user.id));
+                        }}
+                    >
+                        <UserRoundCog className="mr-2 h-4 w-4" />
+                        Impersonate
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                        disabled={isSelf}
+                        className="cursor-pointer"
+                        onSelect={() => setDeletingUser(user)}
+                    >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
         );
     };
 
@@ -586,202 +814,26 @@ export default function Users({ users, filters }: Props) {
                 title="Users"
                 description="Manage user accounts across the platform."
             >
-                <div className="space-y-4">
-                    {/* Toolbar */}
-                    <div className="flex items-center justify-between gap-4">
-                        <p className="text-sm text-muted-foreground">
-                            {users.total.toLocaleString()}{' '}
-                            {users.total === 1 ? 'user' : 'users'}
-                        </p>
-                        <div className="relative w-64">
-                            <Search className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                            <Input
-                                value={search}
-                                onChange={(e) => handleSearch(e.target.value)}
-                                placeholder="Search users..."
-                                className="pl-8 text-sm"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Table */}
-                    <div className="overflow-hidden rounded-lg border border-border/70 bg-background">
-                        <table className="w-full text-left">
-                            <thead>
-                                <tr className="border-b border-border/60 bg-muted/40">
-                                    <th className="px-4 py-3 text-xs font-medium text-muted-foreground">
-                                        User
-                                    </th>
-                                    <th className="px-4 py-3 text-xs font-medium text-muted-foreground">
-                                        Status
-                                    </th>
-                                    <th className="px-4 py-3 text-xs font-medium text-muted-foreground">
-                                        Coins
-                                    </th>
-                                    <th className="px-4 py-3 text-xs font-medium text-muted-foreground">
-                                        Joined
-                                    </th>
-                                    <th className="px-4 py-3" />
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {users.data.length > 0 ? (
-                                    users.data.map((user) => {
-                                        const isSuspended =
-                                            user.suspended_at !== null;
-                                        const isVerified =
-                                            user.email_verified_at !== null;
-
-                                        return (
-                                            <tr
-                                                key={user.id}
-                                                className="border-b border-border/60 transition-colors last:border-0 hover:bg-muted/30"
-                                            >
-                                                <td className="px-4 py-3">
-                                                    <div className="flex items-center gap-3">
-                                                        <Avatar className="h-8 w-8 shrink-0 overflow-hidden rounded-full">
-                                                            <AvatarImage
-                                                                src={
-                                                                    user.avatar
-                                                                }
-                                                                alt={user.name}
-                                                            />
-                                                            <AvatarFallback className="rounded-full bg-neutral-200 text-xs text-black dark:bg-neutral-700 dark:text-white">
-                                                                {getInitials(
-                                                                    user.name,
-                                                                )}
-                                                            </AvatarFallback>
-                                                        </Avatar>
-                                                        <div className="min-w-0">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <p className="truncate text-sm font-medium text-foreground">
-                                                                    {user.name}
-                                                                </p>
-                                                                {user.is_admin && (
-                                                                    <Badge
-                                                                        variant="secondary"
-                                                                        className="border-violet-200 bg-violet-50 px-1 py-0 text-[10px] text-violet-700 dark:border-violet-800 dark:bg-violet-950 dark:text-violet-400"
-                                                                    >
-                                                                        Admin
-                                                                    </Badge>
-                                                                )}
-                                                            </div>
-                                                            <p className="truncate text-xs text-muted-foreground">
-                                                                {user.email}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <div className="flex flex-col gap-1">
-                                                        {isSuspended ? (
-                                                            <Badge
-                                                                variant="destructive"
-                                                                className="w-fit"
-                                                            >
-                                                                Suspended
-                                                            </Badge>
-                                                        ) : (
-                                                            <Badge
-                                                                variant="secondary"
-                                                                className="w-fit border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
-                                                            >
-                                                                Active
-                                                            </Badge>
-                                                        )}
-                                                        {!isVerified && (
-                                                            <span className="text-[11px] text-amber-600 dark:text-amber-400">
-                                                                Unverified email
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="px-4 py-3 text-sm text-muted-foreground">
-                                                    {user.coins_balance.toLocaleString()}
-                                                </td>
-                                                <td className="px-4 py-3 text-sm text-muted-foreground">
-                                                    {formatDate(
-                                                        user.created_at,
-                                                    )}
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <div className="flex justify-end">
-                                                        <Button
-                                                            type="button"
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="h-7 px-3 text-xs"
-                                                            onClick={() =>
-                                                                setViewingUser(
-                                                                    user,
-                                                                )
-                                                            }
-                                                        >
-                                                            View
-                                                        </Button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })
-                                ) : (
-                                    <tr>
-                                        <td
-                                            colSpan={5}
-                                            className="px-4 py-12 text-center"
-                                        >
-                                            <p className="text-sm font-medium text-foreground">
-                                                No users found
-                                            </p>
-                                            <p className="mt-1 text-sm text-muted-foreground">
-                                                {filters.search
-                                                    ? 'Try a different search term.'
-                                                    : 'Users will appear here.'}
-                                            </p>
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Pagination */}
-                    {users.last_page > 1 && (
-                        <div className="flex flex-wrap items-center justify-between gap-4">
-                            <p className="text-sm text-muted-foreground">
-                                Showing {users.from ?? 0}–{users.to ?? 0} of{' '}
-                                {users.total.toLocaleString()}
-                            </p>
-                            <nav
-                                className="flex flex-wrap items-center gap-2"
-                                aria-label="Users pagination"
-                            >
-                                {users.links.map((link, index) => (
-                                    <Link
-                                        key={`${link.label}-${index}`}
-                                        href={link.url ?? '#'}
-                                        preserveScroll
-                                        className={cn(
-                                            'rounded-md border px-3 py-2 text-sm transition-colors',
-                                            link.active
-                                                ? 'border-transparent bg-foreground text-background'
-                                                : 'border-border/80 bg-background hover:bg-muted',
-                                            link.url === null
-                                                ? 'pointer-events-none opacity-40'
-                                                : null,
-                                        )}
-                                    >
-                                        <span
-                                            dangerouslySetInnerHTML={{
-                                                __html: link.label,
-                                            }}
-                                        />
-                                    </Link>
-                                ))}
-                            </nav>
-                        </div>
-                    )}
-                </div>
+                <DataTable
+                    data={users}
+                    columns={columns}
+                    searchValue={search}
+                    onSearch={handleSearch}
+                    onRowClick={setViewingUser}
+                    rowMenu={rowMenu}
+                    bulkDeleteUrl={bulkDestroy.url()}
+                    entityName="user"
+                    emptyMessage="No users found"
+                    actions={
+                        <Button
+                            size="table"
+                            onClick={() => setCreatingUser(true)}
+                        >
+                            <Plus className="h-3.5 w-3.5" />
+                            Create new
+                        </Button>
+                    }
+                />
             </AdminLayout>
 
             {viewingUser && (
@@ -790,6 +842,37 @@ export default function Users({ users, filters }: Props) {
                     onClose={() => setViewingUser(null)}
                 />
             )}
+
+            {creatingUser && (
+                <CreateUserModal
+                    onClose={() => setCreatingUser(false)}
+                />
+            )}
+
+            <ConfirmDeleteDialog
+                open={deletingUser !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setDeletingUser(null);
+                    }
+                }}
+                title={`Delete ${deletingUser?.name}?`}
+                description="This action cannot be undone. This account will be permanently removed."
+                loading={singleDeleting}
+                onConfirm={() => {
+                    if (!deletingUser) {
+                        return;
+                    }
+                    setSingleDeleting(true);
+                    router.delete(destroy.url(deletingUser.id), {
+                        onSuccess: () => {
+                            toast.success(`${deletingUser.name} deleted`);
+                            setDeletingUser(null);
+                        },
+                        onFinish: () => setSingleDeleting(false),
+                    });
+                }}
+            />
         </AppLayout>
     );
 }

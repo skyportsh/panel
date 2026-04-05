@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { Toaster } from '@/components/ui/sonner';
 import { WelcomeOverlay } from '@/components/welcome-overlay';
+import { resolveLandingUrl } from '@/lib/default-landing-pages';
 import type { AppVariant } from '@/types';
 
 type Props = {
@@ -34,9 +35,10 @@ export function AppShell({ children, variant = 'sidebar' }: Props) {
 
         if (showWelcome && typeof window !== 'undefined') {
             const preferred = localStorage.getItem('default-landing-url');
+            const target = resolveLandingUrl(preferred, auth.user.is_admin);
 
-            if (preferred && preferred !== window.location.pathname) {
-                router.visit(preferred, { replace: true });
+            if (target !== window.location.pathname) {
+                router.visit(target, { replace: true });
             }
         }
     };
@@ -50,7 +52,7 @@ export function AppShell({ children, variant = 'sidebar' }: Props) {
         return (
             <div className="flex min-h-screen w-full flex-col">
                 {children}
-                <Toaster position="bottom-right" richColors />
+                <Toaster />
                 {overlay}
             </div>
         );
@@ -59,7 +61,7 @@ export function AppShell({ children, variant = 'sidebar' }: Props) {
     return (
         <SidebarProvider defaultOpen={isOpen}>
             {children}
-            <Toaster position="bottom-right" richColors />
+            <Toaster />
             {overlay}
         </SidebarProvider>
     );

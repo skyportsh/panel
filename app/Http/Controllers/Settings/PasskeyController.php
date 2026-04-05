@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\StorePasskeyRequest;
 use App\Models\Passkey;
 use App\Support\WebAuthn\PasskeyService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class PasskeyController extends Controller

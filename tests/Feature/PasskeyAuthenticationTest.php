@@ -76,7 +76,7 @@ function storedPasskeyFor(User $user): array
 }
 
 /**
- * @param  array{credential_id: string}|\App\Models\Passkey  $passkey
+ * @param  array{credential_id: string}|Passkey  $passkey
  * @return array{credential: array<string, mixed>, remember: bool}
  */
 function makeAuthenticationPayload(

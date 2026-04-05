@@ -2,22 +2,26 @@
 
 use App\Models\User;
 
-test('guests are redirected from compute pages', function () {
-    $this->get(route('compute.virtual-servers'))
-        ->assertRedirect(route('login'));
-
-    $this->get(route('compute.settings'))
-        ->assertRedirect(route('login'));
-});
-
-test('authenticated users can visit compute pages', function () {
+test('removed compute and game hosting pages are not available', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->get(route('compute.virtual-servers'))
-        ->assertOk();
+        ->get('/compute/virtual-servers')
+        ->assertNotFound();
 
     $this->actingAs($user)
-        ->get(route('compute.settings'))
-        ->assertOk();
+        ->get('/compute/settings')
+        ->assertNotFound();
+
+    $this->actingAs($user)
+        ->get('/game-hosting/servers')
+        ->assertNotFound();
+
+    $this->actingAs($user)
+        ->get('/game-hosting/domains')
+        ->assertNotFound();
+
+    $this->actingAs($user)
+        ->get('/game-hosting/resources')
+        ->assertNotFound();
 });
