@@ -130,10 +130,8 @@ export default function Login({
                 resetOnSuccess={['password']}
                 onStart={() => {
                     abortController.current?.abort();
-                    sessionStorage.setItem('show_welcome', '1');
                 }}
                 onError={(errors) => {
-                    sessionStorage.removeItem('show_welcome');
                     Object.values(errors).forEach((message) =>
                         toast.error(message),
                     );

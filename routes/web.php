@@ -1,12 +1,17 @@
 <?php
 
 use App\Http\Controllers\Auth\PasskeyAuthenticationController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
-Route::inertia('/', 'welcome', [
-    'canRegister' => Features::enabled(Features::registration()),
-])->name('welcome');
+Route::get('/', function () {
+    if (Auth::check()) {
+        return inertia('dashboard');
+    }
+
+    return to_route('login');
+});
 
 Route::middleware('guest')->group(function () {
     Route::get('login/passkeys/options', [PasskeyAuthenticationController::class, 'create'])
