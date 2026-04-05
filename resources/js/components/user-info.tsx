@@ -19,7 +19,7 @@ export function UserInfo({
                     {getInitials(user.name)}
                 </AvatarFallback>
             </Avatar>
-            <div className="flex min-h-7 flex-1 flex-col justify-center text-left leading-tight">
+            <div className="flex min-h-7 flex-1 flex-col justify-center text-left leading-tight group-data-[collapsible=icon]:hidden">
                 <span className="truncate text-sm font-medium">
                     {user.name}
                 </span>
