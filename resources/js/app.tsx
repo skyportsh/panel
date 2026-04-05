@@ -41,10 +41,42 @@ router.on('finish', (event) => {
     }
 });
 
-const appName = import.meta.env.VITE_APP_NAME || 'Skyport';
+type SharedPageProps = {
+    name?: string;
+};
+
+declare global {
+    interface Window {
+        __skyportAppName?: string;
+    }
+}
+
+function resolveAppName(): string {
+    return (
+        window.__skyportAppName ||
+        document
+            .querySelector('title')
+            ?.textContent?.split(' - ')
+            .pop() ||
+        import.meta.env.VITE_APP_NAME ||
+        'Skyport'
+    );
+}
+
+router.on('navigate', (event) => {
+    const appName = (event.detail.page.props as SharedPageProps).name;
+
+    if (typeof appName === 'string' && appName.length > 0) {
+        window.__skyportAppName = appName;
+    }
+});
 
 createInertiaApp({
-    title: (title) => (title ? `${title} - ${appName}` : appName),
+    title: (title) => {
+        const appName = resolveAppName();
+
+        return title ? `${title} - ${appName}` : appName;
+    },
     resolve: (name) =>
         resolvePageComponent(
             `./pages/${name}.tsx`,
@@ -52,6 +84,11 @@ createInertiaApp({
         ),
     setup({ el, App, props }) {
         const root = createRoot(el);
+        const appName = (props.initialPage.props as SharedPageProps).name;
+
+        if (typeof appName === 'string' && appName.length > 0) {
+            window.__skyportAppName = appName;
+        }
 
         root.render(
             <TooltipProvider delayDuration={0}>

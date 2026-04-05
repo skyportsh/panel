@@ -1,5 +1,5 @@
 import { Link, router } from '@inertiajs/react';
-import { LogOut, Settings, ShieldCheck } from 'lucide-react';
+import { LogOut, Settings } from 'lucide-react';
 import { index as adminUsers } from '@/actions/App/Http/Controllers/Admin/UsersController';
 import {
     DropdownMenuGroup,
@@ -16,6 +16,35 @@ import type { User } from '@/types';
 type Props = {
     user: User;
 };
+
+function AdminMenuIcon() {
+    return (
+        <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="mr-2 size-4"
+            aria-hidden="true"
+        >
+            <path
+                d="M9.17137 14.8284L14.8282 9.17152M14.8282 9.17152H9.87848M14.8282 9.17152V14.1213"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+            <path
+                d="M21 3.6V20.4C21 20.7314 20.7314 21 20.4 21H3.6C3.26863 21 3 20.7314 3 20.4V3.6C3 3.26863 3.26863 3 3.6 3H20.4C20.7314 3 21 3.26863 21 3.6Z"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </svg>
+    );
+}
 
 export function UserMenuContent({ user }: Props) {
     const cleanup = useMobileNavigation();
@@ -42,7 +71,7 @@ export function UserMenuContent({ user }: Props) {
                             prefetch
                             onClick={cleanup}
                         >
-                            <ShieldCheck className="mr-2" />
+                            <AdminMenuIcon />
                             Admin
                         </Link>
                     </DropdownMenuItem>

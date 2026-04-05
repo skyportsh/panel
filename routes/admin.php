@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\CargoController;
 use App\Http\Controllers\Admin\LocationsController;
 use App\Http\Controllers\Admin\NodesController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UsersController;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use Illuminate\Support\Facades\Route;
@@ -19,6 +21,13 @@ Route::middleware(['auth', EnsureUserIsAdmin::class])
         Route::delete('users/bulk-destroy', [UsersController::class, 'bulkDestroy'])->name('users.bulk-destroy');
         Route::delete('users/{user}', [UsersController::class, 'destroy'])->name('users.destroy');
 
+        Route::get('cargo', [CargoController::class, 'index'])->name('cargo.index');
+        Route::post('cargo', [CargoController::class, 'store'])->name('cargo.store');
+        Route::post('cargo/import', [CargoController::class, 'importCargo'])->name('cargo.import');
+        Route::patch('cargo/{cargo}', [CargoController::class, 'update'])->name('cargo.update');
+        Route::delete('cargo/bulk-destroy', [CargoController::class, 'bulkDestroy'])->name('cargo.bulk-destroy');
+        Route::delete('cargo/{cargo}', [CargoController::class, 'destroy'])->name('cargo.destroy');
+
         Route::get('locations', [LocationsController::class, 'index'])->name('locations.index');
         Route::post('locations', [LocationsController::class, 'store'])->name('locations.store');
         Route::patch('locations/{location}', [LocationsController::class, 'update'])->name('locations.update');
@@ -31,6 +40,9 @@ Route::middleware(['auth', EnsureUserIsAdmin::class])
         Route::patch('nodes/{node}', [NodesController::class, 'update'])->name('nodes.update');
         Route::delete('nodes/bulk-destroy', [NodesController::class, 'bulkDestroy'])->name('nodes.bulk-destroy');
         Route::delete('nodes/{node}', [NodesController::class, 'destroy'])->name('nodes.destroy');
+
+        Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
+        Route::patch('settings', [SettingsController::class, 'update'])->name('settings.update');
     });
 
 Route::post('admin/stop-impersonating', [UsersController::class, 'stopImpersonating'])

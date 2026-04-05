@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Http\Requests\Admin;
+
+use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Foundation\Http\FormRequest;
+
+class UpdateAppSettingsRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()?->is_admin ?? false;
+    }
+
+    /**
+     * @return array<string, ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'app_name' => ['required', 'string', 'max:255'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'app_name.required' => 'Please enter an application name.',
+        ];
+    }
+}

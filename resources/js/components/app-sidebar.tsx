@@ -1,11 +1,15 @@
 import { Link, usePage } from '@inertiajs/react';
+import { index as adminCargo } from '@/actions/App/Http/Controllers/Admin/CargoController';
 import { index as adminLocations } from '@/actions/App/Http/Controllers/Admin/LocationsController';
 import { index as adminNodes } from '@/actions/App/Http/Controllers/Admin/NodesController';
+import { index as adminSettings } from '@/actions/App/Http/Controllers/Admin/SettingsController';
 import { index as adminUsers } from '@/actions/App/Http/Controllers/Admin/UsersController';
+import CargoIcon from '@/components/cargo-icon';
 import DashboardIcon from '@/components/dashboard-icon';
 import LocationsIcon from '@/components/locations-icon';
 import { NavMain } from '@/components/nav-main';
 import NodesIcon from '@/components/nodes-icon';
+import SettingsIcon from '@/components/settings-icon';
 import { NavUser } from '@/components/nav-user';
 import UsersIcon from '@/components/users-icon';
 import {
@@ -22,7 +26,7 @@ import type { NavItem } from '@/types';
 
 export function AppSidebar() {
     const page = usePage();
-    const { auth } = page.props;
+    const { auth, name } = page.props;
     const isAdminSidebar = auth.user.is_admin && page.url.startsWith('/admin');
     const mainNavItems: NavItem[] = isAdminSidebar
         ? [
@@ -30,6 +34,11 @@ export function AppSidebar() {
                   title: 'Users',
                   href: adminUsers.url(),
                   icon: UsersIcon,
+              },
+              {
+                  title: 'Cargo',
+                  href: adminCargo.url(),
+                  icon: CargoIcon,
               },
               {
                   title: 'Locations',
@@ -40,6 +49,11 @@ export function AppSidebar() {
                   title: 'Nodes',
                   href: adminNodes.url(),
                   icon: NodesIcon,
+              },
+              {
+                  title: 'Settings',
+                  href: adminSettings.url(),
+                  icon: SettingsIcon,
               },
           ]
         : [
@@ -59,7 +73,7 @@ export function AppSidebar() {
                             <Link href={home()} prefetch>
                                 <div className="relative flex h-8 w-full items-center overflow-hidden group-data-[collapsible=icon]:justify-center">
                                     <span className="text-lg tracking-tight font-semibold group-data-[collapsible=icon]:hidden">
-                                        Skyport
+                                        {name}
                                     </span>
                                     <img
                                         src="https://i.ibb.co/qL4qgHB4/ETHER-2026-04-04-T141225-676.png"
