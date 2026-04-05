@@ -313,7 +313,8 @@ function ConfigureTab({
     node: AdminNode;
     onUpdateStatus: (status: string) => void;
 }) {
-    const [configurationData, setConfigurationData] = useState<ConfigurationData | null>(null);
+    const [configurationData, setConfigurationData] =
+        useState<ConfigurationData | null>(null);
     const [generating, setGenerating] = useState(false);
     const [copied, setCopied] = useState(false);
     const connectionStatus = node.connection_status ?? node.status ?? 'draft';
@@ -323,14 +324,17 @@ function ConfigureTab({
     const generateConfigurationToken = async () => {
         setGenerating(true);
         try {
-            const response = await fetch(`/admin/nodes/${node.id}/configure-token`, {
-                credentials: 'same-origin',
-                headers: {
-                    Accept: 'application/json',
-                    'X-CSRF-TOKEN': csrfToken(),
+            const response = await fetch(
+                `/admin/nodes/${node.id}/configure-token`,
+                {
+                    credentials: 'same-origin',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-CSRF-TOKEN': csrfToken(),
+                    },
+                    method: 'POST',
                 },
-                method: 'POST',
-            });
+            );
 
             if (!response.ok) {
                 throw new Error('Failed to generate configuration token');
@@ -366,31 +370,33 @@ function ConfigureTab({
                     Daemon Configuration
                 </h3>
                 <p className="mt-1 text-xs text-muted-foreground">
-                    Manage node configuration status and generate configuration tokens
-                    for daemon registration.
+                    Manage node configuration status and generate configuration
+                    tokens for daemon registration.
                 </p>
             </div>
 
             <div className="rounded-lg border border-border/70 bg-background p-4">
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Status</span>
+                        <span className="text-sm text-muted-foreground">
+                            Status
+                        </span>
                         <span
                             className={`text-sm font-medium ${
                                 currentStatus === 'online'
                                     ? 'text-emerald-600 dark:text-emerald-400'
                                     : currentStatus === 'offline'
                                       ? 'text-red-600 dark:text-red-400'
-                                : currentStatus === 'configured'
-                                      ? 'text-amber-600 dark:text-amber-400'
-                                      : 'text-muted-foreground'
+                                      : currentStatus === 'configured'
+                                        ? 'text-amber-600 dark:text-amber-400'
+                                        : 'text-muted-foreground'
                             }`}
                         >
                             {currentStatus === 'online'
                                 ? 'Online'
                                 : currentStatus === 'offline'
                                   ? 'Offline'
-                                : currentStatus === 'configured'
+                                  : currentStatus === 'configured'
                                     ? 'Configured'
                                     : 'Draft'}
                         </span>
@@ -446,7 +452,9 @@ function ConfigureTab({
                 <div className="rounded-lg border border-border/70 bg-muted/30 p-4">
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                            <span className="text-sm text-muted-foreground">Token</span>
+                            <span className="text-sm text-muted-foreground">
+                                Token
+                            </span>
                             <Button
                                 size="sm"
                                 variant="ghost"
@@ -462,7 +470,9 @@ function ConfigureTab({
                         </div>
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <span>Expires</span>
-                            <span>{formatDate(configurationData.expires_at, true)}</span>
+                            <span>
+                                {formatDate(configurationData.expires_at, true)}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -755,7 +765,7 @@ function NodeModal({
                                 </div>
                             </form>
                         </div>
-                            ) : null}
+                    ) : null}
 
                     {tab === 'configure' ? (
                         <ConfigureTab
@@ -861,7 +871,12 @@ export default function Nodes({ nodes, locations, filters }: Props) {
                     draft: 'Draft',
                 };
                 return (
-                    <span className={cn('text-sm font-medium', statusColors[status])}>
+                    <span
+                        className={cn(
+                            'text-sm font-medium',
+                            statusColors[status],
+                        )}
+                    >
                         {statusLabels[status]}
                     </span>
                 );
