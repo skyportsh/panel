@@ -34,8 +34,11 @@ test('daemon can enroll with a valid token', function () {
             'heartbeat_interval_seconds',
             'node_id',
             'panel_time',
+            'panel_version',
             'task_poll_interval_seconds',
         ]);
+
+    expect($response->json('panel_version'))->toBe(config('app.version'));
 
     $node->refresh();
 
@@ -82,6 +85,23 @@ test('daemon cannot enroll with an invalid token', function () {
         ]);
 });
 
+test('daemon enrollment rejects an incompatible daemon version', function () {
+    $node = Node::factory()->create();
+    $issued = app(NodeConfigurationService::class)->issue($node);
+
+    $response = postJson('/api/daemon/enroll', [
+        'token' => $issued['token'],
+        'uuid' => '550e8400-e29b-41d4-a716-446655440000',
+        'version' => '9.9.9',
+    ]);
+
+    $response
+        ->assertUnprocessable()
+        ->assertJson([
+            'message' => "This version of skyportd isn't compatible with Skyport panel ".config('app.version').'.',
+        ]);
+});
+
 test('daemon heartbeat updates last seen time', function () {
     $node = Node::factory()->create();
     $issued = app(NodeConfigurationService::class)->issue($node);
@@ -96,7 +116,7 @@ test('daemon heartbeat updates last seen time', function () {
         '/api/daemon/heartbeat',
         [
             'uuid' => '550e8400-e29b-41d4-a716-446655440000',
-            'version' => '0.1.1',
+            'version' => '0.1.0',
         ],
         ['Authorization' => 'Bearer '.$configuration['daemon_secret']],
     );
@@ -109,8 +129,34 @@ test('daemon heartbeat updates last seen time', function () {
 
     $node->refresh();
 
-    expect($node->daemon_version)->toBe('0.1.1');
+    expect($node->daemon_version)->toBe('0.1.0');
     expect($node->last_seen_at)->not->toBeNull();
+});
+
+test('daemon heartbeat rejects an incompatible daemon version', function () {
+    $node = Node::factory()->create();
+    $issued = app(NodeConfigurationService::class)->issue($node);
+
+    $configuration = postJson('/api/daemon/enroll', [
+        'token' => $issued['token'],
+        'uuid' => '550e8400-e29b-41d4-a716-446655440000',
+        'version' => '0.1.0',
+    ])->assertCreated()->json();
+
+    $response = postJson(
+        '/api/daemon/heartbeat',
+        [
+            'uuid' => '550e8400-e29b-41d4-a716-446655440000',
+            'version' => '9.9.9',
+        ],
+        ['Authorization' => 'Bearer '.$configuration['daemon_secret']],
+    );
+
+    $response
+        ->assertUnprocessable()
+        ->assertJson([
+            'message' => "This version of skyportd isn't compatible with Skyport panel ".config('app.version').'.',
+        ]);
 });
 
 test('daemon heartbeat rejects an invalid secret', function () {

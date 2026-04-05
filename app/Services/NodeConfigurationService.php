@@ -12,6 +12,8 @@ class NodeConfigurationService
 {
     private const DEFAULT_DAEMON_UUID = '00000000-0000-0000-0000-000000000000';
 
+    public function __construct(private PanelVersionService $panelVersionService) {}
+
     public function issue(Node $node): array
     {
         $token = Str::random(64);
@@ -60,6 +62,8 @@ class NodeConfigurationService
             throw new InvalidArgumentException('The enrollment token has already been used.');
         }
 
+        $this->panelVersionService->ensureCompatible($payload['version']);
+
         $issuedAt = CarbonImmutable::now();
         $secret = Str::random(64);
         $node = $credential->node;
@@ -86,6 +90,7 @@ class NodeConfigurationService
             'name' => $node->name,
             'node_id' => $node->id,
             'panel_time' => $issuedAt->toIso8601String(),
+            'panel_version' => $this->panelVersionService->current(),
             'task_poll_interval_seconds' => 5,
         ];
     }

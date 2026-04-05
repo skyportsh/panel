@@ -9,6 +9,8 @@ use InvalidArgumentException;
 
 class NodeHeartbeatService
 {
+    public function __construct(private PanelVersionService $panelVersionService) {}
+
     public function record(string $daemonSecret, array $payload): Node
     {
         $credential = NodeCredential::query()
@@ -19,6 +21,8 @@ class NodeHeartbeatService
         if (! $credential || ! $credential->node) {
             throw new InvalidArgumentException('The daemon secret is invalid.');
         }
+
+        $this->panelVersionService->ensureCompatible($payload['version']);
 
         $node = $credential->node;
 
