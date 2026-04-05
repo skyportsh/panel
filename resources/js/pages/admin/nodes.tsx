@@ -619,7 +619,7 @@ export default function Nodes({ nodes, locations, filters }: Props) {
     const columns: Column<AdminNode>[] = [
         {
             label: 'Node',
-            width: 'w-[34%] shrink-0',
+            width: 'w-[42%]',
             render: (node) => (
                 <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-foreground">
@@ -633,7 +633,7 @@ export default function Nodes({ nodes, locations, filters }: Props) {
         },
         {
             label: 'Location',
-            width: 'w-[22%] shrink-0',
+            width: 'w-[18%]',
             render: (node) => (
                 <div className="flex items-center gap-2">
                     <CountryFlagIcon
@@ -653,7 +653,7 @@ export default function Nodes({ nodes, locations, filters }: Props) {
         },
         {
             label: 'SSL',
-            width: 'w-[56px] shrink-0',
+            width: 'flex-1',
             render: (node) => (
                 <div className="flex items-center">
                     {node.use_ssl ? (
