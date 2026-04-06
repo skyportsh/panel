@@ -1,9 +1,9 @@
 <?php
 
 use App\Http\Controllers\Auth\PasskeyAuthenticationController;
+use App\Http\Controllers\Client\ServerWebsocketController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Laravel\Fortify\Features;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -23,6 +23,8 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::inertia('home', 'dashboard')->name('home');
+    Route::get('api/client/servers/{server}/websocket', [ServerWebsocketController::class, 'show'])
+        ->name('client.servers.websocket');
 });
 
 require __DIR__.'/settings.php';
