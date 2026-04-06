@@ -7,7 +7,7 @@ import {
     index as adminLocations,
     store,
     update,
-} from "@/actions/App/Http/Controllers/Admin/LocationsController";
+} from "@/routes/admin/locations";
 import { ConfirmDeleteDialog, DataTable } from "@/components/admin/data-table";
 import type { Column, PaginatedData } from "@/components/admin/data-table";
 import { CountryFlagIcon, CountryFlagOption } from "@/components/country-flag";

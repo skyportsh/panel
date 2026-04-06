@@ -62,86 +62,159 @@ type DataTableProps<T extends { id: number }> = {
 
 // ─── Pagination ──────────────────────────────────────────────────────────────
 
-function DataTablePagination({ data }: { data: PaginatedData<unknown> }) {
-    if (data.last_page <= 1) {
-        return null;
+type VisiblePaginationItem =
+    | {
+          key: string;
+          page: number;
+          type: 'page';
+          url: string | null;
+          active: boolean;
+      }
+    | {
+          key: string;
+          type: 'ellipsis';
+      };
+
+function visiblePaginationItems(
+    data: PaginatedData<unknown>,
+): VisiblePaginationItem[] {
+    const pageLinks = data.links.slice(1, -1).map((link, index) => ({
+        active: link.active,
+        page: index + 1,
+        url: link.url,
+    }));
+
+    if (pageLinks.length === 0) {
+        return [
+            {
+                active: true,
+                key: 'page-1',
+                page: Math.max(data.current_page, 1),
+                type: 'page',
+                url: null,
+            },
+        ];
     }
 
+    if (pageLinks.length <= 7) {
+        return pageLinks.map((link) => ({
+            ...link,
+            key: `page-${link.page}`,
+            type: 'page' as const,
+        }));
+    }
+
+    const pages = new Set([
+        1,
+        data.current_page - 1,
+        data.current_page,
+        data.current_page + 1,
+        data.last_page,
+    ]);
+
+    const sortedPages = [...pages]
+        .filter((page) => page >= 1 && page <= data.last_page)
+        .sort((left, right) => left - right);
+
+    const items: VisiblePaginationItem[] = [];
+
+    sortedPages.forEach((page, index) => {
+        const previousPage = sortedPages[index - 1];
+
+        if (previousPage && page - previousPage > 1) {
+            items.push({
+                key: `ellipsis-${previousPage}-${page}`,
+                type: 'ellipsis',
+            });
+        }
+
+        const link = pageLinks[page - 1];
+
+        if (link) {
+            items.push({
+                ...link,
+                key: `page-${page}`,
+                type: 'page',
+            });
+        }
+    });
+
+    return items;
+}
+
+function DataTablePagination({ data }: { data: PaginatedData<unknown> }) {
+    const items = visiblePaginationItems(data);
+    const previousLink = data.links[0]?.url ?? null;
+    const nextLink = data.links[data.links.length - 1]?.url ?? null;
+
     return (
-        <nav
-            className="flex items-center justify-center gap-0.5"
-            aria-label="Pagination"
-        >
-            <Link
-                href={data.links[0]?.url ?? '#'}
-                preserveScroll
-                className={cn(
-                    'flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-all duration-150 ease-out active:scale-95 active:duration-0',
-                    data.links[0]?.url
-                        ? 'hover:bg-muted hover:text-foreground'
-                        : 'pointer-events-none opacity-30',
-                )}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-muted-foreground">
+                Showing {data.from ?? 0}-{data.to ?? 0} of {data.total}
+            </p>
+
+            <nav
+                className="flex items-center justify-center gap-0.5"
+                aria-label="Pagination"
             >
-                <ChevronLeft className="h-3.5 w-3.5" />
-            </Link>
+                <Link
+                    href={previousLink ?? '#'}
+                    preserveScroll
+                    className={cn(
+                        'flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-all duration-150 ease-out active:scale-95 active:duration-0',
+                        previousLink
+                            ? 'hover:bg-muted hover:text-foreground'
+                            : 'pointer-events-none opacity-30',
+                    )}
+                >
+                    <ChevronLeft className="h-3.5 w-3.5" />
+                </Link>
 
-            {data.links.slice(1, -1).map((link, index) => {
-                const page = index + 1;
-                const current = data.current_page;
-                const last = data.last_page;
+                {items.map((item) => {
+                    if (item.type === 'ellipsis') {
+                        return (
+                            <span
+                                key={item.key}
+                                className="flex h-7 w-7 items-center justify-center text-[11px] text-muted-foreground"
+                            >
+                                …
+                            </span>
+                        );
+                    }
 
-                const isVisible =
-                    page === 1 ||
-                    page === last ||
-                    Math.abs(page - current) <= 1;
-                const isEllipsis =
-                    !isVisible && (page === 2 || page === last - 1);
-
-                if (!isVisible && !isEllipsis) {
-                    return null;
-                }
-
-                if (isEllipsis) {
                     return (
-                        <span
-                            key={`ellipsis-${index}`}
-                            className="flex h-7 w-7 items-center justify-center text-[11px] text-muted-foreground"
+                        <Link
+                            key={item.key}
+                            href={item.url ?? '#'}
+                            preserveScroll
+                            className={cn(
+                                'flex h-7 min-w-7 items-center justify-center rounded-md px-1.5 text-[11px] font-medium transition-all duration-150 ease-out active:scale-95 active:duration-0',
+                                item.active
+                                    ? 'bg-muted text-foreground'
+                                    : item.url
+                                      ? 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                                      : 'pointer-events-none opacity-30',
+                            )}
                         >
-                            …
-                        </span>
+                            {item.page}
+                        </Link>
                     );
-                }
+                })}
 
-                return (
-                    <Link
-                        key={`page-${page}`}
-                        href={link.url ?? '#'}
-                        preserveScroll
-                        className={cn(
-                            'flex h-7 w-7 items-center justify-center rounded-md text-[11px] font-medium transition-all duration-150 ease-out active:scale-95 active:duration-0',
-                            link.active
-                                ? 'bg-muted text-foreground'
-                                : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
-                        )}
-                    >
-                        {page}
-                    </Link>
-                );
-            })}
-
-            <Link
-                href={data.links[data.links.length - 1]?.url ?? '#'}
-                preserveScroll
-                className={cn(
-                    'flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-all duration-150 ease-out active:scale-95 active:duration-0',
-                    data.links[data.links.length - 1]?.url
-                        ? 'hover:bg-muted hover:text-foreground'
-                        : 'pointer-events-none opacity-30',
-                )}
-            >
-                <ChevronRight className="h-3.5 w-3.5" />
-            </Link>
-        </nav>
+                <Link
+                    href={nextLink ?? '#'}
+                    preserveScroll
+                    className={cn(
+                        'flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-all duration-150 ease-out active:scale-95 active:duration-0',
+                        nextLink
+                            ? 'hover:bg-muted hover:text-foreground'
+                            : 'pointer-events-none opacity-30',
+                    )}
+                >
+                    <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
+            </nav>
+        </div>
     );
 }
 

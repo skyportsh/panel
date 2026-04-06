@@ -94,6 +94,35 @@ test('admins can toggle between their servers and all servers on the home page',
             ->where('servers.data.1.id', $otherServer->id));
 });
 
+test('home page paginates server results', function () {
+    $dependencies = homeServerDependencies();
+    $user = User::factory()->create();
+
+    foreach (range(1, 11) as $number) {
+        Server::factory()->create([
+            'allocation_id' => Allocation::factory()->create([
+                'node_id' => $dependencies['node']->id,
+            ])->id,
+            'cargo_id' => $dependencies['cargo']->id,
+            'name' => sprintf('Server %02d', $number),
+            'node_id' => $dependencies['node']->id,
+            'user_id' => $user->id,
+        ]);
+    }
+
+    actingAs($user);
+
+    get('/home?page=2')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('dashboard')
+            ->where('servers.current_page', 2)
+            ->where('servers.last_page', 2)
+            ->where('servers.total', 11)
+            ->has('servers.data', 1)
+            ->where('servers.data.0.name', 'Server 11'));
+});
+
 test('non admins cannot use all scope on the home page', function () {
     $dependencies = homeServerDependencies();
     $user = User::factory()->create();

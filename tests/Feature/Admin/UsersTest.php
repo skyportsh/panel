@@ -52,6 +52,32 @@ test('admin can search users', function () {
         );
 });
 
+test('admin users page paginates results', function () {
+    $admin = User::factory()->create([
+        'is_admin' => true,
+        'updated_at' => now(),
+    ]);
+
+    foreach (range(1, 11) as $number) {
+        User::factory()->create([
+            'name' => "User {$number}",
+            'updated_at' => now()->subMinutes(20 - $number),
+        ]);
+    }
+
+    $this->actingAs($admin)
+        ->get('/admin/users?page=2')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('users.current_page', 2)
+            ->where('users.last_page', 2)
+            ->where('users.total', 12)
+            ->has('users.data', 2)
+            ->where('users.data.0.name', 'User 2')
+            ->where('users.data.1.name', 'User 1'),
+        );
+});
+
 test('admin can update a user name and email', function () {
     $admin = User::factory()->create(['is_admin' => true]);
     $user = User::factory()->create(['name' => 'Old Name', 'email' => 'old@example.com']);

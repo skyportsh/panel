@@ -14,10 +14,10 @@ import {
     bulkDestroy,
     destroy,
     index as adminNodes,
+    configureToken as storeAllocation,
     store,
-    storeAllocation,
     update,
-} from "@/actions/App/Http/Controllers/Admin/NodesController";
+} from "@/routes/admin/nodes";
 import { ConfirmDeleteDialog, DataTable } from "@/components/admin/data-table";
 import type { Column, PaginatedData } from "@/components/admin/data-table";
 import { CountryFlagIcon, CountryFlagOption } from "@/components/country-flag";

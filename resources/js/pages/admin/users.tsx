@@ -19,8 +19,8 @@ import {
     suspend,
     unsuspend,
     update,
-} from "@/actions/App/Http/Controllers/Admin/UsersController";
-import { bulkDestroy } from "@/actions/App/Http/Controllers/Admin/UsersController";
+    bulkDestroy,
+} from "@/routes/admin/users";
 import { ConfirmDeleteDialog, DataTable } from "@/components/admin/data-table";
 import type { Column, PaginatedData } from "@/components/admin/data-table";
 import InputError from "@/components/input-error";

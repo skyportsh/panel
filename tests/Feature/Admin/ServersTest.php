@@ -115,6 +115,35 @@ test('admin can search servers', function () {
             ->where('servers.data.0.name', 'Paper Survival'));
 });
 
+test('admin servers page paginates results', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $dependencies = serverDependencies();
+
+    foreach (range(1, 11) as $number) {
+        Server::factory()->create([
+            'cargo_id' => $dependencies['cargo']->id,
+            'allocation_id' => Allocation::factory()->create([
+                'node_id' => $dependencies['node']->id,
+            ])->id,
+            'name' => "Server {$number}",
+            'node_id' => $dependencies['node']->id,
+            'updated_at' => now()->subMinutes(20 - $number),
+            'user_id' => $dependencies['user']->id,
+        ]);
+    }
+
+    actingAs($admin);
+
+    get('/admin/servers?page=2')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('servers.current_page', 2)
+            ->where('servers.last_page', 2)
+            ->where('servers.total', 11)
+            ->has('servers.data', 1)
+            ->where('servers.data.0.name', 'Server 1'));
+});
+
 test('admin can create a server and push it to skyportd', function () {
     Http::fake([
         'http://node.example.com:2800/api/daemon/servers/sync' => Http::response([

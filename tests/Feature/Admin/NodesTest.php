@@ -67,6 +67,31 @@ test('admin can search nodes', function () {
         );
 });
 
+test('admin nodes page paginates results', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $location = Location::factory()->create();
+
+    foreach (range(1, 11) as $number) {
+        Node::factory()->create([
+            'location_id' => $location->id,
+            'name' => "Node {$number}",
+            'updated_at' => now()->subMinutes(20 - $number),
+        ]);
+    }
+
+    actingAs($admin);
+
+    get('/admin/nodes?page=2')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('nodes.current_page', 2)
+            ->where('nodes.last_page', 2)
+            ->where('nodes.total', 11)
+            ->has('nodes.data', 1)
+            ->where('nodes.data.0.name', 'Node 1'),
+        );
+});
+
 test('admin can create a node', function () {
     $admin = User::factory()->create(['is_admin' => true]);
     $location = Location::factory()->create();

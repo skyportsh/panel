@@ -1,10 +1,9 @@
 import { Head, Link } from '@inertiajs/react';
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts';
-import { index as adminDashboard } from '@/actions/App/Http/Controllers/Admin/DashboardController';
-import { index as adminServers } from '@/actions/App/Http/Controllers/Admin/ServersController';
-import { index as adminUsers } from '@/actions/App/Http/Controllers/Admin/UsersController';
 import AdminLayout from '@/layouts/admin/layout';
 import AppLayout from '@/layouts/app-layout';
+import { index as adminServers } from '@/routes/admin/servers';
+import { index as adminUsers } from '@/routes/admin/users';
 import type { BreadcrumbItem } from '@/types';
 
 type ChartPoint = {
@@ -29,9 +28,7 @@ type Props = {
     recentServersTotal: number;
     serversTrendText: string;
     nodes: NodeInfo[];
-    totalServers: number;
     totalNodes: number;
-    totalUsers: number;
     totalMemoryMib: number;
     totalDiskMib: number;
     version: string;
@@ -89,7 +86,7 @@ function ChartCard({
 }) {
     return (
         <div className="relative flex h-full flex-col gap-1 rounded-md bg-sidebar p-1">
-            <div className="relative flex aspect-video flex-col justify-between overflow-hidden rounded-md border border-sidebar-accent bg-background p-4">
+            <div className="relative flex aspect-[16/7] flex-col justify-between overflow-hidden rounded-md border border-sidebar-accent bg-background p-4">
                 <div className="absolute inset-x-0 bottom-0 z-10 h-1/3 bg-gradient-to-t from-background to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 h-2/4">
                     <ResponsiveContainer width="100%" height="100%">
@@ -214,11 +211,11 @@ function formatMib(mib: number): string {
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Admin',
-        href: adminDashboard.url(),
+        href: '/admin',
     },
     {
         title: 'Overview',
-        href: adminDashboard.url(),
+        href: '/admin',
     },
 ];
 
@@ -230,9 +227,7 @@ export default function AdminDashboard({
     recentServersTotal,
     serversTrendText,
     nodes,
-    totalServers,
     totalNodes,
-    totalUsers,
     totalMemoryMib,
     totalDiskMib,
     version,
@@ -262,7 +257,7 @@ export default function AdminDashboard({
                             </div>
                         </div>
 
-                        <div className="grid auto-rows-min gap-4 md:grid-cols-3">
+                        <div className="grid auto-rows-min gap-4 lg:grid-cols-2">
                             <ChartCard
                                 title="Recent user growth"
                                 subtitle="Last 30 days of registrations"
@@ -303,16 +298,6 @@ export default function AdminDashboard({
                                 footerLink={adminServers.url()}
                                 footerLinkLabel="Manage servers"
                             />
-                            <div className="grid grid-rows-2 gap-4">
-                                <StatCard
-                                    label="Total users"
-                                    value={totalUsers}
-                                />
-                                <StatCard
-                                    label="Total servers"
-                                    value={totalServers}
-                                />
-                            </div>
                         </div>
 
                         <div className="grid auto-rows-min gap-4 md:grid-cols-3">

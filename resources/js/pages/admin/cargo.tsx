@@ -4,11 +4,11 @@ import { useMemo, useRef, useState } from "react";
 import {
     bulkDestroy,
     destroy,
-    importCargo,
     index as adminCargo,
+    importMethod as importCargo,
     store,
     update,
-} from "@/actions/App/Http/Controllers/Admin/CargoController";
+} from "@/routes/admin/cargo";
 import { ConfirmDeleteDialog, DataTable } from "@/components/admin/data-table";
 import type { Column, PaginatedData } from "@/components/admin/data-table";
 import CargoIcon from "@/components/cargo-icon";

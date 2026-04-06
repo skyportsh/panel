@@ -93,6 +93,29 @@ test('admin can search cargo', function () {
             ->where('cargo.data.0.name', 'Paper'));
 });
 
+test('admin cargo page paginates results', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    foreach (range(1, 11) as $number) {
+        Cargo::factory()->create([
+            'name' => "Cargo {$number}",
+            'slug' => "cargo-{$number}",
+            'updated_at' => now()->subMinutes(20 - $number),
+        ]);
+    }
+
+    actingAs($admin);
+
+    get('/admin/cargo?page=2')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('cargo.current_page', 2)
+            ->where('cargo.last_page', 2)
+            ->where('cargo.total', 11)
+            ->has('cargo.data', 1)
+            ->where('cargo.data.0.name', 'Cargo 1'));
+});
+
 test('admin can create cargo', function () {
     $admin = User::factory()->create(['is_admin' => true]);
 

@@ -1,7 +1,6 @@
 import { Head, router } from "@inertiajs/react";
 import { useState } from "react";
 import { index as adminAuditLog } from "@/actions/App/Http/Controllers/Admin/AuditLogController";
-import { index as adminDashboard } from "@/actions/App/Http/Controllers/Admin/DashboardController";
 import { DataTable } from "@/components/admin/data-table";
 import type { Column, PaginatedData } from "@/components/admin/data-table";
 import {
@@ -49,7 +48,7 @@ type Props = {
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: "Admin",
-        href: adminDashboard.url(),
+        href: "/admin",
     },
     {
         title: "Activity",

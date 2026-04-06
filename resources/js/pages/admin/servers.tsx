@@ -3,13 +3,13 @@ import { Download, Ellipsis, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import {
     bulkDestroy,
+    installLog as downloadInstallLog,
     destroy,
-    downloadInstallLog,
     index as adminServers,
     reinstall,
     store,
     update,
-} from "@/actions/App/Http/Controllers/Admin/ServersController";
+} from "@/routes/admin/servers";
 import { ConfirmDeleteDialog, DataTable } from "@/components/admin/data-table";
 import type { Column, PaginatedData } from "@/components/admin/data-table";
 import InputError from "@/components/input-error";

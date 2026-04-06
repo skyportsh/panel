@@ -42,6 +42,28 @@ test('admin can search locations', function () {
         );
 });
 
+test('admin locations page paginates results', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    foreach (range(1, 11) as $number) {
+        Location::factory()->create([
+            'name' => "Location {$number}",
+            'updated_at' => now()->subMinutes(20 - $number),
+        ]);
+    }
+
+    $this->actingAs($admin)
+        ->get('/admin/locations?page=2')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('locations.current_page', 2)
+            ->where('locations.last_page', 2)
+            ->where('locations.total', 11)
+            ->has('locations.data', 1)
+            ->where('locations.data.0.name', 'Location 1'),
+        );
+});
+
 test('admin can create a location', function () {
     $admin = User::factory()->create(['is_admin' => true]);
 
