@@ -109,15 +109,32 @@ class DashboardController extends Controller
             $totalNodes = 0;
         }
 
+        $recentUsersTotal = array_sum(array_column($recentUsers, 'amount'));
+        $recentServersTotal = array_sum(array_column($recentServers, 'amount'));
+
+        $recentHalf = array_slice($recentUsers, 15);
+        $priorHalf = array_slice($recentUsers, 0, 15);
+        $usersTrendText = $this->trendText(
+            array_sum(array_column($recentHalf, 'amount')),
+            array_sum(array_column($priorHalf, 'amount')),
+            'signups',
+        );
+
+        $serverRecentHalf = array_slice($recentServers, 15);
+        $serverPriorHalf = array_slice($recentServers, 0, 15);
+        $serversTrendText = $this->trendText(
+            array_sum(array_column($serverRecentHalf, 'amount')),
+            array_sum(array_column($serverPriorHalf, 'amount')),
+            'provisioning',
+        );
+
         return Inertia::render('admin/dashboard', [
             'recentUsers' => $recentUsers,
-            'recentUsersTotal' => array_sum(
-                array_column($recentUsers, 'amount'),
-            ),
+            'recentUsersTotal' => $recentUsersTotal,
+            'usersTrendText' => $usersTrendText,
             'recentServers' => $recentServers,
-            'recentServersTotal' => array_sum(
-                array_column($recentServers, 'amount'),
-            ),
+            'recentServersTotal' => $recentServersTotal,
+            'serversTrendText' => $serversTrendText,
             'nodes' => $nodes,
             'totalServers' => $totalServers,
             'totalNodes' => $totalNodes,
@@ -126,6 +143,29 @@ class DashboardController extends Controller
             'totalDiskMib' => $totalDiskMib,
             'version' => $this->panelVersion(),
         ]);
+    }
+
+    protected function trendText(int $recent, int $prior, string $noun): string
+    {
+        if ($recent === 0 && $prior === 0) {
+            return "No {$noun} activity";
+        }
+
+        if ($prior === 0) {
+            return ucfirst("{$noun} picking up");
+        }
+
+        $change = (int) round((($recent - $prior) / $prior) * 100);
+
+        if ($change > 10) {
+            return ucfirst("{$noun} trending up {$change}%");
+        }
+
+        if ($change < -10) {
+            return ucfirst("{$noun} down ".abs($change).'%');
+        }
+
+        return ucfirst("{$noun} are steady");
     }
 
     protected function panelVersion(): string

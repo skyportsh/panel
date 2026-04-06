@@ -48,7 +48,10 @@ it('shows the admin overview with recent user creation data', function () {
             ->has('totalNodes')
             ->has('totalUsers')
             ->has('totalMemoryMib')
-            ->has('totalDiskMib'),
+            ->has('totalDiskMib')
+            ->has('version')
+            ->has('usersTrendText')
+            ->has('serversTrendText'),
         );
 
     Carbon::setTestNow();
