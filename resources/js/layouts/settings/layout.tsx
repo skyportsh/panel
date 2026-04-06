@@ -10,6 +10,7 @@ import { edit as editActivity } from '@/routes/activity';
 import { edit as editPreferences } from '@/routes/preferences';
 import { edit } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
+import { edit as editSessions } from '@/routes/sessions';
 import type { NavItem } from '@/types';
 
 const sidebarNavItems: Array<NavItem & { href: NonNullable<NavItem['href']> }> =
@@ -22,6 +23,11 @@ const sidebarNavItems: Array<NavItem & { href: NonNullable<NavItem['href']> }> =
         {
             title: 'Security',
             href: editSecurity(),
+            icon: null,
+        },
+        {
+            title: 'Sessions',
+            href: editSessions(),
             icon: null,
         },
         {

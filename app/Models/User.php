@@ -11,13 +11,13 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
-#[Fillable(["name", "email", "password", "is_admin", "suspended_at"])]
+#[Fillable(['name', 'email', 'password', 'is_admin', 'suspended_at', 'admin_notes'])]
 #[
     Hidden([
-        "password",
-        "two_factor_secret",
-        "two_factor_recovery_codes",
-        "remember_token",
+        'password',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        'remember_token',
     ]),
 ]
 class User extends Authenticatable
@@ -33,11 +33,11 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            "email_verified_at" => "datetime",
-            "is_admin" => "boolean",
-            "password" => "hashed",
-            "suspended_at" => "datetime",
-            "two_factor_confirmed_at" => "datetime",
+            'email_verified_at' => 'datetime',
+            'is_admin' => 'boolean',
+            'password' => 'hashed',
+            'suspended_at' => 'datetime',
+            'two_factor_confirmed_at' => 'datetime',
         ];
     }
 

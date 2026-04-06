@@ -28,6 +28,7 @@ class UpdateUserRequest extends FormRequest
                 'max:255',
                 Rule::unique('users', 'email')->ignore($userId),
             ],
+            'admin_notes' => ['nullable', 'string', 'max:5000'],
         ];
     }
 }

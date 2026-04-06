@@ -19,6 +19,8 @@ class UpdateAppSettingsRequest extends FormRequest
     {
         return [
             'app_name' => ['required', 'string', 'max:255'],
+            'announcement' => ['nullable', 'string', 'max:1000'],
+            'announcement_enabled' => ['boolean'],
         ];
     }
 

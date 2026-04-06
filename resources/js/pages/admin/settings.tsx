@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/sonner';
 import AdminLayout from '@/layouts/admin/layout';
 import AppLayout from '@/layouts/app-layout';
@@ -17,11 +18,15 @@ import type { BreadcrumbItem } from '@/types';
 type Props = {
     settings: {
         app_name: string;
+        announcement: string;
+        announcement_enabled: boolean;
     };
 };
 
 type SettingsFormData = {
     app_name: string;
+    announcement: string;
+    announcement_enabled: boolean;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -32,6 +37,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function Settings({ settings }: Props) {
     const form = useForm<SettingsFormData>({
         app_name: settings.app_name,
+        announcement: settings.announcement,
+        announcement_enabled: settings.announcement_enabled,
     });
     const minimumMs = 500;
     const submitStart = useRef(0);
@@ -52,7 +59,7 @@ export default function Settings({ settings }: Props) {
                 setTimeout(() => setSubmitting(false), Math.max(0, remaining));
             },
             onSuccess: () => {
-                form.setDefaults('app_name', form.data.app_name);
+                form.setDefaults();
                 toast.success('Settings updated');
             },
             onError: (errors) => {
@@ -69,9 +76,9 @@ export default function Settings({ settings }: Props) {
 
             <AdminLayout
                 title="Settings"
-                description="Manage panel-wide branding and future appearance options."
+                description="Manage panel-wide branding and announcements."
             >
-                <form onSubmit={submit} className="max-w-xl space-y-4">
+                <form onSubmit={submit} className="max-w-xl space-y-6">
                     <div className="grid gap-2">
                         <Label htmlFor="app-name">Application name</Label>
                         <Input
@@ -84,6 +91,51 @@ export default function Settings({ settings }: Props) {
                             required
                         />
                         <InputError message={form.errors.app_name} />
+                    </div>
+
+                    <div className="space-y-4 rounded-lg border border-border/70 p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <Label htmlFor="announcement-toggle">
+                                    Announcement banner
+                                </Label>
+                                <p className="text-xs text-muted-foreground">
+                                    Show a banner to all users across the
+                                    panel.
+                                </p>
+                            </div>
+                            <Switch
+                                id="announcement-toggle"
+                                checked={form.data.announcement_enabled}
+                                onCheckedChange={(checked) =>
+                                    form.setData(
+                                        'announcement_enabled',
+                                        checked,
+                                    )
+                                }
+                            />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="announcement">
+                                Announcement message
+                            </Label>
+                            <textarea
+                                id="announcement"
+                                value={form.data.announcement}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'announcement',
+                                        event.target.value,
+                                    )
+                                }
+                                placeholder="Scheduled maintenance on Friday at 10pm UTC..."
+                                rows={3}
+                                className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                maxLength={1000}
+                            />
+                            <InputError message={form.errors.announcement} />
+                        </div>
                     </div>
 
                     <div className="flex justify-start">

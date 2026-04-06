@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\AppSettingsService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -53,6 +54,7 @@ class HandleInertiaRequests extends Middleware
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') ||
                 $request->cookie('sidebar_state') === 'true',
             'impersonating' => $request->session()->has('impersonator_id'),
+            'announcement' => fn (): ?string => app(AppSettingsService::class)->announcement(),
         ];
     }
 }

@@ -64,6 +64,7 @@ type AdminUser = User & {
     suspended_at: string | null;
     is_admin: boolean;
     two_factor_confirmed_at: string | null;
+    admin_notes: string | null;
 };
 
 type Props = {
@@ -101,10 +102,13 @@ function UserModal({
     const passwordStart = useRef(0);
     const [passwordSubmitting, setPasswordSubmitting] = useState(false);
     const [actioning, setActioning] = useState<string | null>(null);
+    const notesStart = useRef(0);
+    const [notesSubmitting, setNotesSubmitting] = useState(false);
 
     const tabs: Tab[] = [
         { id: 'overview', label: 'Overview' },
         { id: 'edit', label: 'Edit' },
+        { id: 'notes', label: 'Notes' },
         { id: 'danger', label: 'Danger' },
     ];
 
@@ -197,6 +201,21 @@ function UserModal({
                                     </div>
                                 ))}
                             </div>
+
+                            {user.admin_notes && (
+                                <div className="mt-4 overflow-hidden rounded-lg bg-muted/40">
+                                    <div className="px-4 py-2.5">
+                                        <span className="text-xs font-medium text-muted-foreground">
+                                            Admin notes
+                                        </span>
+                                    </div>
+                                    <div className="rounded-lg border border-border/70 bg-background p-4">
+                                        <p className="whitespace-pre-wrap text-sm text-foreground">
+                                            {user.admin_notes}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Right — stat cards (table style) */}
                             <div className="w-[300px] shrink-0 space-y-3">
@@ -410,6 +429,86 @@ function UserModal({
                                     )}
                                 </Form>
                             </div>
+                        </div>
+                    )}
+
+                    {/* Notes tab */}
+                    {tab === 'notes' && (
+                        <div className="max-w-lg">
+                            <h3 className="text-sm font-semibold text-foreground">
+                                Admin notes
+                            </h3>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                Internal notes about this user. Only visible
+                                to administrators.
+                            </p>
+                            <Form
+                                {...update.form(user.id)}
+                                options={{ preserveScroll: true }}
+                                onStart={() => {
+                                    notesStart.current = Date.now();
+                                    setNotesSubmitting(true);
+                                }}
+                                onFinish={() => {
+                                    const rem =
+                                        MIN_MS -
+                                        (Date.now() - notesStart.current);
+                                    setTimeout(
+                                        () => setNotesSubmitting(false),
+                                        Math.max(0, rem),
+                                    );
+                                }}
+                                onSuccess={() =>
+                                    toast.success('Notes saved')
+                                }
+                                onError={(errors) =>
+                                    Object.values(errors).forEach((m) =>
+                                        toast.error(m),
+                                    )
+                                }
+                                className="mt-4 space-y-4"
+                            >
+                                {({ errors }) => (
+                                    <>
+                                        <input
+                                            type="hidden"
+                                            name="name"
+                                            value={user.name}
+                                        />
+                                        <input
+                                            type="hidden"
+                                            name="email"
+                                            value={user.email}
+                                        />
+                                        <div className="grid gap-2">
+                                            <textarea
+                                                name="admin_notes"
+                                                defaultValue={
+                                                    user.admin_notes ?? ''
+                                                }
+                                                placeholder="Add notes about this user..."
+                                                rows={6}
+                                                className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                                maxLength={5000}
+                                            />
+                                            <InputError
+                                                message={errors.admin_notes}
+                                            />
+                                        </div>
+                                        <div className="flex justify-end">
+                                            <Button
+                                                type="submit"
+                                                disabled={notesSubmitting}
+                                            >
+                                                {notesSubmitting && (
+                                                    <Spinner />
+                                                )}
+                                                Save notes
+                                            </Button>
+                                        </div>
+                                    </>
+                                )}
+                            </Form>
                         </div>
                     )}
 

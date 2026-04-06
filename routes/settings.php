@@ -4,6 +4,7 @@ use App\Http\Controllers\Settings\ActivityController;
 use App\Http\Controllers\Settings\PasskeyController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
+use App\Http\Controllers\Settings\SessionsController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function () {
@@ -25,6 +26,9 @@ Route::middleware(['auth'])->group(function () {
     Route::put('settings/password', [SecurityController::class, 'update'])
         ->middleware('throttle:6,1')
         ->name('user-password.update');
+
+    Route::get('settings/sessions', [SessionsController::class, 'edit'])->name('sessions.edit');
+    Route::delete('settings/sessions/{session}', [SessionsController::class, 'destroy'])->name('sessions.destroy');
 
     Route::inertia('settings/preferences', 'settings/preferences')->name('preferences.edit');
 });
