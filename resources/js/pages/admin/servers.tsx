@@ -201,12 +201,14 @@ function OptionSelect({
     options,
     placeholder,
     renderLabel,
+    disabled = false,
 }: {
     value: number | '';
     onChange: (value: number) => void;
     options: Array<{ id: number }>;
     placeholder: string;
     renderLabel: (option: any) => string;
+    disabled?: boolean;
 }) {
     const selected = options.find((option) => option.id === value);
 
@@ -214,6 +216,7 @@ function OptionSelect({
         <Select
             value={value === '' ? '' : String(value)}
             onValueChange={(selectedValue) => onChange(Number(selectedValue))}
+            disabled={disabled}
         >
             <SelectTrigger className="w-full">
                 <span
@@ -244,6 +247,7 @@ function ServerFormFields({
     nodes,
     allocations,
     cargo,
+    lockPlacement,
 }: {
     data: ServerFormData;
     setData: <K extends keyof ServerFormData>(
@@ -255,6 +259,7 @@ function ServerFormFields({
     nodes: NodeOption[];
     allocations: AllocationOption[];
     cargo: CargoOption[];
+    lockPlacement?: boolean;
 }) {
     const availableAllocations = allocations.filter(
         (allocation) =>
@@ -300,6 +305,7 @@ function ServerFormFields({
                         options={nodes}
                         placeholder="Choose a node"
                         renderLabel={(node: NodeOption) => node.name}
+                        disabled={lockPlacement}
                     />
                     <InputError message={errors.node_id} />
                 </div>
@@ -311,6 +317,7 @@ function ServerFormFields({
                         options={cargo}
                         placeholder="Choose a cargo"
                         renderLabel={(cargoItem: CargoOption) => cargoItem.name}
+                        disabled={lockPlacement}
                     />
                     <InputError message={errors.cargo_id} />
                 </div>
@@ -666,11 +673,14 @@ function ServerModal({
                                     Server configuration
                                 </h3>
                                 <p className="mt-1 text-xs text-muted-foreground">
-                                    Update ownership, node placement, cargo, and limits.
+                                    Update ownership, primary allocation, and resource limits.
                                 </p>
                             </div>
 
                             <form onSubmit={submit} className="space-y-4">
+                                <div className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
+                                    Node and cargo cannot be changed after a server is created. Resource updates are applied immediately if the server is offline, or queued until the next restart or start.
+                                </div>
                                 <ServerFormFields
                                     data={form.data}
                                     setData={form.setData}
@@ -679,6 +689,7 @@ function ServerModal({
                                     nodes={nodes}
                                     allocations={allocations}
                                     cargo={cargo}
+                                    lockPlacement
                                 />
 
                                 <div className="flex justify-end">

@@ -142,19 +142,13 @@ class ServersController extends Controller
     {
         $server->loadMissing(['cargo', 'node.credential', 'user']);
         $targetServer = clone $server;
-        $originalNodeId = $server->node_id;
         $validated = $request->validated();
         $this->ensureAllocationIsAvailable((int) $validated['allocation_id'], (int) $validated['node_id'], $server);
 
         $server->update($validated);
         $server->refresh()->loadMissing(['cargo', 'node.credential', 'user']);
 
-        if ($originalNodeId !== $server->node_id) {
-            $synced = $this->serverRemoteUpdateService->delete($targetServer)
-                && $this->serverRemoteUpdateService->push($server);
-        } else {
-            $synced = $this->serverRemoteUpdateService->push($targetServer, $server);
-        }
+        $synced = $this->serverRemoteUpdateService->push($targetServer, $server);
 
         if ($synced) {
             return back()->with('success', 'Server updated. skyportd saved the new server state.');

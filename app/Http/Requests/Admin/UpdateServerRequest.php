@@ -4,6 +4,7 @@ namespace App\Http\Requests\Admin;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateServerRequest extends FormRequest
 {
@@ -17,11 +18,13 @@ class UpdateServerRequest extends FormRequest
      */
     public function rules(): array
     {
+        $server = $this->route('server');
+
         return [
             'name' => ['required', 'string', 'max:255'],
             'user_id' => ['required', 'integer', 'exists:users,id'],
-            'node_id' => ['required', 'integer', 'exists:nodes,id'],
-            'cargo_id' => ['required', 'integer', 'exists:cargos,id'],
+            'node_id' => ['required', 'integer', Rule::in([$server->node_id])],
+            'cargo_id' => ['required', 'integer', Rule::in([$server->cargo_id])],
             'allocation_id' => ['required', 'integer', 'exists:allocations,id'],
             'memory_mib' => ['required', 'integer', 'min:1'],
             'cpu_limit' => ['required', 'integer', 'min:0'],
@@ -39,9 +42,9 @@ class UpdateServerRequest extends FormRequest
             'user_id.required' => 'Please choose a user.',
             'user_id.exists' => 'Please choose a valid user.',
             'node_id.required' => 'Please choose a node.',
-            'node_id.exists' => 'Please choose a valid node.',
+            'node_id.in' => 'The node cannot be changed after the server is created.',
             'cargo_id.required' => 'Please choose a cargo.',
-            'cargo_id.exists' => 'Please choose a valid cargo.',
+            'cargo_id.in' => 'The cargo cannot be changed after the server is created.',
             'allocation_id.required' => 'Please choose an allocation.',
             'allocation_id.exists' => 'Please choose a valid allocation.',
             'memory_mib.required' => 'Please enter a memory limit.',

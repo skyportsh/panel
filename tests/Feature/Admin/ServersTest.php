@@ -195,39 +195,77 @@ test('admin can download an install log from skyportd', function () {
     });
 });
 
-test('admin can update a server and move it between nodes', function () {
+test('admin can update a server on the same node and sync new limits to skyportd', function () {
     Http::fake([
-        'http://old-node.example.com:2800/api/daemon/servers/*' => Http::response([
-            'ok' => true,
-        ]),
-        'http://new-node.example.com:2900/api/daemon/servers/sync' => Http::response([
+        'http://node.example.com:2800/api/daemon/servers/sync' => Http::response([
             'ok' => true,
         ]),
     ]);
 
     $admin = User::factory()->create(['is_admin' => true]);
     $dependencies = serverDependencies();
-    $newDependencies = serverDependencies();
     $dependencies['node']->forceFill([
         'daemon_uuid' => '550e8400-e29b-41d4-a716-446655440001',
         'daemon_port' => 2800,
-        'fqdn' => 'old-node.example.com',
-        'use_ssl' => false,
-    ])->save();
-    $newDependencies['node']->forceFill([
-        'daemon_uuid' => '550e8400-e29b-41d4-a716-446655440002',
-        'daemon_port' => 2900,
-        'fqdn' => 'new-node.example.com',
+        'fqdn' => 'node.example.com',
         'use_ssl' => false,
     ])->save();
     NodeCredential::factory()->create([
-        'daemon_callback_token' => 'old-callback-token',
+        'daemon_callback_token' => 'callback-token',
         'node_id' => $dependencies['node']->id,
     ]);
-    NodeCredential::factory()->create([
-        'daemon_callback_token' => 'new-callback-token',
-        'node_id' => $newDependencies['node']->id,
+    $server = Server::factory()->create([
+        'cargo_id' => $dependencies['cargo']->id,
+        'allocation_id' => $dependencies['allocation']->id,
+        'node_id' => $dependencies['node']->id,
+        'user_id' => $dependencies['user']->id,
     ]);
+    $newUser = User::factory()->create();
+    $newAllocation = Allocation::factory()->create(['node_id' => $dependencies['node']->id]);
+
+    actingAs($admin);
+
+    patch("/admin/servers/{$server->id}", [
+        'name' => 'Updated Survival',
+        'user_id' => $newUser->id,
+        'node_id' => $dependencies['node']->id,
+        'cargo_id' => $dependencies['cargo']->id,
+        'allocation_id' => $newAllocation->id,
+        'memory_mib' => 8192,
+        'cpu_limit' => 0,
+        'disk_mib' => 40960,
+    ])
+        ->assertRedirect()
+        ->assertSessionHas('success', 'Server updated. skyportd saved the new server state.');
+
+    $server->refresh();
+
+    expect($server->name)->toBe('Updated Survival');
+    expect($server->user_id)->toBe($newUser->id);
+    expect($server->node_id)->toBe($dependencies['node']->id);
+    expect($server->cargo_id)->toBe($dependencies['cargo']->id);
+    expect($server->allocation_id)->toBe($newAllocation->id);
+    expect($server->memory_mib)->toBe(8192);
+    expect($server->cpu_limit)->toBe(0);
+    expect($server->disk_mib)->toBe(40960);
+
+    Http::assertSent(function ($request) use ($server, $newAllocation) {
+        return $request->method() === 'POST'
+            && $request->url() === 'http://node.example.com:2800/api/daemon/servers/sync'
+            && $request->hasHeader('Authorization', 'Bearer callback-token')
+            && $request['uuid'] === '550e8400-e29b-41d4-a716-446655440001'
+            && $request['server']['id'] === $server->id
+            && $request['server']['limits']['memory_mib'] === 8192
+            && $request['server']['allocation']['id'] === $newAllocation->id;
+    });
+});
+
+test('admin cannot change a server node or cargo after creation', function () {
+    Http::fake();
+
+    $admin = User::factory()->create(['is_admin' => true]);
+    $dependencies = serverDependencies();
+    $otherDependencies = serverDependencies();
     $server = Server::factory()->create([
         'cargo_id' => $dependencies['cargo']->id,
         'allocation_id' => $dependencies['allocation']->id,
@@ -239,42 +277,20 @@ test('admin can update a server and move it between nodes', function () {
 
     patch("/admin/servers/{$server->id}", [
         'name' => 'Updated Survival',
-        'user_id' => $newDependencies['user']->id,
-        'node_id' => $newDependencies['node']->id,
-        'cargo_id' => $newDependencies['cargo']->id,
-        'allocation_id' => $newDependencies['allocation']->id,
+        'user_id' => $dependencies['user']->id,
+        'node_id' => $otherDependencies['node']->id,
+        'cargo_id' => $otherDependencies['cargo']->id,
+        'allocation_id' => $dependencies['allocation']->id,
         'memory_mib' => 8192,
         'cpu_limit' => 0,
         'disk_mib' => 40960,
     ])
-        ->assertRedirect()
-        ->assertSessionHas('success', 'Server updated. skyportd saved the new server state.');
+        ->assertSessionHasErrors([
+            'node_id' => 'The node cannot be changed after the server is created.',
+            'cargo_id' => 'The cargo cannot be changed after the server is created.',
+        ]);
 
-    $server->refresh();
-
-    expect($server->name)->toBe('Updated Survival');
-    expect($server->user_id)->toBe($newDependencies['user']->id);
-    expect($server->node_id)->toBe($newDependencies['node']->id);
-    expect($server->cargo_id)->toBe($newDependencies['cargo']->id);
-    expect($server->allocation_id)->toBe($newDependencies['allocation']->id);
-    expect($server->memory_mib)->toBe(8192);
-    expect($server->cpu_limit)->toBe(0);
-    expect($server->disk_mib)->toBe(40960);
-
-    Http::assertSent(function ($request) use ($server) {
-        return $request->method() === 'DELETE'
-            && $request->url() === "http://old-node.example.com:2800/api/daemon/servers/{$server->id}"
-            && $request->hasHeader('Authorization', 'Bearer old-callback-token')
-            && $request['uuid'] === '550e8400-e29b-41d4-a716-446655440001';
-    });
-
-    Http::assertSent(function ($request) use ($server) {
-        return $request->method() === 'POST'
-            && $request->url() === 'http://new-node.example.com:2900/api/daemon/servers/sync'
-            && $request->hasHeader('Authorization', 'Bearer new-callback-token')
-            && $request['uuid'] === '550e8400-e29b-41d4-a716-446655440002'
-            && $request['server']['id'] === $server->id;
-    });
+    Http::assertNothingSent();
 });
 
 test('admin can delete a server and remove it from skyportd', function () {
