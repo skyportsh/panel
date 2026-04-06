@@ -1,11 +1,12 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { Download, Ellipsis, Plus, Trash2 } from 'lucide-react';
+import { Download, Ellipsis, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import {
     bulkDestroy,
     destroy,
     downloadInstallLog,
     index as adminServers,
+    reinstall,
     store,
     update,
 } from '@/actions/App/Http/Controllers/Admin/ServersController';
@@ -480,6 +481,8 @@ function ServerModal({
     onDelete: (server: AdminServer) => void;
 }) {
     const [tab, setTab] = useState('overview');
+    const [confirmingReinstall, setConfirmingReinstall] = useState(false);
+    const [reinstalling, setReinstalling] = useState(false);
     const form = useForm<ServerFormData>({
         name: server.name,
         user_id: server.user.id,
@@ -562,25 +565,41 @@ function ServerModal({
                                                 automatically.
                                             </p>
                                             <p className="mt-1 text-sm text-muted-foreground">
-                                                The daemon reported an
-                                                unrecoverable install failure.
-                                                This server should be deleted
-                                                and recreated.
+                                                The daemon reported an install
+                                                failure. Download the install
+                                                log, then trigger a force
+                                                reinstall to rebuild the server
+                                                from scratch.
                                             </p>
                                         </div>
-                                        <a
-                                            href={downloadInstallLog.url(
-                                                server.id,
-                                            )}
-                                            className={buttonVariants({
-                                                size: 'table',
-                                                variant: 'outline',
-                                                className: 'shrink-0',
-                                            })}
-                                        >
-                                            <Download className="h-3.5 w-3.5" />
-                                            Download install log
-                                        </a>
+                                        <div className="flex shrink-0 gap-2">
+                                            <a
+                                                href={downloadInstallLog.url(
+                                                    server.id,
+                                                )}
+                                                className={buttonVariants({
+                                                    size: 'table',
+                                                    variant: 'outline',
+                                                })}
+                                            >
+                                                <Download className="h-3.5 w-3.5" />
+                                                Download install log
+                                            </a>
+                                            <Button
+                                                size="table"
+                                                variant="destructive"
+                                                disabled={reinstalling}
+                                                onClick={() =>
+                                                    setConfirmingReinstall(
+                                                        true,
+                                                    )
+                                                }
+                                            >
+                                                {reinstalling && <Spinner />}
+                                                <RotateCcw className="h-3.5 w-3.5" />
+                                                Force reinstall
+                                            </Button>
+                                        </div>
                                     </div>
                                     {server.last_error ? (
                                         <p className="mt-3 rounded-md bg-background/80 px-3 py-2 font-mono text-xs text-foreground">
@@ -669,7 +688,7 @@ function ServerModal({
                                         value={statusLabel(server.status)}
                                         description={
                                             server.status === 'install_failed'
-                                                ? 'This server must be deleted and recreated.'
+                                                ? 'Download the install log or force a reinstall.'
                                                 : 'Daemon lifecycle status'
                                         }
                                         valueClassName={
@@ -751,6 +770,30 @@ function ServerModal({
                                     </span>
                                 </div>
                                 <div className="rounded-lg border border-border/70 bg-background p-5">
+                                    <div className="flex items-center justify-between gap-4 border-b border-border/60 pb-5">
+                                        <div>
+                                            <h3 className="text-sm font-semibold text-foreground">
+                                                Force reinstall
+                                            </h3>
+                                            <p className="mt-1 text-sm text-muted-foreground">
+                                                Delete the server files and run
+                                                the cargo installer again.
+                                            </p>
+                                        </div>
+                                        <Button
+                                            variant="destructive"
+                                            className="cursor-pointer"
+                                            disabled={reinstalling}
+                                            onClick={() =>
+                                                setConfirmingReinstall(true)
+                                            }
+                                        >
+                                            {reinstalling && <Spinner />}
+                                            <RotateCcw className="h-4 w-4" />
+                                            Force reinstall
+                                        </Button>
+                                    </div>
+
                                     <div className="flex items-center justify-between gap-4">
                                         <div>
                                             <h3 className="text-sm font-semibold text-foreground">
@@ -776,6 +819,26 @@ function ServerModal({
                     ) : null}
                 </div>
             </DialogContentFull>
+
+            <ConfirmDeleteDialog
+                open={confirmingReinstall}
+                onOpenChange={setConfirmingReinstall}
+                title={`Force reinstall ${server.name}?`}
+                description="This will delete the current server files and rerun the cargo installer. The server will start automatically after a successful reinstall."
+                loading={reinstalling}
+                confirmLabel="Force reinstall"
+                onConfirm={() => {
+                    setReinstalling(true);
+                    router.post(reinstall.url(server.id), {}, {
+                        preserveScroll: true,
+                        onSuccess: () => {
+                            toast.success(`${server.name} reinstall requested`);
+                            setConfirmingReinstall(false);
+                        },
+                        onFinish: () => setReinstalling(false),
+                    });
+                }}
+            />
         </Dialog>
     );
 }

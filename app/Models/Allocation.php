@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['node_id', 'bind_ip', 'port', 'ip_alias'])]
+#[Fillable(["node_id", "bind_ip", "port", "ip_alias"])]
 class Allocation extends Model
 {
     /** @use HasFactory<AllocationFactory> */
@@ -28,7 +28,7 @@ class Allocation extends Model
     protected function casts(): array
     {
         return [
-            'port' => 'integer',
+            "port" => "integer",
         ];
     }
 }

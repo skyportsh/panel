@@ -216,6 +216,51 @@ test('admin can download an install log from skyportd', function () {
     });
 });
 
+test('admin can request a server reinstall', function () {
+    Http::fake([
+        'http://node.example.com:2800/api/daemon/servers/*/power' => Http::response([
+            'ok' => true,
+        ]),
+    ]);
+
+    $admin = User::factory()->create(['is_admin' => true]);
+    $dependencies = serverDependencies();
+    $dependencies['node']->forceFill([
+        'daemon_uuid' => '550e8400-e29b-41d4-a716-446655440002',
+        'daemon_port' => 2800,
+        'fqdn' => 'node.example.com',
+        'use_ssl' => false,
+    ])->save();
+    NodeCredential::factory()->create([
+        'daemon_callback_token' => 'callback-token',
+        'node_id' => $dependencies['node']->id,
+    ]);
+    $server = Server::factory()->create([
+        'cargo_id' => $dependencies['cargo']->id,
+        'allocation_id' => $dependencies['allocation']->id,
+        'node_id' => $dependencies['node']->id,
+        'status' => 'install_failed',
+        'user_id' => $dependencies['user']->id,
+    ]);
+
+    actingAs($admin);
+
+    post("/admin/servers/{$server->id}/reinstall")
+        ->assertRedirect()
+        ->assertSessionHas(
+            'success',
+            'Server reinstall requested. skyportd will clear the server files and install it again.',
+        );
+
+    Http::assertSent(function ($request) use ($server) {
+        return $request->method() === 'POST'
+            && $request->url() === "http://node.example.com:2800/api/daemon/servers/{$server->id}/power"
+            && $request->hasHeader('Authorization', 'Bearer callback-token')
+            && $request['signal'] === 'reinstall'
+            && $request['uuid'] === '550e8400-e29b-41d4-a716-446655440002';
+    });
+});
+
 test('admin can update a server on the same node and sync new limits to skyportd', function () {
     Http::fake([
         'http://node.example.com:2800/api/daemon/servers/sync' => Http::response([

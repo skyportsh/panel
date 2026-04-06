@@ -10,26 +10,26 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[
     Fillable([
-        'name',
-        'slug',
-        'author',
-        'description',
-        'features',
-        'docker_images',
-        'file_denylist',
-        'file_hidden_list',
-        'startup_command',
-        'config_files',
-        'config_startup',
-        'config_logs',
-        'config_stop',
-        'install_script',
-        'install_container',
-        'install_entrypoint',
-        'variables',
-        'source_type',
-        'cargofile',
-        'definition',
+        "name",
+        "slug",
+        "author",
+        "description",
+        "features",
+        "docker_images",
+        "file_denylist",
+        "file_hidden_list",
+        "startup_command",
+        "config_files",
+        "config_startup",
+        "config_logs",
+        "config_stop",
+        "install_script",
+        "install_container",
+        "install_entrypoint",
+        "variables",
+        "source_type",
+        "cargofile",
+        "definition",
     ]),
 ]
 class Cargo extends Model
@@ -45,12 +45,12 @@ class Cargo extends Model
     protected function casts(): array
     {
         return [
-            'definition' => 'array',
-            'features' => 'array',
-            'docker_images' => 'array',
-            'file_denylist' => 'array',
-            'file_hidden_list' => 'array',
-            'variables' => 'array',
+            "definition" => "array",
+            "features" => "array",
+            "docker_images" => "array",
+            "file_denylist" => "array",
+            "file_hidden_list" => "array",
+            "variables" => "array",
         ];
     }
 }

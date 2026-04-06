@@ -10,7 +10,7 @@ use InvalidArgumentException;
 
 class NodeConfigurationService
 {
-    private const DEFAULT_DAEMON_UUID = '00000000-0000-0000-0000-000000000000';
+    private const DEFAULT_DAEMON_UUID = "00000000-0000-0000-0000-000000000000";
 
     public function __construct(
         private PanelVersionService $panelVersionService,
@@ -22,99 +22,99 @@ class NodeConfigurationService
         $expiresAt = CarbonImmutable::now()->addHour();
 
         $credential =
-            $node->credential ?? new NodeCredential(['node_id' => $node->id]);
+            $node->credential ?? new NodeCredential(["node_id" => $node->id]);
 
         $credential->fill([
-            'enrollment_token_hash' => $this->hash($token),
-            'enrollment_expires_at' => $expiresAt,
-            'enrollment_used_at' => null,
-            'daemon_secret_hash' => null,
-            'daemon_secret_issued_at' => null,
-            'daemon_callback_token' => null,
+            "enrollment_token_hash" => $this->hash($token),
+            "enrollment_expires_at" => $expiresAt,
+            "enrollment_used_at" => null,
+            "daemon_secret_hash" => null,
+            "daemon_secret_issued_at" => null,
+            "daemon_callback_token" => null,
         ]);
         $credential->save();
 
         $node
             ->forceFill([
-                'status' => 'configured',
-                'daemon_uuid' => null,
-                'daemon_version' => null,
-                'enrolled_at' => null,
+                "status" => "configured",
+                "daemon_uuid" => null,
+                "daemon_version" => null,
+                "enrolled_at" => null,
             ])
             ->save();
 
         return [
-            'expires_at' => $expiresAt,
-            'token' => $token,
+            "expires_at" => $expiresAt,
+            "token" => $token,
         ];
     }
 
     public function enroll(array $payload): array
     {
         $credential = NodeCredential::query()
-            ->with('node.location')
-            ->where('enrollment_token_hash', $this->hash($payload['token']))
+            ->with("node.location")
+            ->where("enrollment_token_hash", $this->hash($payload["token"]))
             ->first();
 
-        if (! $credential || ! $credential->node) {
+        if (!$credential || !$credential->node) {
             throw new InvalidArgumentException(
-                'The enrollment token is invalid.',
+                "The enrollment token is invalid.",
             );
         }
 
         if (
-            ! $credential->enrollment_expires_at ||
+            !$credential->enrollment_expires_at ||
             $credential->enrollment_expires_at->isPast()
         ) {
             throw new InvalidArgumentException(
-                'The enrollment token has expired.',
+                "The enrollment token has expired.",
             );
         }
 
         if ($credential->enrollment_used_at) {
             throw new InvalidArgumentException(
-                'The enrollment token has already been used.',
+                "The enrollment token has already been used.",
             );
         }
 
-        $this->panelVersionService->ensureCompatible($payload['version']);
+        $this->panelVersionService->ensureCompatible($payload["version"]);
 
         $issuedAt = CarbonImmutable::now();
         $secret = Str::random(64);
         $callbackToken = Str::random(64);
         $node = $credential->node;
-        $daemonUuid = $this->resolveDaemonUuid($payload['uuid'], $node);
+        $daemonUuid = $this->resolveDaemonUuid($payload["uuid"], $node);
 
         $credential->fill([
-            'enrollment_used_at' => $issuedAt,
-            'daemon_secret_hash' => $this->hash($secret),
-            'daemon_secret_issued_at' => $issuedAt,
-            'daemon_callback_token' => $callbackToken,
+            "enrollment_used_at" => $issuedAt,
+            "daemon_secret_hash" => $this->hash($secret),
+            "daemon_secret_issued_at" => $issuedAt,
+            "daemon_callback_token" => $callbackToken,
         ]);
         $credential->save();
 
         $node
             ->forceFill([
-                'status' => 'online',
-                'daemon_uuid' => $daemonUuid,
-                'daemon_version' => $payload['version'],
-                'enrolled_at' => $issuedAt,
+                "status" => "online",
+                "daemon_uuid" => $daemonUuid,
+                "daemon_version" => $payload["version"],
+                "enrolled_at" => $issuedAt,
             ])
             ->save();
 
-        $node = $node->fresh('location') ?? $node;
+        $node = $node->fresh("location") ?? $node;
 
         return [
-            'configuration' => $this->configurationPayload($node),
-            'daemon_callback_token' => $callbackToken,
-            'daemon_secret' => $secret,
-            'daemon_uuid' => $daemonUuid,
-            'heartbeat_interval_seconds' => 30,
-            'name' => $node->name,
-            'node_id' => $node->id,
-            'panel_time' => $issuedAt->toIso8601String(),
-            'panel_version' => $this->panelVersionService->current(),
-            'task_poll_interval_seconds' => 5,
+            "configuration" => $this->configurationPayload($node),
+            "daemon_callback_token" => $callbackToken,
+            "daemon_secret" => $secret,
+            "daemon_uuid" => $daemonUuid,
+            "heartbeat_interval_seconds" => 30,
+            "name" => $node->name,
+            "node_id" => $node->id,
+            "panel_time" => $issuedAt->toIso8601String(),
+            "panel_version" => $this->panelVersionService->current(),
+            "task_poll_interval_seconds" => 5,
         ];
     }
 
@@ -132,18 +132,19 @@ class NodeConfigurationService
      */
     public function configurationPayload(Node $node): array
     {
-        $node->loadMissing('location');
+        $node->loadMissing("location");
 
         return [
-            'daemon_port' => $node->daemon_port,
-            'fqdn' => $node->fqdn,
-            'location_country' => $node->location->country,
-            'location_name' => $node->location->name,
-            'name' => $node->name,
-            'sftp_port' => $node->sftp_port,
-            'updated_at' => $node->updated_at?->toIso8601String() ??
+            "daemon_port" => $node->daemon_port,
+            "fqdn" => $node->fqdn,
+            "location_country" => $node->location->country,
+            "location_name" => $node->location->name,
+            "name" => $node->name,
+            "sftp_port" => $node->sftp_port,
+            "updated_at" =>
+                $node->updated_at?->toIso8601String() ??
                 now()->toIso8601String(),
-            'use_ssl' => $node->use_ssl,
+            "use_ssl" => $node->use_ssl,
         ];
     }
 
@@ -164,6 +165,6 @@ class NodeConfigurationService
 
     private function hash(string $value): string
     {
-        return hash('sha256', $value);
+        return hash("sha256", $value);
     }
 }

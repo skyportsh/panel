@@ -44,56 +44,58 @@ class ServerConfigurationService
      */
     public function payload(Server $server): array
     {
-        $server->loadMissing(['allocation', 'cargo', 'node', 'user']);
+        $server->loadMissing(["allocation", "cargo", "node", "user"]);
 
         return [
-            'allocation' => [
-                'bind_ip' => $server->allocation->bind_ip,
-                'id' => $server->allocation->id,
-                'ip_alias' => $server->allocation->ip_alias,
-                'port' => $server->allocation->port,
+            "allocation" => [
+                "bind_ip" => $server->allocation->bind_ip,
+                "id" => $server->allocation->id,
+                "ip_alias" => $server->allocation->ip_alias,
+                "port" => $server->allocation->port,
             ],
-            'cargo' => [
-                'config_files' => $server->cargo->config_files,
-                'config_logs' => $server->cargo->config_logs,
-                'config_startup' => $server->cargo->config_startup,
-                'config_stop' => $server->cargo->config_stop,
-                'definition' => $server->cargo->definition,
-                'disk_mib' => $server->disk_mib,
-                'docker_images' => $server->cargo->docker_images ?? [],
-                'features' => $server->cargo->features ?? [],
-                'file_denylist' => $server->cargo->file_denylist ?? [],
-                'file_hidden_list' => $server->cargo->file_hidden_list ?? [],
-                'id' => $server->cargo->id,
-                'install_container' => $server->cargo->install_container,
-                'install_entrypoint' => $server->cargo->install_entrypoint,
-                'install_script' => $server->cargo->install_script,
-                'memory_mib' => $server->memory_mib,
-                'name' => $server->cargo->name,
-                'slug' => $server->cargo->slug,
-                'source_type' => $server->cargo->source_type,
-                'startup_command' => $server->cargo->startup_command,
-                'variables' => $server->cargo->variables ?? [],
+            "cargo" => [
+                "config_files" => $server->cargo->config_files,
+                "config_logs" => $server->cargo->config_logs,
+                "config_startup" => $server->cargo->config_startup,
+                "config_stop" => $server->cargo->config_stop,
+                "definition" => $server->cargo->definition,
+                "disk_mib" => $server->disk_mib,
+                "docker_images" => $server->cargo->docker_images ?? [],
+                "features" => $server->cargo->features ?? [],
+                "file_denylist" => $server->cargo->file_denylist ?? [],
+                "file_hidden_list" => $server->cargo->file_hidden_list ?? [],
+                "id" => $server->cargo->id,
+                "install_container" => $server->cargo->install_container,
+                "install_entrypoint" => $server->cargo->install_entrypoint,
+                "install_script" => $server->cargo->install_script,
+                "memory_mib" => $server->memory_mib,
+                "name" => $server->cargo->name,
+                "slug" => $server->cargo->slug,
+                "source_type" => $server->cargo->source_type,
+                "startup_command" => $server->cargo->startup_command,
+                "variables" => $server->cargo->variables ?? [],
             ],
-            'created_at' => $server->created_at?->toIso8601String() ??
+            "created_at" =>
+                $server->created_at?->toIso8601String() ??
                 now()->toIso8601String(),
-            'id' => $server->id,
-            'limits' => [
-                'cpu_limit' => $server->cpu_limit,
-                'disk_mib' => $server->disk_mib,
-                'memory_mib' => $server->memory_mib,
+            "id" => $server->id,
+            "limits" => [
+                "cpu_limit" => $server->cpu_limit,
+                "disk_mib" => $server->disk_mib,
+                "memory_mib" => $server->memory_mib,
             ],
-            'name' => $server->name,
-            'node_id' => $server->node_id,
-            'status' => $server->status,
-            'updated_at' => $server->updated_at?->toIso8601String() ??
+            "name" => $server->name,
+            "node_id" => $server->node_id,
+            "status" => $server->status,
+            "updated_at" =>
+                $server->updated_at?->toIso8601String() ??
                 now()->toIso8601String(),
-            'user' => [
-                'email' => $server->user->email,
-                'id' => $server->user->id,
-                'name' => $server->user->name,
+            "user" => [
+                "email" => $server->user->email,
+                "id" => $server->user->id,
+                "name" => $server->user->name,
             ],
-            'volume_path' => sprintf('volumes/%d', $server->id),
+            "volume_path" => sprintf("volumes/%d", $server->id),
         ];
     }
 }

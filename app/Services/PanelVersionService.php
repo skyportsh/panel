@@ -8,7 +8,7 @@ class PanelVersionService
 {
     public function current(): string
     {
-        return (string) config('app.version');
+        return (string) config("app.version");
     }
 
     public function ensureCompatible(string $daemonVersion): void

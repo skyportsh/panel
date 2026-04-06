@@ -17,18 +17,18 @@ class ServerRemoteUpdateService
      */
     public function downloadInstallLog(Server $server): ?array
     {
-        $server->loadMissing('node.credential');
+        $server->loadMissing("node.credential");
 
         $callbackToken = $server->node->credential?->daemon_callback_token;
         $daemonUuid = $server->node->daemon_uuid;
 
-        if (! $callbackToken || ! $daemonUuid) {
+        if (!$callbackToken || !$daemonUuid) {
             return null;
         }
 
-        $scheme = $server->node->use_ssl ? 'https' : 'http';
+        $scheme = $server->node->use_ssl ? "https" : "http";
         $url = sprintf(
-            '%s://%s:%d/api/daemon/servers/%d/install-log',
+            "%s://%s:%d/api/daemon/servers/%d/install-log",
             $scheme,
             $server->node->fqdn,
             $server->node->daemon_port,
@@ -37,22 +37,23 @@ class ServerRemoteUpdateService
 
         try {
             $response = Http::timeout(10)
-                ->accept('text/plain')
+                ->accept("text/plain")
                 ->withToken($callbackToken)
                 ->get($url, [
-                    'panel_version' => config('app.version'),
-                    'uuid' => $daemonUuid,
+                    "panel_version" => config("app.version"),
+                    "uuid" => $daemonUuid,
                 ]);
 
-            if (! $response->successful()) {
+            if (!$response->successful()) {
                 return null;
             }
 
             return [
-                'content_type' => (string) ($response->header('Content-Type') ?:
-                    'text/plain; charset=utf-8'),
-                'contents' => $response->body(),
-                'filename' => sprintf('server-%d-install.log', $server->id),
+                "content_type" =>
+                    (string) ($response->header("Content-Type") ?:
+                    "text/plain; charset=utf-8"),
+                "contents" => $response->body(),
+                "filename" => sprintf("server-%d-install.log", $server->id),
             ];
         } catch (Throwable) {
             return null;
@@ -63,26 +64,26 @@ class ServerRemoteUpdateService
         Server $targetServer,
         ?Server $configurationServer = null,
     ): bool {
-        $targetServer->loadMissing('node.credential');
+        $targetServer->loadMissing("node.credential");
         $configurationServer ??= $targetServer;
         $configurationServer->loadMissing([
-            'allocation',
-            'cargo',
-            'node',
-            'user',
+            "allocation",
+            "cargo",
+            "node",
+            "user",
         ]);
 
         $callbackToken =
             $targetServer->node->credential?->daemon_callback_token;
         $daemonUuid = $targetServer->node->daemon_uuid;
 
-        if (! $callbackToken || ! $daemonUuid) {
+        if (!$callbackToken || !$daemonUuid) {
             return false;
         }
 
-        $scheme = $targetServer->node->use_ssl ? 'https' : 'http';
+        $scheme = $targetServer->node->use_ssl ? "https" : "http";
         $url = sprintf(
-            '%s://%s:%d/api/daemon/servers/sync',
+            "%s://%s:%d/api/daemon/servers/sync",
             $scheme,
             $targetServer->node->fqdn,
             $targetServer->node->daemon_port,
@@ -93,11 +94,11 @@ class ServerRemoteUpdateService
                 ->acceptJson()
                 ->withToken($callbackToken)
                 ->post($url, [
-                    'panel_version' => config('app.version'),
-                    'server' => $this->serverConfigurationService->payload(
+                    "panel_version" => config("app.version"),
+                    "server" => $this->serverConfigurationService->payload(
                         $configurationServer,
                     ),
-                    'uuid' => $daemonUuid,
+                    "uuid" => $daemonUuid,
                 ]);
 
             return $response->successful();
@@ -108,18 +109,18 @@ class ServerRemoteUpdateService
 
     public function delete(Server $server): bool
     {
-        $server->loadMissing('node.credential');
+        $server->loadMissing("node.credential");
 
         $callbackToken = $server->node->credential?->daemon_callback_token;
         $daemonUuid = $server->node->daemon_uuid;
 
-        if (! $callbackToken || ! $daemonUuid) {
+        if (!$callbackToken || !$daemonUuid) {
             return false;
         }
 
-        $scheme = $server->node->use_ssl ? 'https' : 'http';
+        $scheme = $server->node->use_ssl ? "https" : "http";
         $url = sprintf(
-            '%s://%s:%d/api/daemon/servers/%d',
+            "%s://%s:%d/api/daemon/servers/%d",
             $scheme,
             $server->node->fqdn,
             $server->node->daemon_port,
@@ -130,10 +131,10 @@ class ServerRemoteUpdateService
             $response = Http::timeout(5)
                 ->acceptJson()
                 ->withToken($callbackToken)
-                ->send('DELETE', $url, [
-                    'json' => [
-                        'panel_version' => config('app.version'),
-                        'uuid' => $daemonUuid,
+                ->send("DELETE", $url, [
+                    "json" => [
+                        "panel_version" => config("app.version"),
+                        "uuid" => $daemonUuid,
                     ],
                 ]);
 

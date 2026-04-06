@@ -10,16 +10,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[
     Fillable([
-        'user_id',
-        'node_id',
-        'cargo_id',
-        'allocation_id',
-        'name',
-        'memory_mib',
-        'cpu_limit',
-        'disk_mib',
-        'status',
-        'last_error',
+        "user_id",
+        "node_id",
+        "cargo_id",
+        "allocation_id",
+        "name",
+        "memory_mib",
+        "cpu_limit",
+        "disk_mib",
+        "status",
+        "last_error",
     ]),
 ]
 class Server extends Model
@@ -50,9 +50,9 @@ class Server extends Model
     protected function casts(): array
     {
         return [
-            'memory_mib' => 'integer',
-            'cpu_limit' => 'integer',
-            'disk_mib' => 'integer',
+            "memory_mib" => "integer",
+            "cpu_limit" => "integer",
+            "disk_mib" => "integer",
         ];
     }
 }

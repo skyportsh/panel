@@ -6,6 +6,9 @@ import { index as adminNodes } from '@/actions/App/Http/Controllers/Admin/NodesC
 import { index as adminServers } from '@/actions/App/Http/Controllers/Admin/ServersController';
 import { index as adminSettings } from '@/actions/App/Http/Controllers/Admin/SettingsController';
 import { index as adminUsers } from '@/actions/App/Http/Controllers/Admin/UsersController';
+import { show as serverConsole } from '@/actions/App/Http/Controllers/Client/ServerConsoleController';
+import { show as serverFilesystem } from '@/actions/App/Http/Controllers/Client/ServerFilesystemController';
+import { show as serverSettings } from '@/actions/App/Http/Controllers/Client/ServerSettingsController';
 import CargoIcon from '@/components/cargo-icon';
 import DashboardIcon from '@/components/dashboard-icon';
 import LocationsIcon from '@/components/locations-icon';
@@ -29,8 +32,14 @@ import type { NavItem } from '@/types';
 
 export function AppSidebar() {
     const page = usePage();
-    const { auth, name } = page.props;
+    const { auth, name, server } = page.props as typeof page.props & {
+        server?: {
+            id: number;
+            name: string;
+        };
+    };
     const isAdminSidebar = auth.user.is_admin && page.url.startsWith('/admin');
+    const isServerSidebar = page.url.startsWith('/server/');
     const mainNavItems: NavItem[] = isAdminSidebar
         ? [
               {
@@ -69,6 +78,27 @@ export function AppSidebar() {
                   icon: SettingsIcon,
               },
           ]
+        : isServerSidebar && server
+          ? [
+                {
+                    title: server.name,
+                    icon: ServerIcon,
+                    items: [
+                        {
+                            title: 'Console',
+                            href: serverConsole.url(server.id),
+                        },
+                        {
+                            title: 'Filesystem',
+                            href: serverFilesystem.url(server.id),
+                        },
+                        {
+                            title: 'Settings',
+                            href: serverSettings.url(server.id),
+                        },
+                    ],
+                },
+            ]
         : [
               {
                   title: 'Home',
@@ -102,7 +132,13 @@ export function AppSidebar() {
             <SidebarContent>
                 <NavMain
                     items={mainNavItems}
-                    label={isAdminSidebar ? 'Admin' : 'Platform'}
+                    label={
+                        isAdminSidebar
+                            ? 'Admin'
+                            : isServerSidebar
+                              ? 'Server'
+                              : 'Platform'
+                    }
                 />
             </SidebarContent>
 

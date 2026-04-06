@@ -1,11 +1,17 @@
 import { Head, router } from '@inertiajs/react';
 import { Cpu, MemoryStick } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { show as serverConsole } from '@/actions/App/Http/Controllers/Client/ServerConsoleController';
 import { show as websocketCredentials } from '@/actions/App/Http/Controllers/Client/ServerWebsocketController';
 import { DataTable } from '@/components/admin/data-table';
 import type { Column, PaginatedData } from '@/components/admin/data-table';
 import { Switch } from '@/components/ui/switch';
 import AppLayout from '@/layouts/app-layout';
+import {
+    formatServerAddress,
+    statusLabel,
+    statusTone,
+} from '@/lib/server-runtime';
 import { home } from '@/routes';
 import type { Auth, BreadcrumbItem } from '@/types';
 
@@ -64,10 +70,6 @@ const defaultStats: ServerStats = {
     state: 'offline',
 };
 
-function formatServerAddress(server: DashboardServer): string {
-    return `${server.allocation.ip_alias ?? server.allocation.bind_ip}:${server.allocation.port}`;
-}
-
 function formatGiBLimit(memoryMib: number): string {
     const gibibytes = memoryMib / 1024;
     const formatted = Number.isInteger(gibibytes)
@@ -90,35 +92,6 @@ function formatCpuUsage(cpu: string, limit: number): string {
     const current = cpu === '—' || cpu === 'Offline' ? '0%' : cpu.trim();
 
     return `${current} / ${limit === 0 ? 'Unlimited' : `${limit}%`}`;
-}
-
-function statusTone(status: string): string {
-    switch (status) {
-        case 'running':
-            return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
-        case 'starting':
-        case 'installing':
-            return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
-        case 'install_failed':
-            return 'bg-[#d92400]/12 text-[#d92400] dark:text-[#ff8a6b]';
-        default:
-            return 'bg-muted text-muted-foreground';
-    }
-}
-
-function statusLabel(status: string): string {
-    switch (status) {
-        case 'running':
-            return 'Running';
-        case 'starting':
-            return 'Starting';
-        case 'installing':
-            return 'Installing';
-        case 'install_failed':
-            return 'Install failed';
-        default:
-            return 'Offline';
-    }
 }
 
 async function fetchWebsocketCredentials(
@@ -414,6 +387,9 @@ export default function Home({ auth, filters, servers }: Props) {
                 <DataTable
                     data={servers}
                     columns={columns}
+                    onRowClick={(server) =>
+                        router.visit(serverConsole.url(server.id))
+                    }
                     searchValue={search}
                     onSearch={(value) => {
                         setSearch(value);

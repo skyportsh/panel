@@ -16,14 +16,14 @@ class UserActivity extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'action',
-        'context',
-        'method',
-        'path',
-        'route_name',
-        'status_code',
-        'user_agent',
-        'user_id',
+        "action",
+        "context",
+        "method",
+        "path",
+        "route_name",
+        "status_code",
+        "user_agent",
+        "user_id",
     ];
 
     /**
@@ -32,7 +32,7 @@ class UserActivity extends Model
     protected function casts(): array
     {
         return [
-            'context' => 'array',
+            "context" => "array",
         ];
     }
 

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'country'])]
+#[Fillable(["name", "country"])]
 class Location extends Model
 {
     /** @use HasFactory<LocationFactory> */

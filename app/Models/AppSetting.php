@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['key', 'value'])]
+#[Fillable(["key", "value"])]
 class AppSetting extends Model
 {
     /** @use HasFactory<AppSettingFactory> */

@@ -13,7 +13,7 @@ class CoseKey
             2 => self::ec2ToPem($key),
             3 => self::rsaToPem($key),
             default => throw new \InvalidArgumentException(
-                'Unsupported COSE key type.',
+                "Unsupported COSE key type.",
             ),
         };
     }
@@ -25,29 +25,29 @@ class CoseKey
     {
         if (($key[3] ?? null) !== -7) {
             throw new \InvalidArgumentException(
-                'Only ES256 passkeys are supported.',
+                "Only ES256 passkeys are supported.",
             );
         }
 
         $x = $key[-2] ?? null;
         $y = $key[-3] ?? null;
 
-        if (! is_string($x) || ! is_string($y)) {
+        if (!is_string($x) || !is_string($y)) {
             throw new \InvalidArgumentException(
-                'Invalid EC2 public key coordinates.',
+                "Invalid EC2 public key coordinates.",
             );
         }
 
         $algorithmIdentifier = self::asn1Sequence(
-            self::asn1ObjectIdentifier('1.2.840.10045.2.1').
-                self::asn1ObjectIdentifier('1.2.840.10045.3.1.7'),
+            self::asn1ObjectIdentifier("1.2.840.10045.2.1") .
+                self::asn1ObjectIdentifier("1.2.840.10045.3.1.7"),
         );
 
-        $subjectPublicKey = self::asn1BitString("\x04".$x.$y);
+        $subjectPublicKey = self::asn1BitString("\x04" . $x . $y);
 
         return self::pemEncode(
-            self::asn1Sequence($algorithmIdentifier.$subjectPublicKey),
-            'PUBLIC KEY',
+            self::asn1Sequence($algorithmIdentifier . $subjectPublicKey),
+            "PUBLIC KEY",
         );
     }
 
@@ -59,24 +59,24 @@ class CoseKey
         $modulus = $key[-1] ?? null;
         $exponent = $key[-2] ?? null;
 
-        if (! is_string($modulus) || ! is_string($exponent)) {
-            throw new \InvalidArgumentException('Invalid RSA public key.');
+        if (!is_string($modulus) || !is_string($exponent)) {
+            throw new \InvalidArgumentException("Invalid RSA public key.");
         }
 
         $rsaPublicKey = self::asn1Sequence(
-            self::asn1Integer($modulus).self::asn1Integer($exponent),
+            self::asn1Integer($modulus) . self::asn1Integer($exponent),
         );
 
         $algorithmIdentifier = self::asn1Sequence(
-            self::asn1ObjectIdentifier('1.2.840.113549.1.1.1').
+            self::asn1ObjectIdentifier("1.2.840.113549.1.1.1") .
                 self::asn1Null(),
         );
 
         return self::pemEncode(
             self::asn1Sequence(
-                $algorithmIdentifier.self::asn1BitString($rsaPublicKey),
+                $algorithmIdentifier . self::asn1BitString($rsaPublicKey),
             ),
-            'PUBLIC KEY',
+            "PUBLIC KEY",
         );
     }
 
@@ -92,26 +92,26 @@ class CoseKey
 
     private static function asn1Sequence(string $payload): string
     {
-        return "\x30".self::asn1Length(strlen($payload)).$payload;
+        return "\x30" . self::asn1Length(strlen($payload)) . $payload;
     }
 
     private static function asn1Integer(string $payload): string
     {
         $normalized = ltrim($payload, "\x00");
-        $normalized = $normalized === '' ? "\x00" : $normalized;
+        $normalized = $normalized === "" ? "\x00" : $normalized;
 
         if ((ord($normalized[0]) & 0x80) !== 0) {
-            $normalized = "\x00".$normalized;
+            $normalized = "\x00" . $normalized;
         }
 
-        return "\x02".self::asn1Length(strlen($normalized)).$normalized;
+        return "\x02" . self::asn1Length(strlen($normalized)) . $normalized;
     }
 
     private static function asn1BitString(string $payload): string
     {
-        return "\x03".
-            self::asn1Length(strlen($payload) + 1).
-            "\x00".
+        return "\x03" .
+            self::asn1Length(strlen($payload) + 1) .
+            "\x00" .
             $payload;
     }
 
@@ -122,18 +122,18 @@ class CoseKey
 
     private static function asn1ObjectIdentifier(string $oid): string
     {
-        $parts = array_map('intval', explode('.', $oid));
+        $parts = array_map("intval", explode(".", $oid));
         $encoded = chr(40 * $parts[0] + $parts[1]);
 
         foreach (array_slice($parts, 2) as $part) {
-            $segment = '';
+            $segment = "";
 
             do {
-                $segment = chr($part & 0x7F).$segment;
+                $segment = chr($part & 0x7f) . $segment;
                 $part >>= 7;
             } while ($part > 0);
 
-            $bytes = unpack('C*', $segment);
+            $bytes = unpack("C*", $segment);
             $count = count($bytes);
 
             foreach ($bytes as $index => $byte) {
@@ -141,7 +141,7 @@ class CoseKey
             }
         }
 
-        return "\x06".self::asn1Length(strlen($encoded)).$encoded;
+        return "\x06" . self::asn1Length(strlen($encoded)) . $encoded;
     }
 
     private static function asn1Length(int $length): string
@@ -150,13 +150,13 @@ class CoseKey
             return chr($length);
         }
 
-        $bytes = '';
+        $bytes = "";
 
         while ($length > 0) {
-            $bytes = chr($length & 0xFF).$bytes;
+            $bytes = chr($length & 0xff) . $bytes;
             $length >>= 8;
         }
 
-        return chr(0x80 | strlen($bytes)).$bytes;
+        return chr(0x80 | strlen($bytes)) . $bytes;
     }
 }

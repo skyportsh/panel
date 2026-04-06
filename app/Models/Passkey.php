@@ -16,14 +16,14 @@ class Passkey extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'aaguid',
-        'counter',
-        'credential_id',
-        'last_used_at',
-        'name',
-        'public_key',
-        'transports',
-        'user_id',
+        "aaguid",
+        "counter",
+        "credential_id",
+        "last_used_at",
+        "name",
+        "public_key",
+        "transports",
+        "user_id",
     ];
 
     /**
@@ -32,9 +32,9 @@ class Passkey extends Model
     protected function casts(): array
     {
         return [
-            'counter' => 'integer',
-            'last_used_at' => 'datetime',
-            'transports' => 'array',
+            "counter" => "integer",
+            "last_used_at" => "datetime",
+            "transports" => "array",
         ];
     }
 

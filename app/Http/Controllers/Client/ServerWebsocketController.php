@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Http\Controllers\Client\Concerns\AuthorizesServerAccess;
 use App\Http\Controllers\Controller;
 use App\Models\Server;
 use App\Services\ServerWebsocketTokenService;
@@ -12,14 +13,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ServerWebsocketController extends Controller
 {
+    use AuthorizesServerAccess;
+
     public function __construct(private ServerWebsocketTokenService $serverWebsocketTokenService) {}
 
     public function show(Request $request, Server $server): JsonResponse
     {
-        abort_unless(
-            $request->user()?->is_admin || $server->user_id === $request->user()?->id,
-            Response::HTTP_FORBIDDEN,
-        );
+        $this->authorizeServerAccess($request, $server);
 
         try {
             $payload = $this->serverWebsocketTokenService->issue($server);

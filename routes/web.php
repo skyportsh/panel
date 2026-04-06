@@ -1,6 +1,10 @@
 <?php
 
 use App\Http\Controllers\Auth\PasskeyAuthenticationController;
+use App\Http\Controllers\Client\ServerConsoleController;
+use App\Http\Controllers\Client\ServerFilesystemController;
+use App\Http\Controllers\Client\ServerPowerController;
+use App\Http\Controllers\Client\ServerSettingsController;
 use App\Http\Controllers\Client\ServerWebsocketController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Auth;
@@ -24,6 +28,14 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::get('home', [HomeController::class, 'index'])->name('home');
+    Route::get('server/{server}/console', [ServerConsoleController::class, 'show'])
+        ->name('client.servers.console');
+    Route::get('server/{server}/filesystem', [ServerFilesystemController::class, 'show'])
+        ->name('client.servers.filesystem');
+    Route::get('server/{server}/settings', [ServerSettingsController::class, 'show'])
+        ->name('client.servers.settings');
+    Route::post('api/client/servers/{server}/power', [ServerPowerController::class, 'store'])
+        ->name('client.servers.power');
     Route::get('api/client/servers/{server}/websocket', [ServerWebsocketController::class, 'show'])
         ->name('client.servers.websocket');
 });

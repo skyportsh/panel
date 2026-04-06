@@ -14,18 +14,18 @@ class NodeRemoteUpdateService
 
     public function push(Node $targetNode, Node $configurationNode): bool
     {
-        $targetNode->loadMissing('credential');
-        $configurationNode->loadMissing('location');
+        $targetNode->loadMissing("credential");
+        $configurationNode->loadMissing("location");
 
         $callbackToken = $targetNode->credential?->daemon_callback_token;
 
-        if (! $callbackToken || ! $targetNode->daemon_uuid) {
+        if (!$callbackToken || !$targetNode->daemon_uuid) {
             return false;
         }
 
-        $scheme = $targetNode->use_ssl ? 'https' : 'http';
+        $scheme = $targetNode->use_ssl ? "https" : "http";
         $url = sprintf(
-            '%s://%s:%d/api/daemon/configuration/sync',
+            "%s://%s:%d/api/daemon/configuration/sync",
             $scheme,
             $targetNode->fqdn,
             $targetNode->daemon_port,
@@ -39,8 +39,8 @@ class NodeRemoteUpdateService
                     ...$this->nodeConfigurationService->configurationPayload(
                         $configurationNode,
                     ),
-                    'panel_version' => config('app.version'),
-                    'uuid' => $targetNode->daemon_uuid,
+                    "panel_version" => config("app.version"),
+                    "uuid" => $targetNode->daemon_uuid,
                 ]);
 
             return $response->successful();

@@ -11,6 +11,7 @@ use App\Models\Node;
 use App\Models\Server;
 use App\Models\User;
 use App\Services\ServerRemoteUpdateService;
+use App\Services\ServerPowerService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -25,6 +26,7 @@ class ServersController extends Controller
 {
     public function __construct(
         private ServerRemoteUpdateService $serverRemoteUpdateService,
+        private ServerPowerService $serverPowerService,
     ) {}
 
     public function index(Request $request): Response
@@ -298,6 +300,20 @@ class ServersController extends Controller
             [
                 'Content-Type' => $payload['content_type'],
             ],
+        );
+    }
+
+    public function reinstall(Server $server): RedirectResponse
+    {
+        try {
+            $this->serverPowerService->dispatch($server, 'reinstall');
+        } catch (InvalidArgumentException $exception) {
+            return Redirect::back()->with('warning', $exception->getMessage());
+        }
+
+        return Redirect::back()->with(
+            'success',
+            'Server reinstall requested. skyportd will clear the server files and install it again.',
         );
     }
 

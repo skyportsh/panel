@@ -13,16 +13,16 @@ class CborDecoder
         $value = self::decodeItem($payload, $offset);
 
         return [
-            'value' => $value,
-            'bytes' => $offset,
+            "value" => $value,
+            "bytes" => $offset,
         ];
     }
 
     private static function decodeItem(string $payload, int &$offset): mixed
     {
-        if (! isset($payload[$offset])) {
+        if (!isset($payload[$offset])) {
             throw new \InvalidArgumentException(
-                'Unexpected end of CBOR payload.',
+                "Unexpected end of CBOR payload.",
             );
         }
 
@@ -30,7 +30,7 @@ class CborDecoder
         $offset++;
 
         $majorType = $initialByte >> 5;
-        $additionalInformation = $initialByte & 0x1F;
+        $additionalInformation = $initialByte & 0x1f;
         $length = self::readLength($payload, $offset, $additionalInformation);
 
         return match ($majorType) {
@@ -43,7 +43,7 @@ class CborDecoder
             6 => self::decodeItem($payload, $offset),
             7 => self::readSimpleValue($additionalInformation),
             default => throw new \InvalidArgumentException(
-                'Unsupported CBOR major type.',
+                "Unsupported CBOR major type.",
             ),
         };
     }
@@ -76,7 +76,7 @@ class CborDecoder
                 8,
             ),
             default => throw new \InvalidArgumentException(
-                'Indefinite CBOR lengths are not supported.',
+                "Indefinite CBOR lengths are not supported.",
             ),
         };
     }
@@ -89,7 +89,7 @@ class CborDecoder
         $bytes = self::readBytes($payload, $offset, $length);
         $value = 0;
 
-        foreach (unpack('C*', $bytes) as $byte) {
+        foreach (unpack("C*", $bytes) as $byte) {
             $value = ($value << 8) | $byte;
         }
 
@@ -105,7 +105,7 @@ class CborDecoder
 
         if (strlen($value) !== $length) {
             throw new \InvalidArgumentException(
-                'Unexpected end of CBOR byte string.',
+                "Unexpected end of CBOR byte string.",
             );
         }
 
@@ -164,7 +164,7 @@ class CborDecoder
             21 => true,
             22 => null,
             default => throw new \InvalidArgumentException(
-                'Unsupported CBOR simple value.',
+                "Unsupported CBOR simple value.",
             ),
         };
     }

@@ -31,6 +31,7 @@ import {
     SidebarGroup,
     SidebarGroupLabel,
     SidebarMenu,
+    SidebarMenuAction,
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarMenuSub,
@@ -442,37 +443,31 @@ function NavMainItem({ item, index }: { item: NavItem; index: number }) {
                         >
                             {item.icon && <item.icon />}
                             <span>{item.title}</span>
-                            <button
-                                type="button"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-
-                                    if (isPinned) {
-                                        unpin();
-                                    } else {
-                                        setPinModalOpen(true);
-                                    }
-                                }}
-                                className={cn(
-                                    'mr-0.5 ml-auto cursor-pointer rounded p-0.5 transition-[opacity,background-color] group-data-[collapsible=icon]:hidden hover:bg-sidebar-accent',
-                                    isPinned
-                                        ? 'opacity-100'
-                                        : 'opacity-0 group-hover/menu-button:opacity-60 hover:!opacity-100',
-                                )}
-                                aria-label={
-                                    isPinned
-                                        ? `Unpin ${item.title}`
-                                        : `Pin ${item.title}`
-                                }
-                            >
-                                <Pin
-                                    className="h-3 w-3"
-                                    fill={isPinned ? 'currentColor' : 'none'}
-                                />
-                            </button>
                             <ChevronRight className="transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-data-[collapsible=icon]:hidden group-data-[state=open]/collapsible:rotate-90" />
                         </SidebarMenuButton>
                     </CollapsibleTrigger>
+                    <SidebarMenuAction
+                        showOnHover
+                        onClick={(e) => {
+                            e.stopPropagation();
+
+                            if (isPinned) {
+                                unpin();
+                            } else {
+                                setPinModalOpen(true);
+                            }
+                        }}
+                        aria-label={
+                            isPinned
+                                ? `Unpin ${item.title}`
+                                : `Pin ${item.title}`
+                        }
+                    >
+                        <Pin
+                            className="h-3 w-3"
+                            fill={isPinned ? 'currentColor' : 'none'}
+                        />
+                    </SidebarMenuAction>
 
                     <CollapsibleContent className="overflow-hidden transition-[max-height,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] data-[state=closed]:max-h-0 data-[state=closed]:opacity-0 data-[state=open]:max-h-48 data-[state=open]:opacity-100">
                         <div ref={subMenuRef} className="relative">
