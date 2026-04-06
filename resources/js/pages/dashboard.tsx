@@ -304,7 +304,7 @@ export default function Home({ auth, filters, servers }: Props) {
     const columns: Column<DashboardServer>[] = [
         {
             label: 'Name',
-            width: 'min-w-0 flex-1',
+            width: 'min-w-0 w-[52%] shrink-0',
             render: (server) => {
                 const serverStats = stats[server.id] ?? defaultStats;
 
@@ -329,7 +329,7 @@ export default function Home({ auth, filters, servers }: Props) {
         },
         {
             label: 'Memory',
-            width: 'w-52 shrink-0',
+            width: 'w-64 shrink-0',
             render: (server) => {
                 const serverStats = stats[server.id] ?? defaultStats;
 
@@ -350,7 +350,7 @@ export default function Home({ auth, filters, servers }: Props) {
         },
         {
             label: 'CPU',
-            width: 'w-40 shrink-0',
+            width: 'w-56 shrink-0',
             render: (server) => {
                 const serverStats = stats[server.id] ?? defaultStats;
 
