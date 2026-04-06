@@ -57,6 +57,7 @@ function NavMainItem({ item, index }: { item: NavItem; index: number }) {
     const subIndicatorStorageKey = `nav-sub-indicator:${item.title}`;
     const subIndexStorageKey = `nav-sub-active-index:${item.title}`;
     const pinnedStorageKey = `nav-pinned:${item.title}`;
+    const collapseStorageKey = `nav-collapse:${item.title}`;
     const [isPinned, setIsPinned] = useState(() => {
         if (typeof window === 'undefined') {
             return false;
@@ -64,7 +65,19 @@ function NavMainItem({ item, index }: { item: NavItem; index: number }) {
 
         return window.localStorage.getItem(pinnedStorageKey) === 'true';
     });
-    const [isOpen, setIsOpen] = useState(hasActiveChild || isPinned);
+    const [isOpen, setIsOpen] = useState(() => {
+        if (typeof window === 'undefined') {
+            return hasActiveChild || isPinned;
+        }
+
+        const stored = window.sessionStorage.getItem(collapseStorageKey);
+
+        if (stored !== null) {
+            return stored === 'true' || isPinned;
+        }
+
+        return hasActiveChild || isPinned;
+    });
     const [pinModalOpen, setPinModalOpen] = useState(false);
 
     const handleOpenChange = (next: boolean) => {
@@ -73,10 +86,12 @@ function NavMainItem({ item, index }: { item: NavItem; index: number }) {
         } // prevent closing when pinned
 
         setIsOpen(next);
+        window.sessionStorage.setItem(collapseStorageKey, String(next));
     };
 
     const pin = () => {
         window.localStorage.setItem(pinnedStorageKey, 'true');
+        window.sessionStorage.removeItem(collapseStorageKey);
         setIsPinned(true);
         setIsOpen(true);
         setPinModalOpen(false);
@@ -84,6 +99,7 @@ function NavMainItem({ item, index }: { item: NavItem; index: number }) {
 
     const unpin = () => {
         window.localStorage.removeItem(pinnedStorageKey);
+        window.sessionStorage.removeItem(collapseStorageKey);
         setIsPinned(false);
     };
     const subMenuRef = useRef<HTMLDivElement | null>(null);
