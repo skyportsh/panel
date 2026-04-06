@@ -6,6 +6,7 @@ use Database\Factories\CargoFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'name',
@@ -33,6 +34,11 @@ class Cargo extends Model
 {
     /** @use HasFactory<CargoFactory> */
     use HasFactory;
+
+    public function servers(): HasMany
+    {
+        return $this->hasMany(Server::class);
+    }
 
     protected function casts(): array
     {
