@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Allocation;
 use App\Models\Cargo;
 use App\Models\Location;
 use App\Models\Node;
@@ -18,10 +19,12 @@ use function Pest\Laravel\post;
 function serverDependencies(): array
 {
     $location = Location::factory()->create();
+    $node = Node::factory()->create(['location_id' => $location->id]);
 
     return [
         'cargo' => Cargo::factory()->create(),
-        'node' => Node::factory()->create(['location_id' => $location->id]),
+        'node' => $node,
+        'allocation' => Allocation::factory()->create(['node_id' => $node->id]),
         'user' => User::factory()->create(),
     ];
 }
@@ -39,6 +42,7 @@ test('admin can access servers page', function () {
     $dependencies = serverDependencies();
     $server = Server::factory()->create([
         'cargo_id' => $dependencies['cargo']->id,
+        'allocation_id' => $dependencies['allocation']->id,
         'node_id' => $dependencies['node']->id,
         'user_id' => $dependencies['user']->id,
     ]);
@@ -54,8 +58,10 @@ test('admin can access servers page', function () {
             ->where('servers.data.0.user.name', $dependencies['user']->name)
             ->where('servers.data.0.node.name', $dependencies['node']->name)
             ->where('servers.data.0.cargo.name', $dependencies['cargo']->name)
+            ->where('servers.data.0.allocation.port', $dependencies['allocation']->port)
             ->has('users', 2)
             ->has('nodes', 1)
+            ->has('allocations', 1)
             ->has('cargo', 1)
             ->has('filters'));
 });
@@ -66,12 +72,14 @@ test('admin can search servers', function () {
 
     Server::factory()->create([
         'cargo_id' => $dependencies['cargo']->id,
+        'allocation_id' => $dependencies['allocation']->id,
         'name' => 'Paper Survival',
         'node_id' => $dependencies['node']->id,
         'user_id' => $dependencies['user']->id,
     ]);
     Server::factory()->create([
         'cargo_id' => $dependencies['cargo']->id,
+        'allocation_id' => Allocation::factory()->create(['node_id' => $dependencies['node']->id])->id,
         'name' => 'Velocity Proxy',
         'node_id' => $dependencies['node']->id,
         'user_id' => $dependencies['user']->id,
@@ -113,6 +121,7 @@ test('admin can create a server and push it to skyportd', function () {
         'user_id' => $dependencies['user']->id,
         'node_id' => $dependencies['node']->id,
         'cargo_id' => $dependencies['cargo']->id,
+        'allocation_id' => $dependencies['allocation']->id,
         'memory_mib' => 4096,
         'cpu_limit' => 200,
         'disk_mib' => 20480,
@@ -126,13 +135,15 @@ test('admin can create a server and push it to skyportd', function () {
     expect($server?->user_id)->toBe($dependencies['user']->id);
     expect($server?->node_id)->toBe($dependencies['node']->id);
     expect($server?->cargo_id)->toBe($dependencies['cargo']->id);
-    expect($server?->status)->toBe('pending');
+    expect($server?->allocation_id)->toBe($dependencies['allocation']->id);
+    expect($server?->status)->toBe('installing');
 
     Http::assertSent(function ($request) use ($server) {
         return $request->url() === 'http://node.example.com:2800/api/daemon/servers/sync'
             && $request->hasHeader('Authorization', 'Bearer callback-token')
             && $request['uuid'] === '550e8400-e29b-41d4-a716-446655440000'
             && $request['server']['id'] === $server?->id
+            && $request['server']['allocation']['port'] === $server?->allocation?->port
             && $request['server']['cargo']['startup_command'] === './start.sh';
     });
 });
@@ -172,6 +183,7 @@ test('admin can update a server and move it between nodes', function () {
     ]);
     $server = Server::factory()->create([
         'cargo_id' => $dependencies['cargo']->id,
+        'allocation_id' => $dependencies['allocation']->id,
         'node_id' => $dependencies['node']->id,
         'user_id' => $dependencies['user']->id,
     ]);
@@ -183,6 +195,7 @@ test('admin can update a server and move it between nodes', function () {
         'user_id' => $newDependencies['user']->id,
         'node_id' => $newDependencies['node']->id,
         'cargo_id' => $newDependencies['cargo']->id,
+        'allocation_id' => $newDependencies['allocation']->id,
         'memory_mib' => 8192,
         'cpu_limit' => 0,
         'disk_mib' => 40960,
@@ -196,6 +209,7 @@ test('admin can update a server and move it between nodes', function () {
     expect($server->user_id)->toBe($newDependencies['user']->id);
     expect($server->node_id)->toBe($newDependencies['node']->id);
     expect($server->cargo_id)->toBe($newDependencies['cargo']->id);
+    expect($server->allocation_id)->toBe($newDependencies['allocation']->id);
     expect($server->memory_mib)->toBe(8192);
     expect($server->cpu_limit)->toBe(0);
     expect($server->disk_mib)->toBe(40960);
@@ -237,6 +251,7 @@ test('admin can delete a server and remove it from skyportd', function () {
     ]);
     $server = Server::factory()->create([
         'cargo_id' => $dependencies['cargo']->id,
+        'allocation_id' => $dependencies['allocation']->id,
         'node_id' => $dependencies['node']->id,
         'user_id' => $dependencies['user']->id,
     ]);
@@ -260,10 +275,19 @@ test('admin can delete a server and remove it from skyportd', function () {
 test('admin can bulk delete servers', function () {
     $admin = User::factory()->create(['is_admin' => true]);
     $dependencies = serverDependencies();
-    $servers = Server::factory()->count(2)->create([
-        'cargo_id' => $dependencies['cargo']->id,
-        'node_id' => $dependencies['node']->id,
-        'user_id' => $dependencies['user']->id,
+    $servers = collect([
+        Server::factory()->create([
+            'cargo_id' => $dependencies['cargo']->id,
+            'allocation_id' => $dependencies['allocation']->id,
+            'node_id' => $dependencies['node']->id,
+            'user_id' => $dependencies['user']->id,
+        ]),
+        Server::factory()->create([
+            'cargo_id' => $dependencies['cargo']->id,
+            'allocation_id' => Allocation::factory()->create(['node_id' => $dependencies['node']->id])->id,
+            'node_id' => $dependencies['node']->id,
+            'user_id' => $dependencies['user']->id,
+        ]),
     ]);
 
     actingAs($admin);

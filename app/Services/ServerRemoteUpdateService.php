@@ -14,7 +14,7 @@ class ServerRemoteUpdateService
     {
         $targetServer->loadMissing('node.credential');
         $configurationServer ??= $targetServer;
-        $configurationServer->loadMissing(['cargo', 'node', 'user']);
+        $configurationServer->loadMissing(['allocation', 'cargo', 'node', 'user']);
 
         $callbackToken = $targetServer->node->credential?->daemon_callback_token;
         $daemonUuid = $targetServer->node->daemon_uuid;

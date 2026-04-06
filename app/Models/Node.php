@@ -31,6 +31,11 @@ class Node extends Model
         return $this->hasMany(Server::class);
     }
 
+    public function allocations(): HasMany
+    {
+        return $this->hasMany(Allocation::class);
+    }
+
     protected function casts(): array
     {
         return [

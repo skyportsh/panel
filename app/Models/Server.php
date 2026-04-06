@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'user_id',
     'node_id',
     'cargo_id',
+    'allocation_id',
     'name',
     'memory_mib',
     'cpu_limit',
@@ -36,6 +37,11 @@ class Server extends Model
     public function cargo(): BelongsTo
     {
         return $this->belongsTo(Cargo::class);
+    }
+
+    public function allocation(): BelongsTo
+    {
+        return $this->belongsTo(Allocation::class);
     }
 
     protected function casts(): array

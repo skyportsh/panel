@@ -60,6 +60,15 @@ type CargoOption = {
     name: string;
 };
 
+type AllocationOption = {
+    id: number;
+    node_id: number;
+    bind_ip: string;
+    port: number;
+    ip_alias: string | null;
+    server_id: number | null;
+};
+
 type AdminServer = {
     id: number;
     name: string;
@@ -69,6 +78,7 @@ type AdminServer = {
     status: string;
     created_at: string;
     updated_at: string;
+    allocation: Omit<AllocationOption, 'node_id' | 'server_id'>;
     user: UserOption;
     node: NodeOption;
     cargo: CargoOption;
@@ -78,6 +88,7 @@ type Props = {
     servers: PaginatedData<AdminServer>;
     users: UserOption[];
     nodes: NodeOption[];
+    allocations: AllocationOption[];
     cargo: CargoOption[];
     filters: { search: string };
 };
@@ -87,6 +98,7 @@ type ServerFormData = {
     user_id: number | '';
     node_id: number | '';
     cargo_id: number | '';
+    allocation_id: number | '';
     memory_mib: number;
     cpu_limit: number;
     disk_mib: number;
@@ -113,13 +125,15 @@ function formatCpuLimit(value: number): string {
 
 function statusClasses(status: string): string {
     switch (status) {
-        case 'online':
+        case 'running':
             return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
         case 'installing':
         case 'starting':
             return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
         case 'offline':
             return 'bg-muted text-muted-foreground';
+        case 'install_failed':
+            return 'bg-[#d92400]/12 text-[#d92400] dark:text-[#ff8a6b]';
         default:
             return 'bg-[#d92400]/12 text-[#d92400] dark:text-[#ff8a6b]';
     }
@@ -127,16 +141,18 @@ function statusClasses(status: string): string {
 
 function statusLabel(status: string): string {
     switch (status) {
-        case 'online':
-            return 'Online';
+        case 'running':
+            return 'Running';
         case 'installing':
             return 'Installing';
         case 'starting':
             return 'Starting';
         case 'offline':
             return 'Offline';
+        case 'install_failed':
+            return 'Install failed';
         default:
-            return 'Pending daemon';
+            return 'Installing';
     }
 }
 
@@ -224,6 +240,7 @@ function ServerFormFields({
     errors,
     users,
     nodes,
+    allocations,
     cargo,
 }: {
     data: ServerFormData;
@@ -234,8 +251,15 @@ function ServerFormFields({
     errors: Partial<Record<keyof ServerFormData, string>>;
     users: UserOption[];
     nodes: NodeOption[];
+    allocations: AllocationOption[];
     cargo: CargoOption[];
 }) {
+    const availableAllocations = allocations.filter(
+        (allocation) =>
+            allocation.node_id === data.node_id &&
+            (allocation.server_id === null || allocation.id === data.allocation_id),
+    );
+
     return (
         <div className="grid gap-4">
             <div className="grid gap-2">
@@ -267,7 +291,10 @@ function ServerFormFields({
                     <Label htmlFor="server-node">Node</Label>
                     <OptionSelect
                         value={data.node_id}
-                        onChange={(value) => setData('node_id', value)}
+                        onChange={(value) => {
+                            setData('node_id', value);
+                            setData('allocation_id', '');
+                        }}
                         options={nodes}
                         placeholder="Choose a node"
                         renderLabel={(node: NodeOption) => node.name}
@@ -285,6 +312,24 @@ function ServerFormFields({
                     />
                     <InputError message={errors.cargo_id} />
                 </div>
+            </div>
+
+            <div className="grid gap-2">
+                <Label htmlFor="server-allocation">Primary allocation</Label>
+                <OptionSelect
+                    value={data.allocation_id}
+                    onChange={(value) => setData('allocation_id', value)}
+                    options={availableAllocations}
+                    placeholder={
+                        data.node_id === ''
+                            ? 'Choose a node first'
+                            : 'Choose an allocation'
+                    }
+                    renderLabel={(allocation: AllocationOption) =>
+                        `${allocation.ip_alias ?? allocation.bind_ip}:${allocation.port}`
+                    }
+                />
+                <InputError message={errors.allocation_id} />
             </div>
 
             <div className="grid gap-2 sm:grid-cols-3 sm:gap-4">
@@ -338,11 +383,13 @@ function ServerFormFields({
 function CreateServerModal({
     users,
     nodes,
+    allocations,
     cargo,
     onClose,
 }: {
     users: UserOption[];
     nodes: NodeOption[];
+    allocations: AllocationOption[];
     cargo: CargoOption[];
     onClose: () => void;
 }) {
@@ -351,6 +398,7 @@ function CreateServerModal({
         user_id: users[0]?.id ?? '',
         node_id: nodes[0]?.id ?? '',
         cargo_id: cargo[0]?.id ?? '',
+        allocation_id: '',
         memory_mib: 2048,
         cpu_limit: 100,
         disk_mib: 10240,
@@ -398,6 +446,7 @@ function CreateServerModal({
                         errors={form.errors}
                         users={users}
                         nodes={nodes}
+                        allocations={allocations}
                         cargo={cargo}
                     />
 
@@ -420,6 +469,7 @@ function ServerModal({
     server,
     users,
     nodes,
+    allocations,
     cargo,
     onClose,
     onDelete,
@@ -427,6 +477,7 @@ function ServerModal({
     server: AdminServer;
     users: UserOption[];
     nodes: NodeOption[];
+    allocations: AllocationOption[];
     cargo: CargoOption[];
     onClose: () => void;
     onDelete: (server: AdminServer) => void;
@@ -437,6 +488,7 @@ function ServerModal({
         user_id: server.user.id,
         node_id: server.node.id,
         cargo_id: server.cargo.id,
+        allocation_id: server.allocation.id,
         memory_mib: server.memory_mib,
         cpu_limit: server.cpu_limit,
         disk_mib: server.disk_mib,
@@ -508,6 +560,10 @@ function ServerModal({
                                     { label: 'Node', value: server.node.name },
                                     { label: 'Cargo', value: server.cargo.name },
                                     {
+                                        label: 'Allocation',
+                                        value: `${server.allocation.ip_alias ?? server.allocation.bind_ip}:${server.allocation.port}`,
+                                    },
+                                    {
                                         label: 'Memory',
                                         value: formatLimit(server.memory_mib, 'MiB'),
                                     },
@@ -548,9 +604,11 @@ function ServerModal({
                                     value={statusLabel(server.status)}
                                     description="Daemon-side lifecycle will be attached in the next stage"
                                     valueClassName={
-                                        server.status === 'pending'
+                                        server.status === 'install_failed'
                                             ? 'text-[#d92400] dark:text-[#ff8a6b]'
-                                            : undefined
+                                            : server.status === 'running'
+                                              ? 'text-emerald-600 dark:text-emerald-400'
+                                              : undefined
                                     }
                                 />
                                 <StackedStatCard
@@ -580,6 +638,7 @@ function ServerModal({
                                     errors={form.errors}
                                     users={users}
                                     nodes={nodes}
+                                    allocations={allocations}
                                     cargo={cargo}
                                 />
 
@@ -635,7 +694,7 @@ function ServerModal({
     );
 }
 
-export default function Servers({ servers, users, nodes, cargo, filters }: Props) {
+export default function Servers({ servers, users, nodes, allocations, cargo, filters }: Props) {
     const [search, setSearch] = useState(filters.search);
     const [creatingServer, setCreatingServer] = useState(false);
     const [viewingServer, setViewingServer] = useState<AdminServer | null>(null);
@@ -763,6 +822,7 @@ export default function Servers({ servers, users, nodes, cargo, filters }: Props
                 <CreateServerModal
                     users={users}
                     nodes={nodes}
+                    allocations={allocations}
                     cargo={cargo}
                     onClose={() => setCreatingServer(false)}
                 />
@@ -773,6 +833,7 @@ export default function Servers({ servers, users, nodes, cargo, filters }: Props
                     server={viewingServer}
                     users={users}
                     nodes={nodes}
+                    allocations={allocations}
                     cargo={cargo}
                     onClose={() => setViewingServer(null)}
                     onDelete={setDeletingServer}
