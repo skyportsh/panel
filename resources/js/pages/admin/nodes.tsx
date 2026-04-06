@@ -1130,7 +1130,7 @@ export default function Nodes({ nodes, locations, filters }: Props) {
 
             <AdminLayout
                 title="Nodes"
-                description="Manage your machine endpoints, ports, and regional placement."
+                description="Nodes are where your servers live."
             >
                 <DataTable
                     data={nodes}

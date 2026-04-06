@@ -9,6 +9,7 @@ use App\Models\Cargo;
 use App\Models\Node;
 use App\Models\Server;
 use App\Models\User;
+use App\Services\ServerRemoteUpdateService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,6 +17,8 @@ use Inertia\Response;
 
 class ServersController extends Controller
 {
+    public function __construct(private ServerRemoteUpdateService $serverRemoteUpdateService) {}
+
     public function index(Request $request): Response
     {
         $servers = Server::query()
@@ -98,23 +101,57 @@ class ServersController extends Controller
 
     public function store(StoreServerRequest $request): RedirectResponse
     {
-        Server::create($request->validated() + ['status' => 'pending']);
+        $server = Server::create($request->validated() + ['status' => 'pending']);
+        $server->loadMissing(['cargo', 'node.credential', 'user']);
 
-        return back()->with('success', 'Server created.');
+        if ($this->serverRemoteUpdateService->push($server)) {
+            return back()->with('success', 'Server created. skyportd saved the server state.');
+        }
+
+        return back()
+            ->with('success', 'Server created.')
+            ->with('warning', 'skyportd could not be updated automatically. This server will need to be synced later.');
     }
 
     public function update(UpdateServerRequest $request, Server $server): RedirectResponse
     {
-        $server->update($request->validated());
+        $server->loadMissing(['cargo', 'node.credential', 'user']);
+        $targetServer = clone $server;
+        $originalNodeId = $server->node_id;
 
-        return back()->with('success', 'Server updated.');
+        $server->update($request->validated());
+        $server->refresh()->loadMissing(['cargo', 'node.credential', 'user']);
+
+        if ($originalNodeId !== $server->node_id) {
+            $synced = $this->serverRemoteUpdateService->delete($targetServer)
+                && $this->serverRemoteUpdateService->push($server);
+        } else {
+            $synced = $this->serverRemoteUpdateService->push($targetServer, $server);
+        }
+
+        if ($synced) {
+            return back()->with('success', 'Server updated. skyportd saved the new server state.');
+        }
+
+        return back()
+            ->with('success', 'Server updated.')
+            ->with('warning', 'skyportd could not be updated automatically. This server will need to be synced later.');
     }
 
     public function destroy(Server $server): RedirectResponse
     {
+        $server->loadMissing(['node.credential']);
+        $deletedRemotely = $this->serverRemoteUpdateService->delete($server);
+
         $server->delete();
 
-        return back()->with('success', 'Server deleted.');
+        if ($deletedRemotely) {
+            return back()->with('success', 'Server deleted. skyportd removed the server state.');
+        }
+
+        return back()
+            ->with('success', 'Server deleted.')
+            ->with('warning', 'skyportd could not be updated automatically. This server may still exist on the node until it is reconciled.');
     }
 
     public function bulkDestroy(Request $request): RedirectResponse
@@ -126,9 +163,26 @@ class ServersController extends Controller
 
         $ids = $validated['ids'];
         $count = count($ids);
+        $remoteFailures = 0;
 
-        Server::query()->whereIn('id', $ids)->delete();
+        Server::query()
+            ->with(['node.credential'])
+            ->whereIn('id', $ids)
+            ->get()
+            ->each(function (Server $server) use (&$remoteFailures): void {
+                if (! $this->serverRemoteUpdateService->delete($server)) {
+                    $remoteFailures++;
+                }
 
-        return back()->with('success', $count.' '.str('server')->plural($count).' deleted.');
+                $server->delete();
+            });
+
+        $response = back()->with('success', $count.' '.str('server')->plural($count).' deleted.');
+
+        if ($remoteFailures > 0) {
+            return $response->with('warning', 'Some servers could not be removed from skyportd automatically.');
+        }
+
+        return $response;
     }
 }
