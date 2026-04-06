@@ -13,6 +13,10 @@ class AppSettingsService
 
     public const ANNOUNCEMENT_ENABLED_KEY = 'announcement_enabled';
 
+    public const ANNOUNCEMENT_TYPE_KEY = 'announcement_type';
+
+    public const ANNOUNCEMENT_DISMISSABLE_KEY = 'announcement_dismissable';
+
     public function appName(): string
     {
         $fallback = (string) config('app.name', 'Skyport');
@@ -68,6 +72,44 @@ class AppSettingsService
         AppSetting::query()->updateOrCreate(
             ['key' => self::ANNOUNCEMENT_KEY],
             ['value' => $announcement ?? ''],
+        );
+    }
+
+    public function announcementType(): string
+    {
+        if (! Schema::hasTable('app_settings')) {
+            return 'information';
+        }
+
+        return AppSetting::query()
+            ->where('key', self::ANNOUNCEMENT_TYPE_KEY)
+            ->value('value') ?? 'information';
+    }
+
+    public function setAnnouncementType(string $type): void
+    {
+        AppSetting::query()->updateOrCreate(
+            ['key' => self::ANNOUNCEMENT_TYPE_KEY],
+            ['value' => $type],
+        );
+    }
+
+    public function announcementDismissable(): bool
+    {
+        if (! Schema::hasTable('app_settings')) {
+            return false;
+        }
+
+        return AppSetting::query()
+            ->where('key', self::ANNOUNCEMENT_DISMISSABLE_KEY)
+            ->value('value') === '1';
+    }
+
+    public function setAnnouncementDismissable(bool $dismissable): void
+    {
+        AppSetting::query()->updateOrCreate(
+            ['key' => self::ANNOUNCEMENT_DISMISSABLE_KEY],
+            ['value' => $dismissable ? '1' : '0'],
         );
     }
 

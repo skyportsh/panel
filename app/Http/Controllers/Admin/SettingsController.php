@@ -26,6 +26,8 @@ class SettingsController extends Controller
                     ->where('key', AppSettingsService::ANNOUNCEMENT_KEY)
                     ->value('value') ?? '',
                 'announcement_enabled' => $this->appSettingsService->announcementEnabled(),
+                'announcement_type' => $this->appSettingsService->announcementType(),
+                'announcement_dismissable' => $this->appSettingsService->announcementDismissable(),
             ],
         ]);
     }
@@ -35,6 +37,8 @@ class SettingsController extends Controller
         $this->appSettingsService->setAppName($request->validated('app_name'));
         $this->appSettingsService->setAnnouncement($request->validated('announcement'));
         $this->appSettingsService->setAnnouncementEnabled($request->boolean('announcement_enabled'));
+        $this->appSettingsService->setAnnouncementType($request->validated('announcement_type') ?? 'information');
+        $this->appSettingsService->setAnnouncementDismissable($request->boolean('announcement_dismissable'));
 
         return Redirect::back()->with('success', 'Settings updated.');
     }

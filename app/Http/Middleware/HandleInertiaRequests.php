@@ -55,6 +55,8 @@ class HandleInertiaRequests extends Middleware
                 $request->cookie('sidebar_state') === 'true',
             'impersonating' => $request->session()->has('impersonator_id'),
             'announcement' => fn (): ?string => app(AppSettingsService::class)->announcement(),
+            'announcementType' => fn (): string => app(AppSettingsService::class)->announcementType(),
+            'announcementDismissable' => fn (): bool => app(AppSettingsService::class)->announcementDismissable(),
         ];
     }
 }
