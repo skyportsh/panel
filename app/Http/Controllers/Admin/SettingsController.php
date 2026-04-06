@@ -28,6 +28,7 @@ class SettingsController extends Controller
                 'announcement_enabled' => $this->appSettingsService->announcementEnabled(),
                 'announcement_type' => $this->appSettingsService->announcementType(),
                 'announcement_dismissable' => $this->appSettingsService->announcementDismissable(),
+                'announcement_icon' => $this->appSettingsService->announcementIcon(),
             ],
         ]);
     }
@@ -39,6 +40,10 @@ class SettingsController extends Controller
         $this->appSettingsService->setAnnouncementEnabled($request->boolean('announcement_enabled'));
         $this->appSettingsService->setAnnouncementType($request->validated('announcement_type') ?? 'information');
         $this->appSettingsService->setAnnouncementDismissable($request->boolean('announcement_dismissable'));
+        $this->appSettingsService->setAnnouncementIcon(
+            $request->validated('announcement_icon') ??
+                $this->appSettingsService->announcementIcon(),
+        );
 
         return Redirect::back()->with('success', 'Settings updated.');
     }

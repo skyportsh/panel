@@ -1,10 +1,13 @@
 import { usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
+    Bell,
     CheckCircle,
     Info,
     Megaphone,
     ShieldAlert,
+    Sparkles,
+    TriangleAlert,
     X,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -59,16 +62,29 @@ const typeConfig: Record<
     },
 };
 
+const announcementIcons = {
+    bell: Bell,
+    info: Info,
+    megaphone: Megaphone,
+    sparkles: Sparkles,
+    'triangle-alert': TriangleAlert,
+} as const;
+
 export { typeConfig };
 export type { AnnouncementType };
 
 export function AnnouncementBanner() {
-    const { announcement, announcementType, announcementDismissable } =
-        usePage().props as {
-            announcement?: string | null;
-            announcementType?: AnnouncementType;
-            announcementDismissable?: boolean;
-        };
+    const {
+        announcement,
+        announcementType,
+        announcementDismissable,
+        announcementIcon,
+    } = usePage().props as {
+        announcement?: string | null;
+        announcementType?: AnnouncementType;
+        announcementDismissable?: boolean;
+        announcementIcon?: keyof typeof announcementIcons | null;
+    };
     const [dismissed, setDismissed] = useState(false);
 
     if (!announcement || dismissed) {
@@ -76,7 +92,8 @@ export function AnnouncementBanner() {
     }
 
     const config = typeConfig[announcementType ?? 'information'];
-    const Icon = config.icon;
+    const Icon =
+        announcementIcons[announcementIcon ?? 'megaphone'] ?? config.icon;
 
     return (
         <div className="mx-4 mt-4">

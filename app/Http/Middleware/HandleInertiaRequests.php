@@ -57,6 +57,7 @@ class HandleInertiaRequests extends Middleware
             'announcement' => fn (): ?string => app(AppSettingsService::class)->announcement(),
             'announcementType' => fn (): string => app(AppSettingsService::class)->announcementType(),
             'announcementDismissable' => fn (): bool => app(AppSettingsService::class)->announcementDismissable(),
+            'announcementIcon' => fn (): string => app(AppSettingsService::class)->announcementIcon(),
         ];
     }
 }

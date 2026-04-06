@@ -17,6 +17,22 @@ class AppSettingsService
 
     public const ANNOUNCEMENT_DISMISSABLE_KEY = 'announcement_dismissable';
 
+    public const ANNOUNCEMENT_ICON_KEY = 'announcement_icon';
+
+    /**
+     * @return list<string>
+     */
+    public static function announcementIcons(): array
+    {
+        return [
+            'megaphone',
+            'bell',
+            'info',
+            'triangle-alert',
+            'sparkles',
+        ];
+    }
+
     public function appName(): string
     {
         $fallback = (string) config('app.name', 'Skyport');
@@ -65,6 +81,19 @@ class AppSettingsService
         return AppSetting::query()
             ->where('key', self::ANNOUNCEMENT_ENABLED_KEY)
             ->value('value') === '1';
+    }
+
+    public function announcementIcon(): string
+    {
+        if (! Schema::hasTable('app_settings')) {
+            return 'megaphone';
+        }
+
+        return $this->normalizeAnnouncementIcon(
+            AppSetting::query()
+                ->where('key', self::ANNOUNCEMENT_ICON_KEY)
+                ->value('value'),
+        );
     }
 
     public function setAnnouncement(?string $announcement): void
@@ -119,5 +148,20 @@ class AppSettingsService
             ['key' => self::ANNOUNCEMENT_ENABLED_KEY],
             ['value' => $enabled ? '1' : '0'],
         );
+    }
+
+    public function setAnnouncementIcon(string $icon): void
+    {
+        AppSetting::query()->updateOrCreate(
+            ['key' => self::ANNOUNCEMENT_ICON_KEY],
+            ['value' => $this->normalizeAnnouncementIcon($icon)],
+        );
+    }
+
+    protected function normalizeAnnouncementIcon(?string $icon): string
+    {
+        return in_array($icon, self::announcementIcons(), true)
+            ? $icon
+            : 'megaphone';
     }
 }
