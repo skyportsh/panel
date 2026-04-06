@@ -54,6 +54,7 @@ class ServersController extends Controller
                 'created_at' => $server->created_at?->toIso8601String(),
                 'disk_mib' => $server->disk_mib,
                 'id' => $server->id,
+                'last_error' => $server->last_error,
                 'memory_mib' => $server->memory_mib,
                 'name' => $server->name,
                 'node' => [

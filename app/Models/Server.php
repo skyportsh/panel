@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'cpu_limit',
     'disk_mib',
     'status',
+    'last_error',
 ])]
 class Server extends Model
 {

@@ -25,6 +25,7 @@ class ServerFactory extends Factory
             'cpu_limit' => fake()->randomElement([100, 200, 400]),
             'disk_mib' => fake()->randomElement([5120, 10240, 20480]),
             'status' => 'pending',
+            'last_error' => null,
         ];
     }
 }

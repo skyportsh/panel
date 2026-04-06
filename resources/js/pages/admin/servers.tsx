@@ -76,6 +76,7 @@ type AdminServer = {
     cpu_limit: number;
     disk_mib: number;
     status: string;
+    last_error: string | null;
     created_at: string;
     updated_at: string;
     allocation: Omit<AllocationOption, 'node_id' | 'server_id'>;
@@ -551,6 +552,23 @@ function ServerModal({
 
                 <div className="flex-1 overflow-y-auto px-6 py-6">
                     {tab === 'overview' ? (
+                        <div className="space-y-4">
+                            {server.status === 'install_failed' ? (
+                                <div className="rounded-lg border border-[#d92400]/30 bg-[#d92400]/8 px-4 py-3">
+                                    <p className="text-sm font-semibold text-[#d92400] dark:text-[#ff8a6b]">
+                                        This server cannot be recovered automatically.
+                                    </p>
+                                    <p className="mt-1 text-sm text-muted-foreground">
+                                        The daemon reported an unrecoverable install failure. This server should be deleted and recreated.
+                                    </p>
+                                    {server.last_error ? (
+                                        <p className="mt-3 rounded-md bg-background/80 px-3 py-2 font-mono text-xs text-foreground">
+                                            {server.last_error}
+                                        </p>
+                                    ) : null}
+                                </div>
+                            ) : null}
+
                         <div className="flex gap-6">
                             <div className="min-w-0 flex-1 space-y-1">
                                 {[
@@ -602,7 +620,11 @@ function ServerModal({
                                 <StackedStatCard
                                     label="Status"
                                     value={statusLabel(server.status)}
-                                    description="Daemon-side lifecycle will be attached in the next stage"
+                                    description={
+                                        server.status === 'install_failed'
+                                            ? 'This server must be deleted and recreated.'
+                                            : 'Daemon lifecycle status'
+                                    }
                                     valueClassName={
                                         server.status === 'install_failed'
                                             ? 'text-[#d92400] dark:text-[#ff8a6b]'
@@ -617,6 +639,7 @@ function ServerModal({
                                     description="Planned server files location"
                                 />
                             </div>
+                        </div>
                         </div>
                     ) : null}
 
