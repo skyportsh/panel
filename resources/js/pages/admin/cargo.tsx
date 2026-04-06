@@ -34,6 +34,7 @@ import { toast } from '@/components/ui/sonner';
 import { SlidingTabs } from '@/components/ui/sliding-tabs';
 import type { Tab } from '@/components/ui/sliding-tabs';
 import { Spinner } from '@/components/ui/spinner';
+import { useDialogState } from '@/hooks/use-dialog-state';
 import AdminLayout from '@/layouts/admin/layout';
 import AppLayout from '@/layouts/app-layout';
 import { formatDate } from '@/lib/format';
@@ -192,7 +193,13 @@ function JsonEditor({
     );
 }
 
-function CreateCargoModal({ onClose }: { onClose: () => void }) {
+function CreateCargoModal({
+    open,
+    onClose,
+}: {
+    open: boolean;
+    onClose: () => void;
+}) {
     const form = useForm<CreateCargoFormData>({
         name: '',
         author: '',
@@ -229,7 +236,7 @@ function CreateCargoModal({ onClose }: { onClose: () => void }) {
     };
 
     return (
-        <Dialog open onOpenChange={(open) => !open && onClose()}>
+        <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle>Create cargo</DialogTitle>
@@ -311,7 +318,13 @@ function CreateCargoModal({ onClose }: { onClose: () => void }) {
     );
 }
 
-function ImportCargoModal({ onClose }: { onClose: () => void }) {
+function ImportCargoModal({
+    open,
+    onClose,
+}: {
+    open: boolean;
+    onClose: () => void;
+}) {
     const form = useForm<ImportCargoFormData>({
         content: '',
     });
@@ -369,7 +382,7 @@ function ImportCargoModal({ onClose }: { onClose: () => void }) {
     };
 
     return (
-        <Dialog open onOpenChange={(open) => !open && onClose()}>
+        <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="sm:max-w-3xl">
                 <DialogHeader>
                     <DialogTitle>Import cargo</DialogTitle>
@@ -419,7 +432,9 @@ function ImportCargoModal({ onClose }: { onClose: () => void }) {
                                     type="button"
                                     variant="outline"
                                     className="cursor-pointer"
-                                    onClick={() => fileInputRef.current?.click()}
+                                    onClick={() =>
+                                        fileInputRef.current?.click()
+                                    }
                                 >
                                     <Upload className="h-4 w-4" />
                                     Select file
@@ -446,10 +461,12 @@ function ImportCargoModal({ onClose }: { onClose: () => void }) {
 
 function CargoModal({
     cargo,
+    open,
     onClose,
     onDelete,
 }: {
     cargo: AdminCargo;
+    open: boolean;
     onClose: () => void;
     onDelete: (cargo: AdminCargo) => void;
 }) {
@@ -501,7 +518,7 @@ function CargoModal({
     };
 
     return (
-        <Dialog open onOpenChange={(open) => !open && onClose()}>
+        <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
             <DialogContentFull>
                 <div className="px-8 pt-8 pb-4">
                     <div className="flex items-center gap-4">
@@ -537,7 +554,10 @@ function CargoModal({
                         <div className="flex gap-6">
                             <div className="min-w-0 flex-1 space-y-1">
                                 {[
-                                    { label: 'Cargo ID', value: `#${cargo.id}` },
+                                    {
+                                        label: 'Cargo ID',
+                                        value: `#${cargo.id}`,
+                                    },
                                     { label: 'Name', value: cargo.name },
                                     { label: 'Slug', value: cargo.slug },
                                     {
@@ -551,7 +571,10 @@ function CargoModal({
                                     },
                                     {
                                         label: 'Created',
-                                        value: formatDate(cargo.created_at, true),
+                                        value: formatDate(
+                                            cargo.created_at,
+                                            true,
+                                        ),
                                     },
                                 ].map((item) => (
                                     <div
@@ -642,7 +665,9 @@ function CargoModal({
 
                             <form onSubmit={submit} className="mt-6 space-y-4">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="cargo-cargofile">.cargofile</Label>
+                                    <Label htmlFor="cargo-cargofile">
+                                        .cargofile
+                                    </Label>
                                     <JsonEditor
                                         id="cargo-cargofile"
                                         value={form.data.cargofile}
@@ -650,7 +675,9 @@ function CargoModal({
                                             form.setData('cargofile', value)
                                         }
                                     />
-                                    <InputError message={form.errors.cargofile} />
+                                    <InputError
+                                        message={form.errors.cargofile}
+                                    />
                                 </div>
 
                                 <div className="flex justify-end">
@@ -690,40 +717,47 @@ function CargoModal({
                                             <span>Flags</span>
                                         </div>
                                         <div className="divide-y divide-border/60">
-                                            {cargo.definition.variables.map((variable) => (
-                                                <div
-                                                    key={variable.env_variable}
-                                                    className="grid grid-cols-[1.1fr_0.9fr_0.9fr_120px] gap-4 px-4 py-3"
-                                                >
-                                                    <div className="min-w-0">
-                                                        <p className="truncate text-sm font-medium text-foreground">
-                                                            {variable.name}
+                                            {cargo.definition.variables.map(
+                                                (variable) => (
+                                                    <div
+                                                        key={
+                                                            variable.env_variable
+                                                        }
+                                                        className="grid grid-cols-[1.1fr_0.9fr_0.9fr_120px] gap-4 px-4 py-3"
+                                                    >
+                                                        <div className="min-w-0">
+                                                            <p className="truncate text-sm font-medium text-foreground">
+                                                                {variable.name}
+                                                            </p>
+                                                            <p className="mt-1 text-xs text-muted-foreground">
+                                                                {variable.description ||
+                                                                    'No description provided.'}
+                                                            </p>
+                                                        </div>
+                                                        <p className="truncate font-mono text-xs text-foreground">
+                                                            {
+                                                                variable.env_variable
+                                                            }
                                                         </p>
-                                                        <p className="mt-1 text-xs text-muted-foreground">
-                                                            {variable.description ||
-                                                                'No description provided.'}
+                                                        <p className="truncate text-xs text-muted-foreground">
+                                                            {variable.default_value ||
+                                                                '—'}
                                                         </p>
+                                                        <div className="space-y-1 text-xs text-muted-foreground">
+                                                            <p>
+                                                                {variable.user_viewable
+                                                                    ? 'Visible'
+                                                                    : 'Hidden'}
+                                                            </p>
+                                                            <p>
+                                                                {variable.user_editable
+                                                                    ? 'Editable'
+                                                                    : 'Locked'}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <p className="truncate font-mono text-xs text-foreground">
-                                                        {variable.env_variable}
-                                                    </p>
-                                                    <p className="truncate text-xs text-muted-foreground">
-                                                        {variable.default_value || '—'}
-                                                    </p>
-                                                    <div className="space-y-1 text-xs text-muted-foreground">
-                                                        <p>
-                                                            {variable.user_viewable
-                                                                ? 'Visible'
-                                                                : 'Hidden'}
-                                                        </p>
-                                                        <p>
-                                                            {variable.user_editable
-                                                                ? 'Editable'
-                                                                : 'Locked'}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                                ),
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -828,9 +862,9 @@ function CargoModal({
 
 export default function Cargo({ cargo, filters }: Props) {
     const [search, setSearch] = useState(filters.search);
-    const [viewingCargo, setViewingCargo] = useState<AdminCargo | null>(null);
-    const [creatingCargo, setCreatingCargo] = useState(false);
-    const [importingCargo, setImportingCargo] = useState(false);
+    const viewingCargoDialog = useDialogState<AdminCargo>();
+    const creatingCargoDialog = useDialogState<boolean>();
+    const importingCargoDialog = useDialogState<boolean>();
     const [deletingCargo, setDeletingCargo] = useState<AdminCargo | null>(null);
     const [singleDeleting, setSingleDeleting] = useState(false);
 
@@ -900,7 +934,7 @@ export default function Cargo({ cargo, filters }: Props) {
     ];
 
     const rowMenu = (item: AdminCargo) => (
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
                 <button
                     type="button"
@@ -935,7 +969,7 @@ export default function Cargo({ cargo, filters }: Props) {
                     searchValue={search}
                     onSearch={handleSearch}
                     onRowClick={(item) =>
-                        setViewingCargo(cargoMap.get(item.id) ?? item)
+                        viewingCargoDialog.show(cargoMap.get(item.id) ?? item)
                     }
                     rowMenu={rowMenu}
                     bulkDeleteUrl={bulkDestroy.url()}
@@ -946,14 +980,14 @@ export default function Cargo({ cargo, filters }: Props) {
                             <Button
                                 size="table"
                                 variant="outline"
-                                onClick={() => setImportingCargo(true)}
+                                onClick={() => importingCargoDialog.show(true)}
                             >
                                 <FileUp className="h-3.5 w-3.5" />
                                 Import
                             </Button>
                             <Button
                                 size="table"
-                                onClick={() => setCreatingCargo(true)}
+                                onClick={() => creatingCargoDialog.show(true)}
                             >
                                 <Plus className="h-3.5 w-3.5" />
                                 Create new
@@ -963,18 +997,25 @@ export default function Cargo({ cargo, filters }: Props) {
                 />
             </AdminLayout>
 
-            {creatingCargo ? (
-                <CreateCargoModal onClose={() => setCreatingCargo(false)} />
+            {creatingCargoDialog.payload ? (
+                <CreateCargoModal
+                    open={creatingCargoDialog.open}
+                    onClose={creatingCargoDialog.hide}
+                />
             ) : null}
 
-            {importingCargo ? (
-                <ImportCargoModal onClose={() => setImportingCargo(false)} />
+            {importingCargoDialog.payload ? (
+                <ImportCargoModal
+                    open={importingCargoDialog.open}
+                    onClose={importingCargoDialog.hide}
+                />
             ) : null}
 
-            {viewingCargo ? (
+            {viewingCargoDialog.payload ? (
                 <CargoModal
-                    cargo={viewingCargo}
-                    onClose={() => setViewingCargo(null)}
+                    cargo={viewingCargoDialog.payload}
+                    open={viewingCargoDialog.open}
+                    onClose={viewingCargoDialog.hide}
                     onDelete={setDeletingCargo}
                 />
             ) : null}
@@ -998,7 +1039,12 @@ export default function Cargo({ cargo, filters }: Props) {
                     router.delete(destroy.url(deletingCargo.id), {
                         onSuccess: () => {
                             toast.success(`${deletingCargo.name} deleted`);
-                            setViewingCargo(null);
+                            if (
+                                viewingCargoDialog.payload?.id ===
+                                deletingCargo.id
+                            ) {
+                                viewingCargoDialog.hide();
+                            }
                             setDeletingCargo(null);
                         },
                         onFinish: () => setSingleDeleting(false),

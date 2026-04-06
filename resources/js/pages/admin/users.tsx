@@ -1,4 +1,4 @@
-import { Form, Head, router, usePage } from '@inertiajs/react';
+import { Form, Head, router } from '@inertiajs/react';
 import {
     Crown,
     Ellipsis,
@@ -6,6 +6,7 @@ import {
     LockOpen,
     Plus,
     Trash2,
+    UserX,
     UserRoundCog,
 } from 'lucide-react';
 import { useRef, useState } from 'react';
@@ -50,6 +51,7 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useInitials } from '@/hooks/use-initials';
+import { useDialogState } from '@/hooks/use-dialog-state';
 import AdminLayout from '@/layouts/admin/layout';
 import AppLayout from '@/layouts/app-layout';
 import { formatDate, formatRelativeTime } from '@/lib/format';
@@ -78,16 +80,20 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 function UserModal({
     user,
+    open,
     onClose,
+    onDeleteRequested,
+    onSuspensionRequested,
 }: {
     user: AdminUser;
+    open: boolean;
     onClose: () => void;
+    onDeleteRequested: (user: AdminUser) => void;
+    onSuspensionRequested: (user: AdminUser) => void;
 }) {
-    const { auth } = usePage().props;
     const getInitials = useInitials();
     const [tab, setTab] = useState('overview');
     const isSuspended = user.suspended_at !== null;
-    const isSelf = user.id === auth.user.id;
 
     const MIN_MS = 600;
     const submitStart = useRef(0);
@@ -104,7 +110,7 @@ function UserModal({
 
     return (
         <Dialog
-            open
+            open={open}
             onOpenChange={(open) => {
                 if (!open) {
                     onClose();
@@ -425,48 +431,20 @@ function UserModal({
                                             ? 'Allow this user to access the platform again.'
                                             : 'Prevent this user from logging in.'}
                                     </p>
-                                    <Form
-                                        {...(isSuspended
-                                            ? unsuspend.form(user.id)
-                                            : suspend.form(user.id))}
-                                        onStart={() => setActioning('suspend')}
-                                        onFinish={() => setActioning(null)}
-                                        onSuccess={() =>
-                                            toast.success(
-                                                isSuspended
-                                                    ? 'User unsuspended'
-                                                    : 'User suspended',
-                                            )
+                                    <Button
+                                        type="button"
+                                        variant={
+                                            isSuspended
+                                                ? 'outline'
+                                                : 'destructive'
                                         }
-                                        onError={(errors) =>
-                                            Object.values(errors).forEach((m) =>
-                                                toast.error(m),
-                                            )
+                                        size="sm"
+                                        onClick={() =>
+                                            onSuspensionRequested(user)
                                         }
                                     >
-                                        {() => (
-                                            <Button
-                                                type="submit"
-                                                variant={
-                                                    isSuspended
-                                                        ? 'outline'
-                                                        : 'destructive'
-                                                }
-                                                size="sm"
-                                                disabled={
-                                                    isSelf ||
-                                                    actioning === 'suspend'
-                                                }
-                                            >
-                                                {actioning === 'suspend' && (
-                                                    <Spinner />
-                                                )}
-                                                {isSuspended
-                                                    ? 'Unsuspend'
-                                                    : 'Suspend'}
-                                            </Button>
-                                        )}
-                                    </Form>
+                                        {isSuspended ? 'Unsuspend' : 'Suspend'}
+                                    </Button>
                                 </div>
                             </div>
 
@@ -499,7 +477,6 @@ function UserModal({
                                                 variant="outline"
                                                 size="sm"
                                                 disabled={
-                                                    isSelf ||
                                                     actioning === 'impersonate'
                                                 }
                                             >
@@ -513,6 +490,29 @@ function UserModal({
                                     </Form>
                                 </div>
                             </div>
+
+                            {/* Delete account */}
+                            <div className="overflow-hidden rounded-lg bg-muted/40">
+                                <div className="flex items-center justify-between px-4 py-2.5">
+                                    <span className="text-xs font-medium text-muted-foreground">
+                                        Delete account
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between rounded-lg border border-border/70 bg-background p-4">
+                                    <p className="text-sm text-muted-foreground">
+                                        Permanently remove this account and its
+                                        access.
+                                    </p>
+                                    <Button
+                                        type="button"
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={() => onDeleteRequested(user)}
+                                    >
+                                        Delete account
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -523,14 +523,20 @@ function UserModal({
 
 // ─── Create user modal ────────────────────────────────────────────────────────
 
-function CreateUserModal({ onClose }: { onClose: () => void }) {
+function CreateUserModal({
+    open,
+    onClose,
+}: {
+    open: boolean;
+    onClose: () => void;
+}) {
     const MIN_MS = 600;
     const submitStart = useRef(0);
     const [submitting, setSubmitting] = useState(false);
 
     return (
         <Dialog
-            open
+            open={open}
             onOpenChange={(open) => {
                 if (!open) {
                     onClose();
@@ -637,14 +643,17 @@ function CreateUserModal({ onClose }: { onClose: () => void }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function Users({ users, filters }: Props) {
-    const { auth } = usePage().props;
     const getInitials = useInitials();
-    const [viewingUser, setViewingUser] = useState<AdminUser | null>(null);
-    const [creatingUser, setCreatingUser] = useState(false);
+    const viewingUserDialog = useDialogState<AdminUser>();
+    const creatingUserDialog = useDialogState<boolean>();
     const [search, setSearch] = useState(filters.search);
     const [adminOnly, setAdminOnly] = useState(filters.admin_only);
     const [deletingUser, setDeletingUser] = useState<AdminUser | null>(null);
     const [singleDeleting, setSingleDeleting] = useState(false);
+    const [suspensionUser, setSuspensionUser] = useState<AdminUser | null>(
+        null,
+    );
+    const [singleSuspending, setSingleSuspending] = useState(false);
 
     const navigate = (params: Record<string, string | boolean | undefined>) => {
         router.get(adminUsers.url(), params as Record<string, string>, {
@@ -662,6 +671,57 @@ export default function Users({ users, filters }: Props) {
         const next = !adminOnly;
         setAdminOnly(next);
         navigate({ search, admin_only: next || undefined });
+    };
+
+    const handleImpersonate = (user: AdminUser) => {
+        router.post(
+            impersonate.url(user.id),
+            {},
+            {
+                onError: (errors) =>
+                    Object.values(errors).forEach((message) =>
+                        toast.error(message),
+                    ),
+            },
+        );
+    };
+
+    const handleDeleteRequest = (user: AdminUser) => {
+        setDeletingUser(user);
+    };
+
+    const handleSuspensionRequest = (user: AdminUser) => {
+        setSuspensionUser(user);
+    };
+
+    const handleSuspension = (
+        user: AdminUser,
+        options?: {
+            onFinish?: () => void;
+            onSuccess?: () => void;
+        },
+    ) => {
+        const action = user.suspended_at ? unsuspend : suspend;
+
+        router.post(
+            action.url(user.id),
+            {},
+            {
+                onSuccess: () => {
+                    toast.success(
+                        user.suspended_at
+                            ? 'User unsuspended'
+                            : 'User suspended',
+                    );
+                    options?.onSuccess?.();
+                },
+                onFinish: () => options?.onFinish?.(),
+                onError: (errors) =>
+                    Object.values(errors).forEach((message) =>
+                        toast.error(message),
+                    ),
+            },
+        );
     };
 
     const columns: Column<AdminUser>[] = [
@@ -759,10 +819,8 @@ export default function Users({ users, filters }: Props) {
     ];
 
     const rowMenu = (user: AdminUser) => {
-        const isSelf = user.id === auth.user.id;
-
         return (
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                     <button
                         type="button"
@@ -773,19 +831,31 @@ export default function Users({ users, filters }: Props) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem
-                        disabled={isSelf}
                         className="cursor-pointer"
-                        onSelect={() => {
-                            router.post(impersonate.url(user.id));
+                        onSelect={(event) => {
+                            event.preventDefault();
+                            handleSuspensionRequest(user);
+                        }}
+                    >
+                        <UserX className="mr-2 h-4 w-4" />
+                        {user.suspended_at ? 'Unsuspend' : 'Suspend'}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                        className="cursor-pointer"
+                        onSelect={(event) => {
+                            event.preventDefault();
+                            handleImpersonate(user);
                         }}
                     >
                         <UserRoundCog className="mr-2 h-4 w-4" />
                         Impersonate
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                        disabled={isSelf}
                         className="cursor-pointer"
-                        onSelect={() => setDeletingUser(user)}
+                        onSelect={(event) => {
+                            event.preventDefault();
+                            handleDeleteRequest(user);
+                        }}
                     >
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete
@@ -808,7 +878,7 @@ export default function Users({ users, filters }: Props) {
                     columns={columns}
                     searchValue={search}
                     onSearch={handleSearch}
-                    onRowClick={setViewingUser}
+                    onRowClick={(user) => viewingUserDialog.show(user)}
                     rowMenu={rowMenu}
                     bulkDeleteUrl={bulkDestroy.url()}
                     entityName="user"
@@ -816,7 +886,7 @@ export default function Users({ users, filters }: Props) {
                     actions={
                         <Button
                             size="table"
-                            onClick={() => setCreatingUser(true)}
+                            onClick={() => creatingUserDialog.show(true)}
                         >
                             <Plus className="h-3.5 w-3.5" />
                             Create new
@@ -825,16 +895,52 @@ export default function Users({ users, filters }: Props) {
                 />
             </AdminLayout>
 
-            {viewingUser && (
+            {viewingUserDialog.payload && (
                 <UserModal
-                    user={viewingUser}
-                    onClose={() => setViewingUser(null)}
+                    user={viewingUserDialog.payload}
+                    open={viewingUserDialog.open}
+                    onClose={viewingUserDialog.hide}
+                    onDeleteRequested={handleDeleteRequest}
+                    onSuspensionRequested={handleSuspensionRequest}
                 />
             )}
 
-            {creatingUser && (
-                <CreateUserModal onClose={() => setCreatingUser(false)} />
+            {creatingUserDialog.payload && (
+                <CreateUserModal
+                    open={creatingUserDialog.open}
+                    onClose={creatingUserDialog.hide}
+                />
             )}
+
+            <ConfirmDeleteDialog
+                open={suspensionUser !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setSuspensionUser(null);
+                    }
+                }}
+                title={`${suspensionUser?.suspended_at ? 'Unsuspend' : 'Suspend'} ${suspensionUser?.name}?`}
+                description={
+                    suspensionUser?.suspended_at
+                        ? 'This will restore this account and allow the user to sign in again.'
+                        : 'This will immediately block this account from signing in until it is unsuspended.'
+                }
+                loading={singleSuspending}
+                confirmLabel={
+                    suspensionUser?.suspended_at ? 'Unsuspend' : 'Suspend'
+                }
+                onConfirm={() => {
+                    if (!suspensionUser) {
+                        return;
+                    }
+
+                    setSingleSuspending(true);
+                    handleSuspension(suspensionUser, {
+                        onSuccess: () => setSuspensionUser(null),
+                        onFinish: () => setSingleSuspending(false),
+                    });
+                }}
+            />
 
             <ConfirmDeleteDialog
                 open={deletingUser !== null}
@@ -854,6 +960,12 @@ export default function Users({ users, filters }: Props) {
                     router.delete(destroy.url(deletingUser.id), {
                         onSuccess: () => {
                             toast.success(`${deletingUser.name} deleted`);
+                            if (
+                                viewingUserDialog.payload?.id ===
+                                deletingUser.id
+                            ) {
+                                viewingUserDialog.hide();
+                            }
                             setDeletingUser(null);
                         },
                         onFinish: () => setSingleDeleting(false),

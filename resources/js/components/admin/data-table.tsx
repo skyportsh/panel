@@ -224,6 +224,7 @@ export function ConfirmDeleteDialog({
     description,
     onConfirm,
     loading,
+    confirmLabel = 'Delete',
 }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -231,6 +232,7 @@ export function ConfirmDeleteDialog({
     description: string;
     onConfirm: () => void;
     loading: boolean;
+    confirmLabel?: string;
 }) {
     return (
         <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -254,7 +256,7 @@ export function ConfirmDeleteDialog({
                         }}
                     >
                         {loading && <Spinner />}
-                        Delete
+                        {confirmLabel}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
@@ -302,8 +304,7 @@ function DataTableRow<T extends { id: number }>({
             <div
                 className={cn(
                     'relative flex items-center px-3 py-2.5',
-                    onClick &&
-                        'cursor-pointer transition-transform duration-150 ease-out active:scale-[0.98] active:duration-0',
+                    onClick && 'cursor-pointer',
                 )}
                 onClick={onClick}
             >

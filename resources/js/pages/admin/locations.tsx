@@ -40,6 +40,7 @@ import { SlidingTabs } from '@/components/ui/sliding-tabs';
 import type { Tab } from '@/components/ui/sliding-tabs';
 import { Spinner } from '@/components/ui/spinner';
 import { countryFlags } from '@/data/country-flags';
+import { useDialogState } from '@/hooks/use-dialog-state';
 import AdminLayout from '@/layouts/admin/layout';
 import AppLayout from '@/layouts/app-layout';
 import { formatDate, formatRelativeTime } from '@/lib/format';
@@ -178,7 +179,13 @@ function LocationFormFields({
     );
 }
 
-function CreateLocationModal({ onClose }: { onClose: () => void }) {
+function CreateLocationModal({
+    open,
+    onClose,
+}: {
+    open: boolean;
+    onClose: () => void;
+}) {
     const form = useForm<LocationFormData>({
         name: '',
         country: '',
@@ -213,7 +220,7 @@ function CreateLocationModal({ onClose }: { onClose: () => void }) {
     };
 
     return (
-        <Dialog open onOpenChange={(open) => !open && onClose()}>
+        <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Create location</DialogTitle>
@@ -246,10 +253,12 @@ function CreateLocationModal({ onClose }: { onClose: () => void }) {
 
 function LocationModal({
     location,
+    open,
     onClose,
     onDelete,
 }: {
     location: AdminLocation;
+    open: boolean;
     onClose: () => void;
     onDelete: (location: AdminLocation) => void;
 }) {
@@ -287,7 +296,7 @@ function LocationModal({
     };
 
     return (
-        <Dialog open onOpenChange={(open) => !open && onClose()}>
+        <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
             <DialogContentFull>
                 <div className="px-8 pt-8 pb-4">
                     <div className="flex items-center gap-4">
@@ -455,9 +464,8 @@ function LocationModal({
 
 export default function Locations({ locations, filters }: Props) {
     const [search, setSearch] = useState(filters.search);
-    const [viewingLocation, setViewingLocation] =
-        useState<AdminLocation | null>(null);
-    const [creatingLocation, setCreatingLocation] = useState(false);
+    const viewingLocationDialog = useDialogState<AdminLocation>();
+    const creatingLocationDialog = useDialogState<boolean>();
     const [deletingLocation, setDeletingLocation] =
         useState<AdminLocation | null>(null);
     const [singleDeleting, setSingleDeleting] = useState(false);
@@ -521,7 +529,7 @@ export default function Locations({ locations, filters }: Props) {
     ];
 
     const rowMenu = (location: AdminLocation) => (
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
                 <button
                     type="button"
@@ -556,7 +564,7 @@ export default function Locations({ locations, filters }: Props) {
                     searchValue={search}
                     onSearch={handleSearch}
                     onRowClick={(location) =>
-                        setViewingLocation(
+                        viewingLocationDialog.show(
                             locationMap.get(location.id) ?? location,
                         )
                     }
@@ -567,7 +575,7 @@ export default function Locations({ locations, filters }: Props) {
                     actions={
                         <Button
                             size="table"
-                            onClick={() => setCreatingLocation(true)}
+                            onClick={() => creatingLocationDialog.show(true)}
                         >
                             <Plus className="h-3.5 w-3.5" />
                             Create new
@@ -576,16 +584,18 @@ export default function Locations({ locations, filters }: Props) {
                 />
             </AdminLayout>
 
-            {creatingLocation ? (
+            {creatingLocationDialog.payload ? (
                 <CreateLocationModal
-                    onClose={() => setCreatingLocation(false)}
+                    open={creatingLocationDialog.open}
+                    onClose={creatingLocationDialog.hide}
                 />
             ) : null}
 
-            {viewingLocation ? (
+            {viewingLocationDialog.payload ? (
                 <LocationModal
-                    location={viewingLocation}
-                    onClose={() => setViewingLocation(null)}
+                    location={viewingLocationDialog.payload}
+                    open={viewingLocationDialog.open}
+                    onClose={viewingLocationDialog.hide}
                     onDelete={setDeletingLocation}
                 />
             ) : null}
@@ -609,7 +619,12 @@ export default function Locations({ locations, filters }: Props) {
                     router.delete(destroy.url(deletingLocation.id), {
                         onSuccess: () => {
                             toast.success(`${deletingLocation.name} deleted`);
-                            setViewingLocation(null);
+                            if (
+                                viewingLocationDialog.payload?.id ===
+                                deletingLocation.id
+                            ) {
+                                viewingLocationDialog.hide();
+                            }
                             setDeletingLocation(null);
                         },
                         onFinish: () => setSingleDeleting(false),

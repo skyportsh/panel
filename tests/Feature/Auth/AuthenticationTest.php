@@ -59,6 +59,35 @@ test('users can not authenticate with invalid password', function () {
     $this->assertGuest();
 });
 
+test('suspended users can not authenticate using the login screen', function () {
+    $user = User::factory()->create([
+        'suspended_at' => now(),
+    ]);
+
+    $response = $this->from(route('login'))
+        ->post(route('login.store'), [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+    $response->assertRedirect(route('login'));
+    $response->assertSessionHasErrors('email');
+    $this->assertGuest();
+});
+
+test('suspended authenticated users are logged out on their next request', function () {
+    $user = User::factory()->create([
+        'suspended_at' => now(),
+    ]);
+
+    $response = $this->actingAs($user)
+        ->get(route('home'));
+
+    $response->assertRedirect(route('login'));
+    $response->assertSessionHasErrors('email');
+    $this->assertGuest();
+});
+
 test('users can logout', function () {
     $user = User::factory()->create();
 

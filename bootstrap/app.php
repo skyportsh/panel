@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\ApplyAppSettings;
+use App\Http\Middleware\EnsureUserIsNotSuspended;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RecordUserActivity;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             ApplyAppSettings::class,
             HandleAppearance::class,
+            EnsureUserIsNotSuspended::class,
             RecordUserActivity::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,

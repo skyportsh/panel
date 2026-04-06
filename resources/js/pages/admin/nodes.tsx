@@ -65,6 +65,7 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useDialogState } from '@/hooks/use-dialog-state';
 import AdminLayout from '@/layouts/admin/layout';
 import AppLayout from '@/layouts/app-layout';
 import { formatDate } from '@/lib/format';
@@ -189,7 +190,10 @@ function formatDetailedRelativeTime(
         return 'never';
     }
 
-    const seconds = Math.max(0, Math.round((now - new Date(value).getTime()) / 1000));
+    const seconds = Math.max(
+        0,
+        Math.round((now - new Date(value).getTime()) / 1000),
+    );
 
     if (seconds < 60) {
         return 'just now';
@@ -251,7 +255,8 @@ function NodeConnectionIndicator({
                     <div className="space-y-0.5">
                         <p className="text-sm font-medium">Offline</p>
                         <p className="text-xs text-muted-foreground">
-                            Last seen {formatDetailedRelativeTime(node.last_seen_at, now)}
+                            Last seen{' '}
+                            {formatDetailedRelativeTime(node.last_seen_at, now)}
                         </p>
                     </div>
                 ) : (
@@ -590,8 +595,7 @@ function ConfigureTab({
         useState<ConfigurationData | null>(null);
     const [generating, setGenerating] = useState(false);
     const [copied, setCopied] = useState(false);
-    const [showReconfigureWarning, setShowReconfigureWarning] =
-        useState(false);
+    const [showReconfigureWarning, setShowReconfigureWarning] = useState(false);
     const connectionStatus = node.connection_status ?? node.status ?? 'draft';
 
     const currentStatus = node.daemon_uuid ? connectionStatus : 'draft';
@@ -819,9 +823,11 @@ function ConfigureTab({
 }
 
 function CreateNodeModal({
+    open,
     onClose,
     locations,
 }: {
+    open: boolean;
     onClose: () => void;
     locations: LocationOption[];
 }) {
@@ -863,7 +869,7 @@ function CreateNodeModal({
     };
 
     return (
-        <Dialog open onOpenChange={(open) => !open && onClose()}>
+        <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle>Create node</DialogTitle>
@@ -897,11 +903,13 @@ function CreateNodeModal({
 
 function NodeModal({
     node,
+    open,
     onClose,
     onDelete,
     locations,
 }: {
     node: AdminNode;
+    open: boolean;
     onClose: () => void;
     onDelete: (node: AdminNode) => void;
     locations: LocationOption[];
@@ -934,9 +942,15 @@ function NodeModal({
                 setTimeout(() => setSubmitting(false), Math.max(0, remaining));
             },
             onSuccess: (page) => {
-                const flash = (page.props as {
-                    flash?: { info?: string; success?: string; warning?: string };
-                }).flash;
+                const flash = (
+                    page.props as {
+                        flash?: {
+                            info?: string;
+                            success?: string;
+                            warning?: string;
+                        };
+                    }
+                ).flash;
 
                 if (flash?.success) {
                     toast.success(flash.success);
@@ -959,7 +973,7 @@ function NodeModal({
     };
 
     return (
-        <Dialog open onOpenChange={(open) => !open && onClose()}>
+        <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
             <DialogContentFull>
                 <div className="px-8 pt-8 pb-4">
                     <div className="flex items-center gap-4">
@@ -1218,8 +1232,8 @@ function NodeModal({
 
 export default function Nodes({ nodes, locations, filters }: Props) {
     const [search, setSearch] = useState(filters.search);
-    const [viewingNode, setViewingNode] = useState<AdminNode | null>(null);
-    const [creatingNode, setCreatingNode] = useState(false);
+    const viewingNodeDialog = useDialogState<AdminNode>();
+    const creatingNodeDialog = useDialogState<boolean>();
     const [deletingNode, setDeletingNode] = useState<AdminNode | null>(null);
     const [singleDeleting, setSingleDeleting] = useState(false);
     const [now, setNow] = useState(() => Date.now());
@@ -1267,14 +1281,14 @@ export default function Nodes({ nodes, locations, filters }: Props) {
     }, []);
 
     useEffect(() => {
-        setViewingNode((current) => {
+        viewingNodeDialog.setPayload((current) => {
             if (!current) {
                 return current;
             }
 
             return nodeMap.get(current.id) ?? null;
         });
-    }, [nodeMap]);
+    }, [nodeMap, viewingNodeDialog]);
 
     const columns: Column<AdminNode>[] = [
         {
@@ -1340,7 +1354,7 @@ export default function Nodes({ nodes, locations, filters }: Props) {
     ];
 
     const rowMenu = (node: AdminNode) => (
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
                 <button
                     type="button"
@@ -1375,7 +1389,7 @@ export default function Nodes({ nodes, locations, filters }: Props) {
                     searchValue={search}
                     onSearch={handleSearch}
                     onRowClick={(node) =>
-                        setViewingNode(nodeMap.get(node.id) ?? node)
+                        viewingNodeDialog.show(nodeMap.get(node.id) ?? node)
                     }
                     rowMenu={rowMenu}
                     bulkDeleteUrl={bulkDestroy.url()}
@@ -1384,7 +1398,7 @@ export default function Nodes({ nodes, locations, filters }: Props) {
                     actions={
                         <Button
                             size="table"
-                            onClick={() => setCreatingNode(true)}
+                            onClick={() => creatingNodeDialog.show(true)}
                             disabled={locations.length === 0}
                         >
                             <Plus className="h-3.5 w-3.5" />
@@ -1394,17 +1408,19 @@ export default function Nodes({ nodes, locations, filters }: Props) {
                 />
             </AdminLayout>
 
-            {creatingNode ? (
+            {creatingNodeDialog.payload ? (
                 <CreateNodeModal
-                    onClose={() => setCreatingNode(false)}
+                    open={creatingNodeDialog.open}
+                    onClose={creatingNodeDialog.hide}
                     locations={locations}
                 />
             ) : null}
 
-            {viewingNode ? (
+            {viewingNodeDialog.payload ? (
                 <NodeModal
-                    node={viewingNode}
-                    onClose={() => setViewingNode(null)}
+                    node={viewingNodeDialog.payload}
+                    open={viewingNodeDialog.open}
+                    onClose={viewingNodeDialog.hide}
                     onDelete={setDeletingNode}
                     locations={locations}
                 />
@@ -1429,7 +1445,12 @@ export default function Nodes({ nodes, locations, filters }: Props) {
                     router.delete(destroy.url(deletingNode.id), {
                         onSuccess: () => {
                             toast.success(`${deletingNode.name} deleted`);
-                            setViewingNode(null);
+                            if (
+                                viewingNodeDialog.payload?.id ===
+                                deletingNode.id
+                            ) {
+                                viewingNodeDialog.hide();
+                            }
                             setDeletingNode(null);
                         },
                         onFinish: () => setSingleDeleting(false),
