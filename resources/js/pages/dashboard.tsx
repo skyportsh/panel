@@ -371,14 +371,14 @@ export default function Home({ auth, filters, servers }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Home" />
-            <div className="flex h-full flex-1 flex-col gap-6 p-4">
-                <div className="flex items-start justify-between gap-4 px-4 py-2">
+            <div className="flex h-full flex-1 flex-col gap-6 px-4 py-6">
+                <div className="flex items-start justify-between gap-4 py-0.5">
                     <div className="space-y-0.5">
                         <h2 className="text-xl font-semibold tracking-tight">
                             Servers
                         </h2>
                         <p className="text-sm text-muted-foreground">
-                            View live resource usage from your servers.
+                            A list of all servers that you own or have access to.
                         </p>
                     </div>
 
