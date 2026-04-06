@@ -3,8 +3,10 @@ export type ServerRuntimeState =
     | 'installing'
     | 'offline'
     | 'pending'
+    | 'restarting'
     | 'running'
     | 'starting'
+    | 'stopping'
     | (string & {});
 
 export type ServerPowerAvailability = {
@@ -39,6 +41,8 @@ export function statusTone(status: string): string {
             return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
         case 'starting':
         case 'installing':
+        case 'stopping':
+        case 'restarting':
             return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
         case 'install_failed':
             return 'bg-[#d92400]/12 text-[#d92400] dark:text-[#ff8a6b]';
@@ -55,6 +59,10 @@ export function statusLabel(status: string): string {
             return 'Running';
         case 'starting':
             return 'Starting';
+        case 'stopping':
+            return 'Stopping';
+        case 'restarting':
+            return 'Restarting';
         case 'installing':
             return 'Installing';
         case 'install_failed':
@@ -88,6 +96,8 @@ export function powerActionsForState(
                 reinstall: true,
             };
         case 'starting':
+        case 'stopping':
+        case 'restarting':
             return {
                 start: false,
                 stop: false,

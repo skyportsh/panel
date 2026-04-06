@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Server;
-use App\Support\ServerPowerState;
 use Illuminate\Support\Facades\Http;
 use InvalidArgumentException;
 use Throwable;
@@ -12,16 +11,6 @@ class ServerPowerService
 {
     public function dispatch(Server $server, string $signal): Server
     {
-        if (! ServerPowerState::allows($server->status, $signal)) {
-            throw new InvalidArgumentException(
-                sprintf(
-                    'The %s action is not available while the server is %s.',
-                    $signal,
-                    $server->status,
-                ),
-            );
-        }
-
         $server->loadMissing('node.credential');
 
         $callbackToken = $server->node->credential?->daemon_callback_token;
