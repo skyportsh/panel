@@ -1,11 +1,11 @@
-import type { PropsWithChildren } from 'react';
+import type { PropsWithChildren } from "react";
 import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 
 export default function AuthCardLayout({
     children,

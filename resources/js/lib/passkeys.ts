@@ -67,23 +67,23 @@ function toUint8Array(buffer: ArrayBuffer | ArrayBufferView): Uint8Array {
 }
 
 function toBase64Url(buffer: ArrayBuffer | ArrayBufferView): string {
-    let output = '';
+    let output = "";
 
     toUint8Array(buffer).forEach((byte) => {
         output += String.fromCharCode(byte);
     });
 
     return btoa(output)
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/g, '');
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/g, "");
 }
 
 function fromBase64Url(value: string): ArrayBuffer {
     const padded = value
-        .replace(/-/g, '+')
-        .replace(/_/g, '/')
-        .padEnd(Math.ceil(value.length / 4) * 4, '=');
+        .replace(/-/g, "+")
+        .replace(/_/g, "/")
+        .padEnd(Math.ceil(value.length / 4) * 4, "=");
     const binary = atob(padded);
     const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
 
@@ -173,7 +173,7 @@ function csrfToken(): string {
     )?.content;
 
     if (!value) {
-        throw new Error('Missing CSRF token.');
+        throw new Error("Missing CSRF token.");
     }
 
     return value;
@@ -185,13 +185,13 @@ async function fetchJson<T>(
 ): Promise<T> {
     const response = await fetch(input, {
         ...init,
-        credentials: 'same-origin',
+        credentials: "same-origin",
         headers: {
-            Accept: 'application/json',
+            Accept: "application/json",
             ...(init?.body
                 ? {
-                      'Content-Type': 'application/json',
-                      'X-CSRF-TOKEN': csrfToken(),
+                      "Content-Type": "application/json",
+                      "X-CSRF-TOKEN": csrfToken(),
                   }
                 : {}),
             ...(init?.headers ?? {}),
@@ -201,13 +201,13 @@ async function fetchJson<T>(
     if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
         const message = payload.errors
-            ? Object.values(payload.errors).flat().join(' ')
+            ? Object.values(payload.errors).flat().join(" ")
             : payload.message;
 
         throw new Error(
-            typeof message === 'string' && message.length > 0
+            typeof message === "string" && message.length > 0
                 ? message
-                : 'Passkey request failed.',
+                : "Passkey request failed.",
         );
     }
 
@@ -216,9 +216,9 @@ async function fetchJson<T>(
 
 export function passkeysAreSupported(): boolean {
     return (
-        typeof window !== 'undefined' &&
-        'PublicKeyCredential' in window &&
-        typeof navigator.credentials !== 'undefined'
+        typeof window !== "undefined" &&
+        "PublicKeyCredential" in window &&
+        typeof navigator.credentials !== "undefined"
     );
 }
 
@@ -233,7 +233,7 @@ export async function conditionalMediationAvailable(): Promise<boolean> {
         }
     ).isConditionalMediationAvailable;
 
-    if (typeof conditionalCheck !== 'function') {
+    if (typeof conditionalCheck !== "function") {
         return false;
     }
 
@@ -252,7 +252,7 @@ export async function registerPasskey(
     );
 
     if (!(credential instanceof PublicKeyCredential)) {
-        throw new Error('The browser did not return a passkey credential.');
+        throw new Error("The browser did not return a passkey credential.");
     }
 
     await fetchJson(storeUrl, {
@@ -260,7 +260,7 @@ export async function registerPasskey(
             credential: serializeRegistrationCredential(credential),
             name,
         }),
-        method: 'POST',
+        method: "POST",
     });
 }
 
@@ -277,7 +277,7 @@ export async function authenticateWithPasskey(
 
     const credential = await navigator.credentials.get({
         ...(conditional
-            ? { mediation: 'conditional' as CredentialMediationRequirement }
+            ? { mediation: "conditional" as CredentialMediationRequirement }
             : {}),
         ...requestOptions,
         signal,
@@ -292,12 +292,12 @@ export async function authenticateWithPasskey(
             credential: serializeAuthenticationCredential(credential),
             remember,
         }),
-        method: 'POST',
+        method: "POST",
     });
 
     return redirect;
 }
 
 export function passkeyAutocomplete(): string {
-    return 'username webauthn';
+    return "username webauthn";
 }

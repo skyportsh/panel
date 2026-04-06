@@ -1,7 +1,6 @@
 import { Form, Head, usePage } from "@inertiajs/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "@/components/ui/sonner";
-import ProfileController from "@/actions/App/Http/Controllers/Settings/ProfileController";
 import DeleteUser from "@/components/delete-user";
 import Heading from "@/components/heading";
 import InputError from "@/components/input-error";
@@ -11,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import AppLayout from "@/layouts/app-layout";
 import SettingsLayout from "@/layouts/settings/layout";
-import { edit } from "@/routes/profile";
+import { edit, update as updateProfile } from "@/routes/profile";
 import type { BreadcrumbItem } from "@/types";
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -48,7 +47,7 @@ export default function Profile({ status }: { status?: string }) {
                     />
 
                     <Form
-                        {...ProfileController.update.form()}
+                        {...updateProfile.form()}
                         options={{ preserveScroll: true }}
                         onStart={() => {
                             submitStart.current = Date.now();

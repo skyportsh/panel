@@ -3,12 +3,21 @@ import { KeyRound, ShieldCheck, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "@/components/ui/sonner";
 import PasskeyController from "@/actions/App/Http/Controllers/Settings/PasskeyController";
-import SecurityController from "@/actions/App/Http/Controllers/Settings/SecurityController";
 import Heading from "@/components/heading";
 import InputError from "@/components/input-error";
 import PasswordInput from "@/components/password-input";
 import TwoFactorRecoveryCodes from "@/components/two-factor-recovery-codes";
 import TwoFactorSetupModal from "@/components/two-factor-setup-modal";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
@@ -18,6 +27,7 @@ import SettingsLayout from "@/layouts/settings/layout";
 import { passkeysAreSupported, registerPasskey } from "@/lib/passkeys";
 import { edit } from "@/routes/security";
 import { disable, enable } from "@/routes/two-factor";
+import { update as updateUserPassword } from "@/routes/user-password";
 import type { BreadcrumbItem, Passkey } from "@/types";
 
 type Props = {
@@ -55,6 +65,8 @@ export default function Security({
     const [removingPasskeyId, setRemovingPasskeyId] = useState<number | null>(
         null,
     );
+    const [passkeyPendingRemoval, setPasskeyPendingRemoval] =
+        useState<Passkey | null>(null);
     const submitStart = useRef(0);
     const MIN_MS = 600;
 
@@ -194,7 +206,9 @@ export default function Security({
                                             type="button"
                                             variant="outline"
                                             onClick={() =>
-                                                handleDeletePasskey(passkey)
+                                                setPasskeyPendingRemoval(
+                                                    passkey,
+                                                )
                                             }
                                             disabled={
                                                 removingPasskeyId === passkey.id
@@ -209,6 +223,57 @@ export default function Security({
                                 ))}
                             </div>
                         )}
+
+                        <AlertDialog
+                            open={passkeyPendingRemoval !== null}
+                            onOpenChange={(open) => {
+                                if (!open && removingPasskeyId === null) {
+                                    setPasskeyPendingRemoval(null);
+                                }
+                            }}
+                        >
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                        Remove this passkey?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        {passkeyPendingRemoval
+                                            ? `This will remove "${passkeyPendingRemoval.name}" from your account and it will no longer be available for sign-in.`
+                                            : "This passkey will no longer be available for sign-in."}
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel
+                                        disabled={removingPasskeyId !== null}
+                                    >
+                                        Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                        className="bg-destructive text-white hover:bg-destructive/90"
+                                        disabled={removingPasskeyId !== null}
+                                        onClick={(event) => {
+                                            event.preventDefault();
+
+                                            if (!passkeyPendingRemoval) {
+                                                return;
+                                            }
+
+                                            void handleDeletePasskey(
+                                                passkeyPendingRemoval,
+                                            ).finally(() =>
+                                                setPasskeyPendingRemoval(null),
+                                            );
+                                        }}
+                                    >
+                                        {removingPasskeyId !== null && (
+                                            <Spinner />
+                                        )}
+                                        Remove passkey
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </div>
 
                     <Heading
@@ -218,7 +283,7 @@ export default function Security({
                     />
 
                     <Form
-                        {...SecurityController.update.form()}
+                        {...updateUserPassword.form()}
                         options={{ preserveScroll: true }}
                         resetOnError={[
                             "password",

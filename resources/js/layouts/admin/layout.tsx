@@ -1,5 +1,5 @@
-import type { PropsWithChildren } from 'react';
-import Heading from '@/components/heading';
+import type { PropsWithChildren } from "react";
+import Heading from "@/components/heading";
 
 type AdminLayoutProps = PropsWithChildren<{
     title: string;

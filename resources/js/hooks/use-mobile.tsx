@@ -1,9 +1,9 @@
-import { useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from "react";
 
 const MOBILE_BREAKPOINT = 768;
 
 const mql =
-    typeof window === 'undefined'
+    typeof window === "undefined"
         ? undefined
         : window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
 
@@ -12,10 +12,10 @@ function mediaQueryListener(callback: (event: MediaQueryListEvent) => void) {
         return () => {};
     }
 
-    mql.addEventListener('change', callback);
+    mql.addEventListener("change", callback);
 
     return () => {
-        mql.removeEventListener('change', callback);
+        mql.removeEventListener("change", callback);
     };
 }
 

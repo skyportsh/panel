@@ -1,6 +1,6 @@
 import { Form, usePage } from '@inertiajs/react';
 import { UserRoundX } from 'lucide-react';
-import { stopImpersonating } from '@/actions/App/Http/Controllers/Admin/UsersController';
+import { stopImpersonating } from '@/routes/admin';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';

@@ -13,8 +13,9 @@ import { PlaceholderPattern } from "@/components/ui/placeholder-pattern";
 import AppLayout from "@/layouts/app-layout";
 import SettingsLayout from "@/layouts/settings/layout";
 import { cn } from "@/lib/utils";
-import { edit as editActivity } from "@/routes/activity";
 import type { BreadcrumbItem } from "@/types";
+
+const settingsActivityHref = "/settings/activity";
 
 type ActivityItem = {
     action: string;
@@ -55,7 +56,7 @@ type Props = {
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: "Activity",
-        href: editActivity(),
+        href: settingsActivityHref,
     },
 ];
 

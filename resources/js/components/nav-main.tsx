@@ -41,8 +41,9 @@ import {
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn } from '@/lib/utils';
-import { edit as editPreferences } from '@/routes/preferences';
 import type { NavItem } from '@/types';
+
+const settingsPreferencesHref = '/settings/preferences';
 
 function NavMainItem({ item, index }: { item: NavItem; index: number }) {
     const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
@@ -524,7 +525,7 @@ function NavMainItem({ item, index }: { item: NavItem; index: number }) {
                             can also change the default page you&apos;ll be
                             redirected to upon login.{' '}
                             <Link
-                                href={editPreferences()}
+                                href={settingsPreferencesHref}
                                 onClick={() => setPinModalOpen(false)}
                                 className="underline underline-offset-4"
                             >

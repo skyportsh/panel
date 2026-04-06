@@ -22,13 +22,14 @@ import {
 } from "@/lib/default-landing-pages";
 import AppLayout from "@/layouts/app-layout";
 import SettingsLayout from "@/layouts/settings/layout";
-import { edit as editPreferences } from "@/routes/preferences";
 import type { BreadcrumbItem } from "@/types";
+
+const settingsPreferencesHref = "/settings/preferences";
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: "Preferences",
-        href: editPreferences(),
+        href: settingsPreferencesHref,
     },
 ];
 

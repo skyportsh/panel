@@ -1,17 +1,17 @@
 export function formatDate(value: string | null, withTime = false): string {
     if (!value) {
-        return '—';
+        return "—";
     }
 
-    return new Intl.DateTimeFormat('en-GB', {
-        dateStyle: 'medium',
-        ...(withTime ? { timeStyle: 'short' } : {}),
+    return new Intl.DateTimeFormat("en-GB", {
+        dateStyle: "medium",
+        ...(withTime ? { timeStyle: "short" } : {}),
     }).format(new Date(value));
 }
 
 export function formatRelativeTime(value: string | null): string {
     if (!value) {
-        return '—';
+        return "—";
     }
 
     const now = Date.now();
@@ -19,7 +19,7 @@ export function formatRelativeTime(value: string | null): string {
     const seconds = Math.round((now - then) / 1000);
 
     if (seconds < 60) {
-        return 'just now';
+        return "just now";
     }
 
     const minutes = Math.round(seconds / 60);

@@ -1,6 +1,6 @@
-import { usePage } from '@inertiajs/react';
-import AuthPaneArt from '@/components/auth-pane-art';
-import type { AuthLayoutProps } from '@/types';
+import { usePage } from "@inertiajs/react";
+import AuthPaneArt from "@/components/auth-pane-art";
+import type { AuthLayoutProps } from "@/types";
 
 export default function AuthSplitLayout({
     children,

@@ -1,5 +1,5 @@
-import { Toaster } from '@/components/ui/sonner';
-import type { AuthLayoutProps } from '@/types';
+import { Toaster } from "@/components/ui/sonner";
+import type { AuthLayoutProps } from "@/types";
 
 export default function AuthSimpleLayout({
     children,

@@ -19,7 +19,7 @@ import {
 } from "@/lib/passkeys";
 import { register } from "@/routes";
 import { store } from "@/routes/login";
-import { request } from "@/routes/password";
+import { request } from "@/routes/password/index";
 
 type Props = {
     status?: string;

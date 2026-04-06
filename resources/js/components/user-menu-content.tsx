@@ -1,6 +1,5 @@
 import { Link, router } from '@inertiajs/react';
 import { LogOut, Settings } from 'lucide-react';
-import { index as adminUsers } from '@/actions/App/Http/Controllers/Admin/UsersController';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -10,6 +9,7 @@ import {
 import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { logout } from '@/routes';
+import { index as adminUsers } from '@/routes/admin/users';
 import { edit } from '@/routes/profile';
 import type { User } from '@/types';
 

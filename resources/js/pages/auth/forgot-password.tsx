@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import AuthLayout from "@/layouts/auth-layout";
 import { login } from "@/routes";
-import { email } from "@/routes/password";
+import { request } from "@/routes/password/index";
 
 export default function ForgotPassword({ status }: { status?: string }) {
     useEffect(() => {
@@ -27,7 +27,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
 
             <div className="space-y-6">
                 <Form
-                    {...email.form()}
+                    {...request.form()}
                     onError={(errors) => {
                         Object.values(errors).forEach((message) =>
                             toast.error(message),

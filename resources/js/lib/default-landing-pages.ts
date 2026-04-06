@@ -4,14 +4,14 @@ export type LandingOption = {
     url: string;
 };
 
-export const DEFAULT_LANDING_URL = '/home';
+export const DEFAULT_LANDING_URL = "/home";
 
 const baseLandingOptions: LandingOption[] = [
-    { group: 'General', label: 'Home', url: DEFAULT_LANDING_URL },
+    { group: "General", label: "Home", url: DEFAULT_LANDING_URL },
 ];
 
 const adminLandingOptions: LandingOption[] = [
-    { group: 'Admin', label: 'Users', url: '/admin/users' },
+    { group: "Admin", label: "Users", url: "/admin/users" },
 ];
 
 export function getLandingOptions(isAdmin: boolean): LandingOption[] {

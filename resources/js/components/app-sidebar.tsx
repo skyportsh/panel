@@ -1,12 +1,4 @@
 import { Link, usePage } from "@inertiajs/react";
-import { index as adminAuditLog } from "@/actions/App/Http/Controllers/Admin/AuditLogController";
-import { index as adminCargo } from "@/actions/App/Http/Controllers/Admin/CargoController";
-import { index as adminDashboard } from "@/actions/App/Http/Controllers/Admin/DashboardController";
-import { index as adminLocations } from "@/actions/App/Http/Controllers/Admin/LocationsController";
-import { index as adminNodes } from "@/actions/App/Http/Controllers/Admin/NodesController";
-import { index as adminServers } from "@/actions/App/Http/Controllers/Admin/ServersController";
-import { index as adminSettings } from "@/actions/App/Http/Controllers/Admin/SettingsController";
-import { index as adminUsers } from "@/actions/App/Http/Controllers/Admin/UsersController";
 import { show as serverConsole } from "@/actions/App/Http/Controllers/Client/ServerConsoleController";
 import { show as serverFilesystem } from "@/actions/App/Http/Controllers/Client/ServerFilesystemController";
 import { show as serverSettings } from "@/actions/App/Http/Controllers/Client/ServerSettingsController";
@@ -30,6 +22,12 @@ import {
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { home } from "@/routes";
+import { index as adminCargo } from "@/routes/admin/cargo";
+import { index as adminLocations } from "@/routes/admin/locations";
+import { index as adminNodes } from "@/routes/admin/nodes";
+import { index as adminServers } from "@/routes/admin/servers";
+import { index as adminSettings } from "@/routes/admin/settings";
+import { index as adminUsers } from "@/routes/admin/users";
 import type { NavItem } from "@/types";
 
 export function AppSidebar() {
@@ -42,11 +40,13 @@ export function AppSidebar() {
     };
     const isAdminSidebar = auth.user.is_admin && page.url.startsWith("/admin");
     const isServerSidebar = page.url.startsWith("/server/");
+    const adminDashboardHref = "/admin";
+    const adminAuditLogHref = "/admin/audit-log";
     const mainNavItems: NavItem[] = isAdminSidebar
         ? [
               {
                   title: "Overview",
-                  href: adminDashboard.url(),
+                  href: adminDashboardHref,
                   icon: DashboardIcon,
               },
               {
@@ -76,7 +76,7 @@ export function AppSidebar() {
               },
               {
                   title: "Activity",
-                  href: adminAuditLog.url(),
+                  href: adminAuditLogHref,
                   icon: AuditLogIcon,
               },
               {

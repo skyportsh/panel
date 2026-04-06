@@ -2,6 +2,11 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { XIcon } from "lucide-react"
 import * as React from "react"
 
+import {
+  centeredDialogMotionClass,
+  dialogOverlayMotionClass,
+  fullscreenDialogMotionClass,
+} from "@/components/ui/dialog-motion"
 import { PlaceholderPattern } from "@/components/ui/placeholder-pattern"
 import { cn } from "@/lib/utils"
 
@@ -37,7 +42,8 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-black/70 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:duration-200 data-[state=open]:duration-300",
+        "fixed inset-0 z-50 bg-black/70 backdrop-blur-sm",
+        dialogOverlayMotionClass,
         className
       )}
       {...props}
@@ -124,7 +130,8 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "bg-background fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-hidden rounded-lg border p-6 shadow-2xl sm:max-w-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-top-[52%] data-[state=closed]:duration-200 data-[state=open]:duration-300",
+          "bg-background fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-hidden rounded-lg border p-6 shadow-2xl sm:max-w-lg",
+          centeredDialogMotionClass,
           className
         )}
         {...props}
@@ -196,7 +203,8 @@ function DialogContentFull({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "bg-background fixed inset-[5%] z-50 flex flex-col overflow-hidden rounded-xl border shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-[0.985] data-[state=open]:zoom-in-[0.985] data-[state=closed]:slide-out-to-top-[2%] data-[state=open]:slide-in-from-top-[4%] data-[state=closed]:duration-200 data-[state=open]:duration-300",
+          "bg-background fixed inset-[5%] z-50 flex flex-col overflow-hidden rounded-xl border shadow-2xl",
+          fullscreenDialogMotionClass,
           className
         )}
         {...props}
