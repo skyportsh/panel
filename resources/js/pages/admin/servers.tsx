@@ -733,7 +733,7 @@ export default function Servers({ servers, users, nodes, cargo, filters }: Props
 
             <AdminLayout
                 title="Servers"
-                description="Create and manage panel-owned servers before daemon orchestration is attached."
+                description="Manage all servers that are available on the system."
             >
                 <DataTable
                     data={servers}

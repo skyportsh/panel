@@ -3,8 +3,10 @@
 use App\Models\Cargo;
 use App\Models\Location;
 use App\Models\Node;
+use App\Models\NodeCredential;
 use App\Models\Server;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
@@ -84,9 +86,25 @@ test('admin can search servers', function () {
             ->where('servers.data.0.name', 'Paper Survival'));
 });
 
-test('admin can create a server', function () {
+test('admin can create a server and push it to skyportd', function () {
+    Http::fake([
+        'http://node.example.com:2800/api/daemon/servers/sync' => Http::response([
+            'ok' => true,
+        ]),
+    ]);
+
     $admin = User::factory()->create(['is_admin' => true]);
     $dependencies = serverDependencies();
+    $dependencies['node']->forceFill([
+        'daemon_uuid' => '550e8400-e29b-41d4-a716-446655440000',
+        'daemon_port' => 2800,
+        'fqdn' => 'node.example.com',
+        'use_ssl' => false,
+    ])->save();
+    NodeCredential::factory()->create([
+        'daemon_callback_token' => 'callback-token',
+        'node_id' => $dependencies['node']->id,
+    ]);
 
     actingAs($admin);
 
@@ -98,7 +116,9 @@ test('admin can create a server', function () {
         'memory_mib' => 4096,
         'cpu_limit' => 200,
         'disk_mib' => 20480,
-    ])->assertRedirect();
+    ])
+        ->assertRedirect()
+        ->assertSessionHas('success', 'Server created. skyportd saved the server state.');
 
     $server = Server::query()->where('name', 'Paper Survival')->first();
 
@@ -107,12 +127,49 @@ test('admin can create a server', function () {
     expect($server?->node_id)->toBe($dependencies['node']->id);
     expect($server?->cargo_id)->toBe($dependencies['cargo']->id);
     expect($server?->status)->toBe('pending');
+
+    Http::assertSent(function ($request) use ($server) {
+        return $request->url() === 'http://node.example.com:2800/api/daemon/servers/sync'
+            && $request->hasHeader('Authorization', 'Bearer callback-token')
+            && $request['uuid'] === '550e8400-e29b-41d4-a716-446655440000'
+            && $request['server']['id'] === $server?->id
+            && $request['server']['cargo']['startup_command'] === './start.sh';
+    });
 });
 
-test('admin can update a server', function () {
+test('admin can update a server and move it between nodes', function () {
+    Http::fake([
+        'http://old-node.example.com:2800/api/daemon/servers/*' => Http::response([
+            'ok' => true,
+        ]),
+        'http://new-node.example.com:2900/api/daemon/servers/sync' => Http::response([
+            'ok' => true,
+        ]),
+    ]);
+
     $admin = User::factory()->create(['is_admin' => true]);
     $dependencies = serverDependencies();
     $newDependencies = serverDependencies();
+    $dependencies['node']->forceFill([
+        'daemon_uuid' => '550e8400-e29b-41d4-a716-446655440001',
+        'daemon_port' => 2800,
+        'fqdn' => 'old-node.example.com',
+        'use_ssl' => false,
+    ])->save();
+    $newDependencies['node']->forceFill([
+        'daemon_uuid' => '550e8400-e29b-41d4-a716-446655440002',
+        'daemon_port' => 2900,
+        'fqdn' => 'new-node.example.com',
+        'use_ssl' => false,
+    ])->save();
+    NodeCredential::factory()->create([
+        'daemon_callback_token' => 'old-callback-token',
+        'node_id' => $dependencies['node']->id,
+    ]);
+    NodeCredential::factory()->create([
+        'daemon_callback_token' => 'new-callback-token',
+        'node_id' => $newDependencies['node']->id,
+    ]);
     $server = Server::factory()->create([
         'cargo_id' => $dependencies['cargo']->id,
         'node_id' => $dependencies['node']->id,
@@ -129,7 +186,9 @@ test('admin can update a server', function () {
         'memory_mib' => 8192,
         'cpu_limit' => 0,
         'disk_mib' => 40960,
-    ])->assertRedirect();
+    ])
+        ->assertRedirect()
+        ->assertSessionHas('success', 'Server updated. skyportd saved the new server state.');
 
     $server->refresh();
 
@@ -140,11 +199,42 @@ test('admin can update a server', function () {
     expect($server->memory_mib)->toBe(8192);
     expect($server->cpu_limit)->toBe(0);
     expect($server->disk_mib)->toBe(40960);
+
+    Http::assertSent(function ($request) use ($server) {
+        return $request->method() === 'DELETE'
+            && $request->url() === "http://old-node.example.com:2800/api/daemon/servers/{$server->id}"
+            && $request->hasHeader('Authorization', 'Bearer old-callback-token')
+            && $request['uuid'] === '550e8400-e29b-41d4-a716-446655440001';
+    });
+
+    Http::assertSent(function ($request) use ($server) {
+        return $request->method() === 'POST'
+            && $request->url() === 'http://new-node.example.com:2900/api/daemon/servers/sync'
+            && $request->hasHeader('Authorization', 'Bearer new-callback-token')
+            && $request['uuid'] === '550e8400-e29b-41d4-a716-446655440002'
+            && $request['server']['id'] === $server->id;
+    });
 });
 
-test('admin can delete a server', function () {
+test('admin can delete a server and remove it from skyportd', function () {
+    Http::fake([
+        'http://node.example.com:2800/api/daemon/servers/*' => Http::response([
+            'ok' => true,
+        ]),
+    ]);
+
     $admin = User::factory()->create(['is_admin' => true]);
     $dependencies = serverDependencies();
+    $dependencies['node']->forceFill([
+        'daemon_uuid' => '550e8400-e29b-41d4-a716-446655440003',
+        'daemon_port' => 2800,
+        'fqdn' => 'node.example.com',
+        'use_ssl' => false,
+    ])->save();
+    NodeCredential::factory()->create([
+        'daemon_callback_token' => 'callback-token',
+        'node_id' => $dependencies['node']->id,
+    ]);
     $server = Server::factory()->create([
         'cargo_id' => $dependencies['cargo']->id,
         'node_id' => $dependencies['node']->id,
@@ -153,9 +243,18 @@ test('admin can delete a server', function () {
 
     actingAs($admin);
 
-    delete("/admin/servers/{$server->id}")->assertRedirect();
+    delete("/admin/servers/{$server->id}")
+        ->assertRedirect()
+        ->assertSessionHas('success', 'Server deleted. skyportd removed the server state.');
 
     expect(Server::find($server->id))->toBeNull();
+
+    Http::assertSent(function ($request) use ($server) {
+        return $request->method() === 'DELETE'
+            && $request->url() === "http://node.example.com:2800/api/daemon/servers/{$server->id}"
+            && $request->hasHeader('Authorization', 'Bearer callback-token')
+            && $request['uuid'] === '550e8400-e29b-41d4-a716-446655440003';
+    });
 });
 
 test('admin can bulk delete servers', function () {

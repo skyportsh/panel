@@ -927,7 +927,7 @@ export default function Cargo({ cargo, filters }: Props) {
 
             <AdminLayout
                 title="Cargo"
-                description="Build and import reusable server recipes for Skyport, including Pterodactyl egg migrations."
+                description="Server recipes that contain Docker images, variables, and so on."
             >
                 <DataTable
                     data={cargo}
