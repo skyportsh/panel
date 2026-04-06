@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Fortify\Features;
 
@@ -12,6 +13,24 @@ test('login screen can be rendered', function () {
 
 test('users can authenticate using the login screen', function () {
     $user = User::factory()->create();
+
+    $response = $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
+
+    $this->assertAuthenticated();
+    $response->assertRedirect(route('home', absolute: false));
+});
+
+test('users with legacy bcrypt passwords can authenticate using the login screen', function () {
+    $user = User::factory()->create();
+
+    DB::table('users')
+        ->whereKey($user->id)
+        ->update([
+            'password' => password_hash('password', PASSWORD_BCRYPT, ['cost' => 12]),
+        ]);
 
     $response = $this->post(route('login.store'), [
         'email' => $user->email,

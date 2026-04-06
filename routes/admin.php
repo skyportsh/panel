@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CargoController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\LocationsController;
 use App\Http\Controllers\Admin\NodesController;
 use App\Http\Controllers\Admin\ServersController;
@@ -13,6 +14,8 @@ Route::middleware(['auth', EnsureUserIsAdmin::class])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
+        Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
         Route::get('users', [UsersController::class, 'index'])->name('users.index');
         Route::post('users', [UsersController::class, 'store'])->name('users.store');
         Route::patch('users/{user}', [UsersController::class, 'update'])->name('users.update');

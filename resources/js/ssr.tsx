@@ -10,7 +10,8 @@ createServer((page) =>
         render: ReactDOMServer.renderToString,
         title: (title) => {
             const appName =
-                typeof page.props.name === 'string' && page.props.name.length > 0
+                typeof page.props.name === 'string' &&
+                page.props.name.length > 0
                     ? page.props.name
                     : import.meta.env.VITE_APP_NAME || 'Skyport';
 

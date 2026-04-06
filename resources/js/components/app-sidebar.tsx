@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import { index as adminCargo } from '@/actions/App/Http/Controllers/Admin/CargoController';
+import { index as adminDashboard } from '@/actions/App/Http/Controllers/Admin/DashboardController';
 import { index as adminLocations } from '@/actions/App/Http/Controllers/Admin/LocationsController';
 import { index as adminNodes } from '@/actions/App/Http/Controllers/Admin/NodesController';
 import { index as adminServers } from '@/actions/App/Http/Controllers/Admin/ServersController';
@@ -32,6 +33,11 @@ export function AppSidebar() {
     const isAdminSidebar = auth.user.is_admin && page.url.startsWith('/admin');
     const mainNavItems: NavItem[] = isAdminSidebar
         ? [
+              {
+                  title: 'Overview',
+                  href: adminDashboard.url(),
+                  icon: DashboardIcon,
+              },
               {
                   title: 'Users',
                   href: adminUsers.url(),

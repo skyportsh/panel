@@ -54,10 +54,7 @@ declare global {
 function resolveAppName(): string {
     return (
         window.__skyportAppName ||
-        document
-            .querySelector('title')
-            ?.textContent?.split(' - ')
-            .pop() ||
+        document.querySelector('title')?.textContent?.split(' - ').pop() ||
         import.meta.env.VITE_APP_NAME ||
         'Skyport'
     );

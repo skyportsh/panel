@@ -559,18 +559,25 @@ export function NavMain({
     items: NavItem[];
     label?: string;
 }) {
-    const { currentUrl, isCurrentOrParentUrl } = useCurrentUrl();
+    const { currentUrl, isCurrentOrParentUrl, isCurrentUrl } = useCurrentUrl();
     const menuRef = useRef<HTMLDivElement | null>(null);
-    const hasActiveItem = items.some((item) => {
-        if (item.href && isCurrentOrParentUrl(item.href)) {
-            return true;
-        }
+    const isItemActive = useCallback(
+        (item: NavItem): boolean => {
+            if (item.href && isCurrentUrl(item.href)) {
+                return true;
+            }
 
-        return (
-            item.items?.some(
-                (subItem) => subItem.href && isCurrentOrParentUrl(subItem.href),
-            ) ?? false
-        );
+            return (
+                item.items?.some(
+                    (subItem) =>
+                        subItem.href && isCurrentOrParentUrl(subItem.href),
+                ) ?? false
+            );
+        },
+        [isCurrentOrParentUrl, isCurrentUrl],
+    );
+    const hasActiveItem = items.some((item) => {
+        return isItemActive(item);
     });
     const [activeIndicator, setActiveIndicator] = useState<{
         height: number;
@@ -623,18 +630,7 @@ export function NavMain({
     );
 
     useLayoutEffect(() => {
-        const activeIndex = items.findIndex((item) => {
-            if (item.href && isCurrentOrParentUrl(item.href)) {
-                return true;
-            }
-
-            return (
-                item.items?.some(
-                    (subItem) =>
-                        subItem.href && isCurrentOrParentUrl(subItem.href),
-                ) ?? false
-            );
-        });
+        const activeIndex = items.findIndex(isItemActive);
 
         if (activeIndex < 0) {
             const frame = scheduleActiveIndicator((current) => ({
@@ -721,21 +717,10 @@ export function NavMain({
                 window.cancelAnimationFrame(frame);
             }
         };
-    }, [currentUrl, isCurrentOrParentUrl, items, scheduleActiveIndicator]);
+    }, [currentUrl, isItemActive, items, scheduleActiveIndicator]);
 
     useEffect(() => {
-        const activeIndex = items.findIndex((item) => {
-            if (item.href && isCurrentOrParentUrl(item.href)) {
-                return true;
-            }
-
-            return (
-                item.items?.some(
-                    (subItem) =>
-                        subItem.href && isCurrentOrParentUrl(subItem.href),
-                ) ?? false
-            );
-        });
+        const activeIndex = items.findIndex(isItemActive);
 
         if (activeIndex < 0) {
             return;
@@ -774,7 +759,7 @@ export function NavMain({
             window.removeEventListener('resize', updateIndicator);
             observer.disconnect();
         };
-    }, [currentUrl, isCurrentOrParentUrl, items, scheduleActiveIndicator]);
+    }, [currentUrl, isItemActive, items, scheduleActiveIndicator]);
 
     return (
         <SidebarGroup className="px-2 py-0">
