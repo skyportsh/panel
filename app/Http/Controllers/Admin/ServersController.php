@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreServerRequest;
 use App\Http\Requests\Admin\UpdateServerRequest;
+use App\Models\Allocation;
 use App\Models\Cargo;
 use App\Models\Node;
 use App\Models\Server;
@@ -22,7 +23,7 @@ class ServersController extends Controller
     public function index(Request $request): Response
     {
         $servers = Server::query()
-            ->with(['cargo:id,name', 'node:id,name', 'user:id,name,email'])
+            ->with(['allocation:id,node_id,bind_ip,port,ip_alias', 'cargo:id,name', 'node:id,name', 'user:id,name,email'])
             ->when($request->input('search'), function ($query, string $search) {
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery->where('name', 'like', "%{$search}%")
@@ -39,6 +40,12 @@ class ServersController extends Controller
             ->orderByDesc('updated_at')
             ->paginate(10)
             ->through(fn (Server $server): array => [
+                'allocation' => [
+                    'bind_ip' => $server->allocation->bind_ip,
+                    'id' => $server->allocation->id,
+                    'ip_alias' => $server->allocation->ip_alias,
+                    'port' => $server->allocation->port,
+                ],
                 'cargo' => [
                     'id' => $server->cargo->id,
                     'name' => $server->cargo->name,
@@ -87,6 +94,19 @@ class ServersController extends Controller
                     'name' => $node->name,
                 ])
                 ->all(),
+            'allocations' => Allocation::query()
+                ->with('server:id,allocation_id')
+                ->orderBy('port')
+                ->get()
+                ->map(fn (Allocation $allocation): array => [
+                    'bind_ip' => $allocation->bind_ip,
+                    'id' => $allocation->id,
+                    'ip_alias' => $allocation->ip_alias,
+                    'node_id' => $allocation->node_id,
+                    'port' => $allocation->port,
+                    'server_id' => $allocation->server?->id,
+                ])
+                ->all(),
             'cargo' => Cargo::query()
                 ->select('id', 'name')
                 ->orderBy('name')
@@ -101,7 +121,10 @@ class ServersController extends Controller
 
     public function store(StoreServerRequest $request): RedirectResponse
     {
-        $server = Server::create($request->validated() + ['status' => 'pending']);
+        $validated = $request->validated();
+        $this->ensureAllocationIsAvailable((int) $validated['allocation_id'], (int) $validated['node_id']);
+
+        $server = Server::create($validated + ['status' => 'installing']);
         $server->loadMissing(['cargo', 'node.credential', 'user']);
 
         if ($this->serverRemoteUpdateService->push($server)) {
@@ -118,8 +141,10 @@ class ServersController extends Controller
         $server->loadMissing(['cargo', 'node.credential', 'user']);
         $targetServer = clone $server;
         $originalNodeId = $server->node_id;
+        $validated = $request->validated();
+        $this->ensureAllocationIsAvailable((int) $validated['allocation_id'], (int) $validated['node_id'], $server);
 
-        $server->update($request->validated());
+        $server->update($validated);
         $server->refresh()->loadMissing(['cargo', 'node.credential', 'user']);
 
         if ($originalNodeId !== $server->node_id) {
@@ -184,5 +209,13 @@ class ServersController extends Controller
         }
 
         return $response;
+    }
+
+    private function ensureAllocationIsAvailable(int $allocationId, int $nodeId, ?Server $server = null): void
+    {
+        $allocation = Allocation::query()->with('server:id,allocation_id')->findOrFail($allocationId);
+
+        abort_if($allocation->node_id !== $nodeId, 422, 'The selected allocation does not belong to the selected node.');
+        abort_if($allocation->server && $allocation->server->id !== $server?->id, 422, 'The selected allocation is already assigned to another server.');
     }
 }

@@ -8,6 +8,7 @@ class ServerConfigurationService
 {
     /**
      * @return array{
+     *     allocation: array{bind_ip: string, id: int, ip_alias: string|null, port: int},
      *     cargo: array{
      *         config_files: string,
      *         config_logs: string,
@@ -43,9 +44,15 @@ class ServerConfigurationService
      */
     public function payload(Server $server): array
     {
-        $server->loadMissing(['cargo', 'node', 'user']);
+        $server->loadMissing(['allocation', 'cargo', 'node', 'user']);
 
         return [
+            'allocation' => [
+                'bind_ip' => $server->allocation->bind_ip,
+                'id' => $server->allocation->id,
+                'ip_alias' => $server->allocation->ip_alias,
+                'port' => $server->allocation->port,
+            ],
             'cargo' => [
                 'config_files' => $server->cargo->config_files,
                 'config_logs' => $server->cargo->config_logs,

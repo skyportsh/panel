@@ -15,6 +15,7 @@ import {
     destroy,
     index as adminNodes,
     store,
+    storeAllocation,
     update,
 } from '@/actions/App/Http/Controllers/Admin/NodesController';
 import { ConfirmDeleteDialog, DataTable } from '@/components/admin/data-table';
@@ -76,6 +77,14 @@ type LocationOption = {
     country: string;
 };
 
+type NodeAllocation = {
+    id: number;
+    bind_ip: string;
+    port: number;
+    ip_alias: string | null;
+    is_assigned: boolean;
+};
+
 type AdminNode = {
     id: number;
     name: string;
@@ -86,6 +95,7 @@ type AdminNode = {
     created_at: string;
     updated_at: string;
     location: LocationOption;
+    allocations: NodeAllocation[];
     status?: string;
     connection_status?: 'online' | 'offline' | 'configured' | 'draft';
     last_seen_at?: string;
@@ -117,6 +127,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 const tabs: Tab[] = [
     { id: 'overview', label: 'Overview' },
     { id: 'edit', label: 'Edit' },
+    { id: 'allocations', label: 'Allocations' },
     { id: 'configure', label: 'Configure' },
     { id: 'danger', label: 'Danger' },
 ];
@@ -409,6 +420,164 @@ type ConfigurationData = {
     expires_at: string;
     status: string;
 };
+
+type AllocationFormData = {
+    mode: 'single' | 'range';
+    bind_ip: string;
+    ip_alias: string;
+    port: string;
+    start_port: string;
+    end_port: string;
+};
+
+function CreateAllocationModal({
+    node,
+    onClose,
+}: {
+    node: AdminNode;
+    onClose: () => void;
+}) {
+    const form = useForm<AllocationFormData>({
+        mode: 'single',
+        bind_ip: '0.0.0.0',
+        ip_alias: node.fqdn,
+        port: '',
+        start_port: '',
+        end_port: '',
+    });
+    const minimumMs = 500;
+    const submitStart = useRef(0);
+    const [submitting, setSubmitting] = useState(false);
+
+    const submit = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        form.post(storeAllocation.url(node.id), {
+            preserveScroll: true,
+            onStart: () => {
+                submitStart.current = Date.now();
+                setSubmitting(true);
+            },
+            onFinish: () => {
+                const remaining = minimumMs - (Date.now() - submitStart.current);
+                setTimeout(() => setSubmitting(false), Math.max(0, remaining));
+            },
+            onSuccess: () => {
+                toast.success('Allocation created');
+                onClose();
+            },
+            onError: (errors) => {
+                Object.values(errors).forEach((message) => toast.error(message));
+            },
+        });
+    };
+
+    return (
+        <Dialog open onOpenChange={(open) => !open && onClose()}>
+            <DialogContent className="sm:max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>Create allocation</DialogTitle>
+                    <DialogDescription>
+                        Add a single port or a port range to this node.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <form onSubmit={submit} className="space-y-4">
+                    <div className="grid gap-2">
+                        <Label>Mode</Label>
+                        <Select
+                            value={form.data.mode}
+                            onValueChange={(value: 'single' | 'range') => form.setData('mode', value)}
+                        >
+                            <SelectTrigger className="w-full">
+                                <span>{form.data.mode === 'single' ? 'Single port' : 'Port range'}</span>
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="single">Single port</SelectItem>
+                                <SelectItem value="range">Port range</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="grid gap-2 sm:grid-cols-2 sm:gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="allocation-bind-ip">Bind IP</Label>
+                            <Input
+                                id="allocation-bind-ip"
+                                value={form.data.bind_ip}
+                                onChange={(event) => form.setData('bind_ip', event.target.value)}
+                                placeholder="0.0.0.0"
+                                required
+                            />
+                            <InputError message={form.errors.bind_ip} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="allocation-ip-alias">IP alias</Label>
+                            <Input
+                                id="allocation-ip-alias"
+                                value={form.data.ip_alias}
+                                onChange={(event) => form.setData('ip_alias', event.target.value)}
+                                placeholder={node.fqdn}
+                            />
+                            <InputError message={form.errors.ip_alias} />
+                        </div>
+                    </div>
+
+                    {form.data.mode === 'single' ? (
+                        <div className="grid gap-2">
+                            <Label htmlFor="allocation-port">Port</Label>
+                            <Input
+                                id="allocation-port"
+                                type="number"
+                                min={1}
+                                max={65535}
+                                value={form.data.port}
+                                onChange={(event) => form.setData('port', event.target.value)}
+                                required
+                            />
+                            <InputError message={form.errors.port} />
+                        </div>
+                    ) : (
+                        <div className="grid gap-2 sm:grid-cols-2 sm:gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="allocation-start-port">Start port</Label>
+                                <Input
+                                    id="allocation-start-port"
+                                    type="number"
+                                    min={1}
+                                    max={65535}
+                                    value={form.data.start_port}
+                                    onChange={(event) => form.setData('start_port', event.target.value)}
+                                    required
+                                />
+                                <InputError message={form.errors.start_port} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="allocation-end-port">End port</Label>
+                                <Input
+                                    id="allocation-end-port"
+                                    type="number"
+                                    min={1}
+                                    max={65535}
+                                    value={form.data.end_port}
+                                    onChange={(event) => form.setData('end_port', event.target.value)}
+                                    required
+                                />
+                                <InputError message={form.errors.end_port} />
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex justify-end">
+                        <Button type="submit" size="sm" disabled={submitting || form.processing}>
+                            {(submitting || form.processing) && <Spinner />}
+                            Create allocation
+                        </Button>
+                    </div>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
 
 function ConfigureTab({
     node,
@@ -749,6 +918,7 @@ function NodeModal({
     const minimumMs = 500;
     const submitStart = useRef(0);
     const [submitting, setSubmitting] = useState(false);
+    const [creatingAllocation, setCreatingAllocation] = useState(false);
 
     const submit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -932,6 +1102,67 @@ function NodeModal({
                         </div>
                     ) : null}
 
+                    {tab === 'allocations' ? (
+                        <div className="max-w-3xl space-y-4">
+                            <div className="flex items-center justify-between gap-4">
+                                <div>
+                                    <h3 className="text-sm font-semibold text-foreground">
+                                        Allocations
+                                    </h3>
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        Bind ports to this node for server assignments.
+                                    </p>
+                                </div>
+                                <Button
+                                    size="table"
+                                    onClick={() => setCreatingAllocation(true)}
+                                >
+                                    <Plus className="h-3.5 w-3.5" />
+                                    Create allocation
+                                </Button>
+                            </div>
+
+                            {node.allocations.length > 0 ? (
+                                <div className="overflow-hidden rounded-lg bg-muted/40">
+                                    <div className="rounded-lg border border-border/70 bg-background p-1">
+                                        <div className="grid grid-cols-[160px_1fr_120px] gap-4 border-b border-border/60 px-4 py-2 text-xs font-medium text-muted-foreground">
+                                            <span>Bind</span>
+                                            <span>Alias</span>
+                                            <span>Status</span>
+                                        </div>
+                                        <div className="divide-y divide-border/60">
+                                            {node.allocations.map((allocation) => (
+                                                <div
+                                                    key={allocation.id}
+                                                    className="grid grid-cols-[160px_1fr_120px] gap-4 px-4 py-3"
+                                                >
+                                                    <p className="font-mono text-xs text-foreground">
+                                                        {allocation.bind_ip}:{allocation.port}
+                                                    </p>
+                                                    <p className="truncate text-xs text-muted-foreground">
+                                                        {allocation.ip_alias || node.fqdn}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {allocation.is_assigned ? 'Assigned' : 'Available'}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="rounded-lg border border-border/70 bg-background px-4 py-10 text-center">
+                                    <p className="text-sm font-medium text-foreground">
+                                        No allocations yet
+                                    </p>
+                                    <p className="mt-1 text-sm text-muted-foreground">
+                                        Create a single port or range to assign server primary ports.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    ) : null}
+
                     {tab === 'configure' ? (
                         <ConfigureTab
                             node={node}
@@ -974,6 +1205,12 @@ function NodeModal({
                         </div>
                     ) : null}
                 </div>
+                {creatingAllocation ? (
+                    <CreateAllocationModal
+                        node={node}
+                        onClose={() => setCreatingAllocation(false)}
+                    />
+                ) : null}
             </DialogContentFull>
         </Dialog>
     );

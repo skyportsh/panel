@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreNodeAllocationRequest;
 use App\Http\Requests\Admin\StoreNodeRequest;
 use App\Http\Requests\Admin\UpdateNodeRequest;
+use App\Models\Allocation;
 use App\Models\Location;
 use App\Models\Node;
 use App\Services\NodeConfigurationService;
@@ -26,7 +28,7 @@ class NodesController extends Controller
     public function index(Request $request): Response
     {
         $nodes = Node::query()
-            ->with('location:id,name,country')
+            ->with(['allocations.server:id,allocation_id', 'location:id,name,country'])
             ->when($request->input('search'), function ($query, string $search) {
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery->where('name', 'like', "%{$search}%")
@@ -54,6 +56,17 @@ class NodesController extends Controller
                     'id' => $node->location->id,
                     'name' => $node->location->name,
                 ],
+                'allocations' => $node->allocations
+                    ->sortBy('port')
+                    ->values()
+                    ->map(fn (Allocation $allocation): array => [
+                        'bind_ip' => $allocation->bind_ip,
+                        'id' => $allocation->id,
+                        'ip_alias' => $allocation->ip_alias,
+                        'is_assigned' => $allocation->server !== null,
+                        'port' => $allocation->port,
+                    ])
+                    ->all(),
                 'name' => $node->name,
                 'sftp_port' => $node->sftp_port,
                 'status' => $node->status,
@@ -94,6 +107,31 @@ class NodesController extends Controller
             'status' => 'configured',
             'token' => $issued['token'],
         ]);
+    }
+
+    public function storeAllocation(StoreNodeAllocationRequest $request, Node $node): RedirectResponse
+    {
+        $validated = $request->validated();
+        $bindIp = $validated['bind_ip'];
+        $ipAlias = $validated['ip_alias'] ?: $node->fqdn;
+        $ports = $validated['mode'] === 'range'
+            ? range((int) $validated['start_port'], (int) $validated['end_port'])
+            : [(int) $validated['port']];
+
+        foreach ($ports as $port) {
+            Allocation::firstOrCreate(
+                [
+                    'node_id' => $node->id,
+                    'bind_ip' => $bindIp,
+                    'port' => $port,
+                ],
+                [
+                    'ip_alias' => $ipAlias,
+                ],
+            );
+        }
+
+        return back()->with('success', count($ports).' '.str('allocation')->plural(count($ports)).' created.');
     }
 
     public function update(UpdateNodeRequest $request, Node $node): RedirectResponse
