@@ -20,7 +20,9 @@ class ServerWebsocketTokenService
         $daemonUuid = $server->node->daemon_uuid;
 
         if (! $callbackToken || ! $daemonUuid) {
-            throw new InvalidArgumentException('The websocket is not available for this server yet.');
+            throw new InvalidArgumentException(
+                'The websocket is not available for this server yet.',
+            );
         }
 
         $expiresAt = Carbon::now()->addMinutes(15);
@@ -34,7 +36,10 @@ class ServerWebsocketTokenService
         try {
             $payloadHex = bin2hex(json_encode($payload, JSON_THROW_ON_ERROR));
         } catch (JsonException $exception) {
-            throw new InvalidArgumentException('Failed to create the websocket token.', previous: $exception);
+            throw new InvalidArgumentException(
+                'Failed to create the websocket token.',
+                previous: $exception,
+            );
         }
 
         $signature = hash_hmac('sha256', $payloadHex, $callbackToken);

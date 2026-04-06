@@ -126,22 +126,6 @@ function formatCpuLimit(value: number): string {
     return value === 0 ? 'Unlimited' : `${value}%`;
 }
 
-function statusClasses(status: string): string {
-    switch (status) {
-        case 'running':
-            return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
-        case 'installing':
-        case 'starting':
-            return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
-        case 'offline':
-            return 'bg-muted text-muted-foreground';
-        case 'install_failed':
-            return 'bg-[#d92400]/12 text-[#d92400] dark:text-[#ff8a6b]';
-        default:
-            return 'bg-[#d92400]/12 text-[#d92400] dark:text-[#ff8a6b]';
-    }
-}
-
 function statusLabel(status: string): string {
     switch (status) {
         case 'running':
@@ -265,7 +249,8 @@ function ServerFormFields({
     const availableAllocations = allocations.filter(
         (allocation) =>
             allocation.node_id === data.node_id &&
-            (allocation.server_id === null || allocation.id === data.allocation_id),
+            (allocation.server_id === null ||
+                allocation.id === data.allocation_id),
     );
 
     return (
@@ -289,7 +274,9 @@ function ServerFormFields({
                     onChange={(value) => setData('user_id', value)}
                     options={users}
                     placeholder="Choose a user"
-                    renderLabel={(user: UserOption) => `${user.name} · ${user.email}`}
+                    renderLabel={(user: UserOption) =>
+                        `${user.name} · ${user.email}`
+                    }
                 />
                 <InputError message={errors.user_id} />
             </div>
@@ -571,14 +558,20 @@ function ServerModal({
                                     <div className="flex items-start justify-between gap-4">
                                         <div>
                                             <p className="text-sm font-semibold text-[#d92400] dark:text-[#ff8a6b]">
-                                                This server cannot be recovered automatically.
+                                                This server cannot be recovered
+                                                automatically.
                                             </p>
                                             <p className="mt-1 text-sm text-muted-foreground">
-                                                The daemon reported an unrecoverable install failure. This server should be deleted and recreated.
+                                                The daemon reported an
+                                                unrecoverable install failure.
+                                                This server should be deleted
+                                                and recreated.
                                             </p>
                                         </div>
                                         <a
-                                            href={downloadInstallLog.url(server.id)}
+                                            href={downloadInstallLog.url(
+                                                server.id,
+                                            )}
                                             className={buttonVariants({
                                                 size: 'table',
                                                 variant: 'outline',
@@ -597,77 +590,103 @@ function ServerModal({
                                 </div>
                             ) : null}
 
-                        <div className="flex gap-6">
-                            <div className="min-w-0 flex-1 space-y-1">
-                                {[
-                                    { label: 'Server ID', value: `#${server.id}` },
-                                    { label: 'Name', value: server.name },
-                                    { label: 'User', value: server.user.name },
-                                    { label: 'Node', value: server.node.name },
-                                    { label: 'Cargo', value: server.cargo.name },
-                                    {
-                                        label: 'Allocation',
-                                        value: `${server.allocation.ip_alias ?? server.allocation.bind_ip}:${server.allocation.port}`,
-                                    },
-                                    {
-                                        label: 'Memory',
-                                        value: formatLimit(server.memory_mib, 'MiB'),
-                                    },
-                                    {
-                                        label: 'CPU',
-                                        value: formatCpuLimit(server.cpu_limit),
-                                    },
-                                    {
-                                        label: 'Disk',
-                                        value: formatLimit(server.disk_mib, 'MiB'),
-                                    },
-                                    {
-                                        label: 'Created',
-                                        value: formatDate(server.created_at, true),
-                                    },
-                                    {
-                                        label: 'Last updated',
-                                        value: formatDate(server.updated_at, true),
-                                    },
-                                ].map((item) => (
-                                    <div
-                                        key={item.label}
-                                        className="flex items-center justify-between gap-4 rounded-md px-3 py-2.5"
-                                    >
-                                        <span className="text-sm text-muted-foreground">
-                                            {item.label}
-                                        </span>
-                                        <span className="max-w-[70%] truncate text-right text-sm font-medium text-foreground">
-                                            {item.value}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
+                            <div className="flex gap-6">
+                                <div className="min-w-0 flex-1 space-y-1">
+                                    {[
+                                        {
+                                            label: 'Server ID',
+                                            value: `#${server.id}`,
+                                        },
+                                        { label: 'Name', value: server.name },
+                                        {
+                                            label: 'User',
+                                            value: server.user.name,
+                                        },
+                                        {
+                                            label: 'Node',
+                                            value: server.node.name,
+                                        },
+                                        {
+                                            label: 'Cargo',
+                                            value: server.cargo.name,
+                                        },
+                                        {
+                                            label: 'Allocation',
+                                            value: `${server.allocation.ip_alias ?? server.allocation.bind_ip}:${server.allocation.port}`,
+                                        },
+                                        {
+                                            label: 'Memory',
+                                            value: formatLimit(
+                                                server.memory_mib,
+                                                'MiB',
+                                            ),
+                                        },
+                                        {
+                                            label: 'CPU',
+                                            value: formatCpuLimit(
+                                                server.cpu_limit,
+                                            ),
+                                        },
+                                        {
+                                            label: 'Disk',
+                                            value: formatLimit(
+                                                server.disk_mib,
+                                                'MiB',
+                                            ),
+                                        },
+                                        {
+                                            label: 'Created',
+                                            value: formatDate(
+                                                server.created_at,
+                                                true,
+                                            ),
+                                        },
+                                        {
+                                            label: 'Last updated',
+                                            value: formatDate(
+                                                server.updated_at,
+                                                true,
+                                            ),
+                                        },
+                                    ].map((item) => (
+                                        <div
+                                            key={item.label}
+                                            className="flex items-center justify-between gap-4 rounded-md px-3 py-2.5"
+                                        >
+                                            <span className="text-sm text-muted-foreground">
+                                                {item.label}
+                                            </span>
+                                            <span className="max-w-[70%] truncate text-right text-sm font-medium text-foreground">
+                                                {item.value}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
 
-                            <div className="w-[320px] shrink-0 space-y-3">
-                                <StackedStatCard
-                                    label="Status"
-                                    value={statusLabel(server.status)}
-                                    description={
-                                        server.status === 'install_failed'
-                                            ? 'This server must be deleted and recreated.'
-                                            : 'Daemon lifecycle status'
-                                    }
-                                    valueClassName={
-                                        server.status === 'install_failed'
-                                            ? 'text-[#d92400] dark:text-[#ff8a6b]'
-                                            : server.status === 'running'
-                                              ? 'text-emerald-600 dark:text-emerald-400'
-                                              : undefined
-                                    }
-                                />
-                                <StackedStatCard
-                                    label="Volume path"
-                                    value={`volumes/${server.id}`}
-                                    description="Planned server files location"
-                                />
+                                <div className="w-[320px] shrink-0 space-y-3">
+                                    <StackedStatCard
+                                        label="Status"
+                                        value={statusLabel(server.status)}
+                                        description={
+                                            server.status === 'install_failed'
+                                                ? 'This server must be deleted and recreated.'
+                                                : 'Daemon lifecycle status'
+                                        }
+                                        valueClassName={
+                                            server.status === 'install_failed'
+                                                ? 'text-[#d92400] dark:text-[#ff8a6b]'
+                                                : server.status === 'running'
+                                                  ? 'text-emerald-600 dark:text-emerald-400'
+                                                  : undefined
+                                        }
+                                    />
+                                    <StackedStatCard
+                                        label="Volume path"
+                                        value={`volumes/${server.id}`}
+                                        description="Planned server files location"
+                                    />
+                                </div>
                             </div>
-                        </div>
                         </div>
                     ) : null}
 
@@ -678,7 +697,8 @@ function ServerModal({
                                     Server configuration
                                 </h3>
                                 <p className="mt-1 text-xs text-muted-foreground">
-                                    Update ownership, primary allocation, and resource limits.
+                                    Update ownership, primary allocation, and
+                                    resource limits.
                                 </p>
                             </div>
 
@@ -689,7 +709,11 @@ function ServerModal({
                                         className="pointer-events-none absolute inset-0 size-full stroke-current opacity-[0.08]"
                                     />
                                     <div className="relative">
-                                        Node and cargo cannot be changed after a server is created. Resource updates are applied immediately if the server is offline, or queued until the next restart or start.
+                                        Node and cargo cannot be changed after a
+                                        server is created. Resource updates are
+                                        applied immediately if the server is
+                                        offline, or queued until the next
+                                        restart or start.
                                     </div>
                                 </div>
                                 <ServerFormFields
@@ -733,7 +757,8 @@ function ServerModal({
                                                 Delete server
                                             </h3>
                                             <p className="mt-1 text-sm text-muted-foreground">
-                                                Permanently remove this server record from the panel.
+                                                Permanently remove this server
+                                                record from the panel.
                                             </p>
                                         </div>
                                         <Button
@@ -755,11 +780,22 @@ function ServerModal({
     );
 }
 
-export default function Servers({ servers, users, nodes, allocations, cargo, filters }: Props) {
+export default function Servers({
+    servers,
+    users,
+    nodes,
+    allocations,
+    cargo,
+    filters,
+}: Props) {
     const [search, setSearch] = useState(filters.search);
     const [creatingServer, setCreatingServer] = useState(false);
-    const [viewingServer, setViewingServer] = useState<AdminServer | null>(null);
-    const [deletingServer, setDeletingServer] = useState<AdminServer | null>(null);
+    const [viewingServer, setViewingServer] = useState<AdminServer | null>(
+        null,
+    );
+    const [deletingServer, setDeletingServer] = useState<AdminServer | null>(
+        null,
+    );
     const [singleDeleting, setSingleDeleting] = useState(false);
 
     const navigate = (params: Record<string, string | undefined>) => {

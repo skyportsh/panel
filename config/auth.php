@@ -3,7 +3,6 @@
 use App\Models\User;
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Authentication Defaults
@@ -95,7 +94,10 @@ return [
     'passwords' => [
         'users' => [
             'provider' => 'users',
-            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'table' => env(
+                'AUTH_PASSWORD_RESET_TOKEN_TABLE',
+                'password_reset_tokens',
+            ),
             'expire' => 60,
             'throttle' => 60,
         ],
@@ -113,5 +115,4 @@ return [
     */
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
-
 ];

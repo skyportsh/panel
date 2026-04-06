@@ -12,7 +12,9 @@ class CoseKey
         return match ($key[1] ?? null) {
             2 => self::ec2ToPem($key),
             3 => self::rsaToPem($key),
-            default => throw new \InvalidArgumentException('Unsupported COSE key type.'),
+            default => throw new \InvalidArgumentException(
+                'Unsupported COSE key type.',
+            ),
         };
     }
 
@@ -22,19 +24,23 @@ class CoseKey
     private static function ec2ToPem(array $key): string
     {
         if (($key[3] ?? null) !== -7) {
-            throw new \InvalidArgumentException('Only ES256 passkeys are supported.');
+            throw new \InvalidArgumentException(
+                'Only ES256 passkeys are supported.',
+            );
         }
 
         $x = $key[-2] ?? null;
         $y = $key[-3] ?? null;
 
         if (! is_string($x) || ! is_string($y)) {
-            throw new \InvalidArgumentException('Invalid EC2 public key coordinates.');
+            throw new \InvalidArgumentException(
+                'Invalid EC2 public key coordinates.',
+            );
         }
 
         $algorithmIdentifier = self::asn1Sequence(
-            self::asn1ObjectIdentifier('1.2.840.10045.2.1')
-            .self::asn1ObjectIdentifier('1.2.840.10045.3.1.7')
+            self::asn1ObjectIdentifier('1.2.840.10045.2.1').
+                self::asn1ObjectIdentifier('1.2.840.10045.3.1.7'),
         );
 
         $subjectPublicKey = self::asn1BitString("\x04".$x.$y);
@@ -58,17 +64,18 @@ class CoseKey
         }
 
         $rsaPublicKey = self::asn1Sequence(
-            self::asn1Integer($modulus)
-            .self::asn1Integer($exponent)
+            self::asn1Integer($modulus).self::asn1Integer($exponent),
         );
 
         $algorithmIdentifier = self::asn1Sequence(
-            self::asn1ObjectIdentifier('1.2.840.113549.1.1.1')
-            .self::asn1Null()
+            self::asn1ObjectIdentifier('1.2.840.113549.1.1.1').
+                self::asn1Null(),
         );
 
         return self::pemEncode(
-            self::asn1Sequence($algorithmIdentifier.self::asn1BitString($rsaPublicKey)),
+            self::asn1Sequence(
+                $algorithmIdentifier.self::asn1BitString($rsaPublicKey),
+            ),
             'PUBLIC KEY',
         );
     }
@@ -102,7 +109,10 @@ class CoseKey
 
     private static function asn1BitString(string $payload): string
     {
-        return "\x03".self::asn1Length(strlen($payload) + 1)."\x00".$payload;
+        return "\x03".
+            self::asn1Length(strlen($payload) + 1).
+            "\x00".
+            $payload;
     }
 
     private static function asn1Null(): string
@@ -113,7 +123,7 @@ class CoseKey
     private static function asn1ObjectIdentifier(string $oid): string
     {
         $parts = array_map('intval', explode('.', $oid));
-        $encoded = chr((40 * $parts[0]) + $parts[1]);
+        $encoded = chr(40 * $parts[0] + $parts[1]);
 
         foreach (array_slice($parts, 2) as $part) {
             $segment = '';

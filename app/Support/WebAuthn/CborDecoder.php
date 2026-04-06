@@ -21,7 +21,9 @@ class CborDecoder
     private static function decodeItem(string $payload, int &$offset): mixed
     {
         if (! isset($payload[$offset])) {
-            throw new \InvalidArgumentException('Unexpected end of CBOR payload.');
+            throw new \InvalidArgumentException(
+                'Unexpected end of CBOR payload.',
+            );
         }
 
         $initialByte = ord($payload[$offset]);
@@ -40,24 +42,50 @@ class CborDecoder
             5 => self::readMap($payload, $offset, $length),
             6 => self::decodeItem($payload, $offset),
             7 => self::readSimpleValue($additionalInformation),
-            default => throw new \InvalidArgumentException('Unsupported CBOR major type.'),
+            default => throw new \InvalidArgumentException(
+                'Unsupported CBOR major type.',
+            ),
         };
     }
 
-    private static function readLength(string $payload, int &$offset, int $additionalInformation): int
-    {
+    private static function readLength(
+        string $payload,
+        int &$offset,
+        int $additionalInformation,
+    ): int {
         return match (true) {
             $additionalInformation < 24 => $additionalInformation,
-            $additionalInformation === 24 => self::readUnsignedInteger($payload, $offset, 1),
-            $additionalInformation === 25 => self::readUnsignedInteger($payload, $offset, 2),
-            $additionalInformation === 26 => self::readUnsignedInteger($payload, $offset, 4),
-            $additionalInformation === 27 => self::readUnsignedInteger($payload, $offset, 8),
-            default => throw new \InvalidArgumentException('Indefinite CBOR lengths are not supported.'),
+            $additionalInformation === 24 => self::readUnsignedInteger(
+                $payload,
+                $offset,
+                1,
+            ),
+            $additionalInformation === 25 => self::readUnsignedInteger(
+                $payload,
+                $offset,
+                2,
+            ),
+            $additionalInformation === 26 => self::readUnsignedInteger(
+                $payload,
+                $offset,
+                4,
+            ),
+            $additionalInformation === 27 => self::readUnsignedInteger(
+                $payload,
+                $offset,
+                8,
+            ),
+            default => throw new \InvalidArgumentException(
+                'Indefinite CBOR lengths are not supported.',
+            ),
         };
     }
 
-    private static function readUnsignedInteger(string $payload, int &$offset, int $length): int
-    {
+    private static function readUnsignedInteger(
+        string $payload,
+        int &$offset,
+        int $length,
+    ): int {
         $bytes = self::readBytes($payload, $offset, $length);
         $value = 0;
 
@@ -68,12 +96,17 @@ class CborDecoder
         return $value;
     }
 
-    private static function readBytes(string $payload, int &$offset, int $length): string
-    {
+    private static function readBytes(
+        string $payload,
+        int &$offset,
+        int $length,
+    ): string {
         $value = substr($payload, $offset, $length);
 
         if (strlen($value) !== $length) {
-            throw new \InvalidArgumentException('Unexpected end of CBOR byte string.');
+            throw new \InvalidArgumentException(
+                'Unexpected end of CBOR byte string.',
+            );
         }
 
         $offset += $length;
@@ -81,16 +114,22 @@ class CborDecoder
         return $value;
     }
 
-    private static function readText(string $payload, int &$offset, int $length): string
-    {
+    private static function readText(
+        string $payload,
+        int &$offset,
+        int $length,
+    ): string {
         return self::readBytes($payload, $offset, $length);
     }
 
     /**
      * @return array<int, mixed>
      */
-    private static function readArray(string $payload, int &$offset, int $length): array
-    {
+    private static function readArray(
+        string $payload,
+        int &$offset,
+        int $length,
+    ): array {
         $items = [];
 
         for ($index = 0; $index < $length; $index++) {
@@ -103,8 +142,11 @@ class CborDecoder
     /**
      * @return array<int|string, mixed>
      */
-    private static function readMap(string $payload, int &$offset, int $length): array
-    {
+    private static function readMap(
+        string $payload,
+        int &$offset,
+        int $length,
+    ): array {
         $items = [];
 
         for ($index = 0; $index < $length; $index++) {
@@ -121,7 +163,9 @@ class CborDecoder
             20 => false,
             21 => true,
             22 => null,
-            default => throw new \InvalidArgumentException('Unsupported CBOR simple value.'),
+            default => throw new \InvalidArgumentException(
+                'Unsupported CBOR simple value.',
+            ),
         };
     }
 }

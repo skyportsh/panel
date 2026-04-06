@@ -19,7 +19,8 @@ class AppSettingsService
 
         return AppSetting::query()
             ->where('key', self::APP_NAME_KEY)
-            ->value('value') ?: $fallback;
+            ->value('value') ?:
+            $fallback;
     }
 
     public function setAppName(string $appName): void

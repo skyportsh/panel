@@ -10,7 +10,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['name', 'location_id', 'fqdn', 'daemon_port', 'sftp_port', 'use_ssl'])]
+#[
+    Fillable([
+        'name',
+        'location_id',
+        'fqdn',
+        'daemon_port',
+        'sftp_port',
+        'use_ssl',
+    ]),
+]
 class Node extends Model
 {
     /** @use HasFactory<NodeFactory> */

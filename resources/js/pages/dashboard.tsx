@@ -78,9 +78,10 @@ function formatGiBLimit(memoryMib: number): string {
 }
 
 function formatMemoryUsage(memory: string, limitMib: number): string {
-    const current = memory === '—' || memory === 'Offline'
-        ? '0 MiB'
-        : (memory.split('/')[0]?.trim() ?? '0 MiB');
+    const current =
+        memory === '—' || memory === 'Offline'
+            ? '0 MiB'
+            : (memory.split('/')[0]?.trim() ?? '0 MiB');
 
     return `${current} / ${formatGiBLimit(limitMib)}`;
 }
@@ -210,7 +211,9 @@ export default function Home({ auth, filters, servers }: Props) {
                     }
 
                     if (payload.event === 'status') {
-                        const nextStatus = String(payload.args?.[0] ?? 'offline');
+                        const nextStatus = String(
+                            payload.args?.[0] ?? 'offline',
+                        );
 
                         setStats((current) => ({
                             ...current,
@@ -317,7 +320,9 @@ export default function Home({ auth, filters, servers }: Props) {
                             <span
                                 className={`rounded-md px-1.5 py-0.5 text-[10px] font-medium ${statusTone(serverStats.state || server.status)}`}
                             >
-                                {statusLabel(serverStats.state || server.status)}
+                                {statusLabel(
+                                    serverStats.state || server.status,
+                                )}
                             </span>
                         </div>
                         <p className="mt-1 truncate text-xs text-muted-foreground">
@@ -359,7 +364,10 @@ export default function Home({ auth, filters, servers }: Props) {
                         <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                             <Cpu className="h-4 w-4 text-muted-foreground" />
                             <span>
-                                {formatCpuUsage(serverStats.cpu, server.cpu_limit)}
+                                {formatCpuUsage(
+                                    serverStats.cpu,
+                                    server.cpu_limit,
+                                )}
                             </span>
                         </div>
                     </div>
@@ -378,7 +386,8 @@ export default function Home({ auth, filters, servers }: Props) {
                             Servers
                         </h2>
                         <p className="text-sm text-muted-foreground">
-                            A list of all servers that you own or have access to.
+                            A list of all servers that you own or have access
+                            to.
                         </p>
                     </div>
 

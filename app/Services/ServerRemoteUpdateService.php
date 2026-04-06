@@ -8,7 +8,9 @@ use Throwable;
 
 class ServerRemoteUpdateService
 {
-    public function __construct(private ServerConfigurationService $serverConfigurationService) {}
+    public function __construct(
+        private ServerConfigurationService $serverConfigurationService,
+    ) {}
 
     /**
      * @return array{content_type: string, contents: string, filename: string}|null
@@ -47,7 +49,8 @@ class ServerRemoteUpdateService
             }
 
             return [
-                'content_type' => (string) ($response->header('Content-Type') ?: 'text/plain; charset=utf-8'),
+                'content_type' => (string) ($response->header('Content-Type') ?:
+                    'text/plain; charset=utf-8'),
                 'contents' => $response->body(),
                 'filename' => sprintf('server-%d-install.log', $server->id),
             ];
@@ -56,13 +59,21 @@ class ServerRemoteUpdateService
         }
     }
 
-    public function push(Server $targetServer, ?Server $configurationServer = null): bool
-    {
+    public function push(
+        Server $targetServer,
+        ?Server $configurationServer = null,
+    ): bool {
         $targetServer->loadMissing('node.credential');
         $configurationServer ??= $targetServer;
-        $configurationServer->loadMissing(['allocation', 'cargo', 'node', 'user']);
+        $configurationServer->loadMissing([
+            'allocation',
+            'cargo',
+            'node',
+            'user',
+        ]);
 
-        $callbackToken = $targetServer->node->credential?->daemon_callback_token;
+        $callbackToken =
+            $targetServer->node->credential?->daemon_callback_token;
         $daemonUuid = $targetServer->node->daemon_uuid;
 
         if (! $callbackToken || ! $daemonUuid) {
@@ -83,7 +94,9 @@ class ServerRemoteUpdateService
                 ->withToken($callbackToken)
                 ->post($url, [
                     'panel_version' => config('app.version'),
-                    'server' => $this->serverConfigurationService->payload($configurationServer),
+                    'server' => $this->serverConfigurationService->payload(
+                        $configurationServer,
+                    ),
                     'uuid' => $daemonUuid,
                 ]);
 

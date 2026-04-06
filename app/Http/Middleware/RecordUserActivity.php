@@ -6,6 +6,7 @@ use App\Models\UserActivity;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 class RecordUserActivity
@@ -20,7 +21,11 @@ class RecordUserActivity
         $user = $request->user();
         $response = $next($request);
 
-        if (! $request->route() || $request->route()->named('ignition.*') || ! $this->shouldRecord($request)) {
+        if (
+            ! $request->route() ||
+            $request->route()->named('ignition.*') ||
+            ! $this->shouldRecord($request)
+        ) {
             return $response;
         }
 
@@ -30,7 +35,7 @@ class RecordUserActivity
             return $response;
         }
 
-        UserActivity::create([
+        UserActivity::query()->create([
             'user_id' => $user->id,
             'action' => $this->action($request),
             'route_name' => $request->route()->getName(),
@@ -42,7 +47,10 @@ class RecordUserActivity
                 'full_url' => $request->fullUrl(),
                 'query' => $request->query(),
                 'referer' => $request->headers->get('referer'),
-                'route_parameters' => Arr::where($request->route()->parameters(), fn (mixed $value): bool => is_scalar($value)),
+                'route_parameters' => Arr::where(
+                    $request->route()->parameters(),
+                    fn (mixed $value): bool => is_scalar($value),
+                ),
             ],
         ]);
 
@@ -57,18 +65,22 @@ class RecordUserActivity
             return false;
         }
 
-        return in_array($routeName, [
-            'login.store',
-            'logout',
-            'password.confirm.store',
-            'profile.update',
-            'two-factor.confirm',
-            'two-factor.disable',
-            'two-factor.enable',
-            'two-factor.login.store',
-            'two-factor.regenerate-recovery-codes',
-            'user-password.update',
-        ], true);
+        return in_array(
+            $routeName,
+            [
+                'login.store',
+                'logout',
+                'password.confirm.store',
+                'profile.update',
+                'two-factor.confirm',
+                'two-factor.disable',
+                'two-factor.enable',
+                'two-factor.login.store',
+                'two-factor.regenerate-recovery-codes',
+                'user-password.update',
+            ],
+            true,
+        );
     }
 
     private function action(Request $request): string
@@ -90,7 +102,7 @@ class RecordUserActivity
             'two-factor.login.store' => 'Completed two-factor login',
             'two-factor.regenerate-recovery-codes' => 'Regenerated recovery codes',
             'user-password.update' => 'Changed password',
-            default => str($routeName)
+            default => Str::of($routeName)
                 ->replace('.', ' ')
                 ->replace('-', ' ')
                 ->replace('_', ' ')

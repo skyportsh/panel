@@ -20,7 +20,10 @@ class DashboardController extends Controller
             ->pluck('total', 'date');
 
         $recentUsers = collect(range(0, 29))
-            ->map(function (int $offset) use ($recentUserCounts, $startDate): array {
+            ->map(function (int $offset) use (
+                $recentUserCounts,
+                $startDate,
+            ): array {
                 $date = $startDate->copy()->addDays($offset);
                 $dateKey = $date->toDateString();
 
@@ -33,7 +36,9 @@ class DashboardController extends Controller
 
         return Inertia::render('admin/dashboard', [
             'recentUsers' => $recentUsers,
-            'recentUsersTotal' => array_sum(array_column($recentUsers, 'amount')),
+            'recentUsersTotal' => array_sum(
+                array_column($recentUsers, 'amount'),
+            ),
         ]);
     }
 }

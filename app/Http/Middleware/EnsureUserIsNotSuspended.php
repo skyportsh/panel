@@ -15,8 +15,10 @@ class EnsureUserIsNotSuspended
      *
      * @param  Closure(Request): (Response)  $next
      */
-    public function handle(Request $request, Closure $next): Response|RedirectResponse
-    {
+    public function handle(
+        Request $request,
+        Closure $next,
+    ): Response|RedirectResponse {
         $user = $request->user();
 
         if (! $user || ! $user->isSuspended()) {

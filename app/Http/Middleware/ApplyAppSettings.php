@@ -9,7 +9,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ApplyAppSettings
 {
-    public function __construct(private AppSettingsService $appSettingsService) {}
+    public function __construct(
+        private AppSettingsService $appSettingsService,
+    ) {}
 
     /**
      * @param  Closure(Request): Response  $next

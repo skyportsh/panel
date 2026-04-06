@@ -24,7 +24,11 @@ class UpdateServerRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'user_id' => ['required', 'integer', 'exists:users,id'],
             'node_id' => ['required', 'integer', Rule::in([$server->node_id])],
-            'cargo_id' => ['required', 'integer', Rule::in([$server->cargo_id])],
+            'cargo_id' => [
+                'required',
+                'integer',
+                Rule::in([$server->cargo_id]),
+            ],
             'allocation_id' => ['required', 'integer', 'exists:allocations,id'],
             'memory_mib' => ['required', 'integer', 'min:1'],
             'cpu_limit' => ['required', 'integer', 'min:0'],

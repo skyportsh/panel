@@ -30,26 +30,45 @@ class StoreNodeAllocationRequest extends FormRequest
 
     public function after(): array
     {
-        return [function (Validator $validator): void {
-            $mode = $this->input('mode');
+        return [
+            function (Validator $validator): void {
+                $mode = $this->input('mode');
 
-            if ($mode === 'single' && ! $this->filled('port')) {
-                $validator->errors()->add('port', 'Please choose a port.');
-            }
-
-            if ($mode === 'range') {
-                if (! $this->filled('start_port')) {
-                    $validator->errors()->add('start_port', 'Please choose a starting port.');
+                if ($mode === 'single' && ! $this->filled('port')) {
+                    $validator->errors()->add('port', 'Please choose a port.');
                 }
 
-                if (! $this->filled('end_port')) {
-                    $validator->errors()->add('end_port', 'Please choose an ending port.');
-                }
+                if ($mode === 'range') {
+                    if (! $this->filled('start_port')) {
+                        $validator
+                            ->errors()
+                            ->add(
+                                'start_port',
+                                'Please choose a starting port.',
+                            );
+                    }
 
-                if ($this->filled('start_port') && $this->filled('end_port') && (int) $this->input('end_port') < (int) $this->input('start_port')) {
-                    $validator->errors()->add('end_port', 'The ending port must be greater than or equal to the starting port.');
+                    if (! $this->filled('end_port')) {
+                        $validator
+                            ->errors()
+                            ->add('end_port', 'Please choose an ending port.');
+                    }
+
+                    if (
+                        $this->filled('start_port') &&
+                        $this->filled('end_port') &&
+                        (int) $this->input('end_port') <
+                            (int) $this->input('start_port')
+                    ) {
+                        $validator
+                            ->errors()
+                            ->add(
+                                'end_port',
+                                'The ending port must be greater than or equal to the starting port.',
+                            );
+                    }
                 }
-            }
-        }];
+            },
+        ];
     }
 }

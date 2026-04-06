@@ -16,39 +16,42 @@ class CargoDefinitionService
      */
     public function starter(array $attributes): array
     {
-        return $this->normalizeDefinition([
-            '_comment' => 'Skyport cargo definition file',
-            'meta' => [
-                'version' => self::VERSION,
-                'source' => 'skyport',
-                'update_url' => null,
-            ],
-            'exported_at' => now()->toIso8601String(),
-            'name' => $attributes['name'],
-            'author' => $attributes['author'],
-            'description' => $attributes['description'] ?? '',
-            'features' => [],
-            'docker_images' => [
-                'Default' => 'ghcr.io/skyportsh/yolks:latest',
-            ],
-            'file_denylist' => [],
-            'file_hidden_list' => [],
-            'startup' => $attributes['startup'] ?? './start.sh',
-            'config' => [
-                'files' => '{}',
-                'startup' => '{}',
-                'logs' => '{}',
-                'stop' => 'stop',
-            ],
-            'scripts' => [
-                'installation' => [
-                    'script' => "#!/bin/bash\n# Installation script for {$attributes['name']}\ncd /mnt/server\necho \"Add your installation steps here\"",
-                    'container' => 'ghcr.io/skyportsh/installers:ubuntu',
-                    'entrypoint' => 'bash',
+        return $this->normalizeDefinition(
+            [
+                '_comment' => 'Skyport cargo definition file',
+                'meta' => [
+                    'version' => self::VERSION,
+                    'source' => 'skyport',
+                    'update_url' => null,
                 ],
+                'exported_at' => now()->toIso8601String(),
+                'name' => $attributes['name'],
+                'author' => $attributes['author'],
+                'description' => $attributes['description'] ?? '',
+                'features' => [],
+                'docker_images' => [
+                    'Default' => 'ghcr.io/skyportsh/yolks:latest',
+                ],
+                'file_denylist' => [],
+                'file_hidden_list' => [],
+                'startup' => $attributes['startup'] ?? './start.sh',
+                'config' => [
+                    'files' => '{}',
+                    'startup' => '{}',
+                    'logs' => '{}',
+                    'stop' => 'stop',
+                ],
+                'scripts' => [
+                    'installation' => [
+                        'script' => "#!/bin/bash\n# Installation script for {$attributes['name']}\ncd /mnt/server\necho \"Add your installation steps here\"",
+                        'container' => 'ghcr.io/skyportsh/installers:ubuntu',
+                        'entrypoint' => 'bash',
+                    ],
+                ],
+                'variables' => [],
             ],
-            'variables' => [],
-        ], 'native');
+            'native',
+        );
     }
 
     /**
@@ -59,7 +62,9 @@ class CargoDefinitionService
         $decoded = json_decode($content, true);
 
         if (! is_array($decoded)) {
-            throw new InvalidArgumentException('The import file must be valid JSON.');
+            throw new InvalidArgumentException(
+                'The import file must be valid JSON.',
+            );
         }
 
         $version = (string) Arr::get($decoded, 'meta.version', '');
@@ -69,7 +74,9 @@ class CargoDefinitionService
         } elseif ($version === self::VERSION) {
             $definition = $this->normalizeDefinition($decoded, 'native');
         } else {
-            throw new InvalidArgumentException('Unsupported cargo format. Import a .cargofile or a Pterodactyl egg export.');
+            throw new InvalidArgumentException(
+                'Unsupported cargo format. Import a .cargofile or a Pterodactyl egg export.',
+            );
         }
 
         return $this->compile($definition);
@@ -83,7 +90,9 @@ class CargoDefinitionService
         $decoded = json_decode($content, true);
 
         if (! is_array($decoded)) {
-            throw new InvalidArgumentException('The cargofile must be valid JSON.');
+            throw new InvalidArgumentException(
+                'The cargofile must be valid JSON.',
+            );
         }
 
         $definition = $this->normalizeDefinition($decoded, 'native');
@@ -99,7 +108,9 @@ class CargoDefinitionService
     {
         $normalized = $this->normalizeDefinition(
             $definition,
-            Arr::get($definition, 'meta.source_format') === 'pterodactyl' ? 'pterodactyl' : 'native',
+            Arr::get($definition, 'meta.source_format') === 'pterodactyl'
+                ? 'pterodactyl'
+                : 'native',
         );
 
         return [
@@ -112,17 +123,47 @@ class CargoDefinitionService
             'file_denylist' => $normalized['file_denylist'],
             'file_hidden_list' => $normalized['file_hidden_list'],
             'startup_command' => $normalized['startup'],
-            'config_files' => (string) Arr::get($normalized, 'config.files', '{}'),
-            'config_startup' => (string) Arr::get($normalized, 'config.startup', '{}'),
-            'config_logs' => (string) Arr::get($normalized, 'config.logs', '{}'),
-            'config_stop' => (string) Arr::get($normalized, 'config.stop', 'stop'),
-            'install_script' => (string) Arr::get($normalized, 'scripts.installation.script', ''),
-            'install_container' => (string) Arr::get($normalized, 'scripts.installation.container', ''),
-            'install_entrypoint' => (string) Arr::get($normalized, 'scripts.installation.entrypoint', ''),
+            'config_files' => (string) Arr::get(
+                $normalized,
+                'config.files',
+                '{}',
+            ),
+            'config_startup' => (string) Arr::get(
+                $normalized,
+                'config.startup',
+                '{}',
+            ),
+            'config_logs' => (string) Arr::get(
+                $normalized,
+                'config.logs',
+                '{}',
+            ),
+            'config_stop' => (string) Arr::get(
+                $normalized,
+                'config.stop',
+                'stop',
+            ),
+            'install_script' => (string) Arr::get(
+                $normalized,
+                'scripts.installation.script',
+                '',
+            ),
+            'install_container' => (string) Arr::get(
+                $normalized,
+                'scripts.installation.container',
+                '',
+            ),
+            'install_entrypoint' => (string) Arr::get(
+                $normalized,
+                'scripts.installation.entrypoint',
+                '',
+            ),
             'variables' => $normalized['variables'],
             'cargofile' => $this->serialize($normalized),
             'definition' => $normalized,
-            'source_type' => $normalized['meta']['source_format'] === 'pterodactyl' ? 'pterodactyl' : 'native',
+            'source_type' => $normalized['meta']['source_format'] === 'pterodactyl'
+                    ? 'pterodactyl'
+                    : 'native',
         ];
     }
 
@@ -131,15 +172,23 @@ class CargoDefinitionService
      */
     public function serialize(array $definition): string
     {
-        return json_encode($definition, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+        return json_encode(
+            $definition,
+            JSON_PRETTY_PRINT |
+                JSON_UNESCAPED_SLASHES |
+                JSON_UNESCAPED_UNICODE |
+                JSON_THROW_ON_ERROR,
+        );
     }
 
     /**
      * @param  array<string, mixed>  $definition
      * @return array<string, mixed>
      */
-    private function normalizeDefinition(array $definition, string $sourceType): array
-    {
+    private function normalizeDefinition(
+        array $definition,
+        string $sourceType,
+    ): array {
         $name = trim((string) Arr::get($definition, 'name', ''));
         $author = trim((string) Arr::get($definition, 'author', ''));
         $description = (string) Arr::get($definition, 'description', '');
@@ -154,7 +203,9 @@ class CargoDefinitionService
         }
 
         if ($startup === '') {
-            throw new InvalidArgumentException('Cargo startup command is required.');
+            throw new InvalidArgumentException(
+                'Cargo startup command is required.',
+            );
         }
 
         $dockerImages = Arr::get($definition, 'docker_images', []);
@@ -163,8 +214,16 @@ class CargoDefinitionService
         $fileHiddenList = Arr::get($definition, 'file_hidden_list', []);
         $variables = Arr::get($definition, 'variables', []);
 
-        if (! is_array($dockerImages) || ! is_array($features) || ! is_array($fileDenylist) || ! is_array($fileHiddenList) || ! is_array($variables)) {
-            throw new InvalidArgumentException('Cargo docker images, features, file denylist, file hidden list, and variables must be arrays.');
+        if (
+            ! is_array($dockerImages) ||
+            ! is_array($features) ||
+            ! is_array($fileDenylist) ||
+            ! is_array($fileHiddenList) ||
+            ! is_array($variables)
+        ) {
+            throw new InvalidArgumentException(
+                'Cargo docker images, features, file denylist, file hidden list, and variables must be arrays.',
+            );
         }
 
         return [
@@ -175,41 +234,95 @@ class CargoDefinitionService
                 'source_format' => $sourceType,
                 'update_url' => Arr::get($definition, 'meta.update_url'),
             ],
-            'exported_at' => (string) Arr::get($definition, 'exported_at', now()->toIso8601String()),
+            'exported_at' => (string) Arr::get(
+                $definition,
+                'exported_at',
+                now()->toIso8601String(),
+            ),
             'name' => $name,
             'author' => $author,
             'description' => $description,
             'features' => array_values(array_map('strval', $features)),
             'docker_images' => collect($dockerImages)
-                ->mapWithKeys(fn ($image, $label) => [(string) $label => (string) $image])
+                ->mapWithKeys(
+                    fn ($image, $label) => [(string) $label => (string) $image],
+                )
                 ->all(),
             'file_denylist' => array_values(array_map('strval', $fileDenylist)),
-            'file_hidden_list' => array_values(array_map('strval', $fileHiddenList)),
+            'file_hidden_list' => array_values(
+                array_map('strval', $fileHiddenList),
+            ),
             'startup' => $startup,
             'config' => [
                 'files' => (string) Arr::get($definition, 'config.files', '{}'),
-                'startup' => (string) Arr::get($definition, 'config.startup', '{}'),
+                'startup' => (string) Arr::get(
+                    $definition,
+                    'config.startup',
+                    '{}',
+                ),
                 'logs' => (string) Arr::get($definition, 'config.logs', '{}'),
                 'stop' => (string) Arr::get($definition, 'config.stop', 'stop'),
             ],
             'scripts' => [
                 'installation' => [
-                    'script' => (string) Arr::get($definition, 'scripts.installation.script', ''),
-                    'container' => (string) Arr::get($definition, 'scripts.installation.container', ''),
-                    'entrypoint' => (string) Arr::get($definition, 'scripts.installation.entrypoint', ''),
+                    'script' => (string) Arr::get(
+                        $definition,
+                        'scripts.installation.script',
+                        '',
+                    ),
+                    'container' => (string) Arr::get(
+                        $definition,
+                        'scripts.installation.container',
+                        '',
+                    ),
+                    'entrypoint' => (string) Arr::get(
+                        $definition,
+                        'scripts.installation.entrypoint',
+                        '',
+                    ),
                 ],
             ],
             'variables' => collect($variables)
-                ->map(fn ($variable) => [
-                    'name' => (string) Arr::get($variable, 'name', ''),
-                    'description' => (string) Arr::get($variable, 'description', ''),
-                    'env_variable' => (string) Arr::get($variable, 'env_variable', ''),
-                    'default_value' => (string) Arr::get($variable, 'default_value', ''),
-                    'user_viewable' => (bool) Arr::get($variable, 'user_viewable', false),
-                    'user_editable' => (bool) Arr::get($variable, 'user_editable', false),
-                    'rules' => (string) Arr::get($variable, 'rules', 'nullable|string'),
-                    'field_type' => (string) Arr::get($variable, 'field_type', 'text'),
-                ])
+                ->map(
+                    fn ($variable) => [
+                        'name' => (string) Arr::get($variable, 'name', ''),
+                        'description' => (string) Arr::get(
+                            $variable,
+                            'description',
+                            '',
+                        ),
+                        'env_variable' => (string) Arr::get(
+                            $variable,
+                            'env_variable',
+                            '',
+                        ),
+                        'default_value' => (string) Arr::get(
+                            $variable,
+                            'default_value',
+                            '',
+                        ),
+                        'user_viewable' => (bool) Arr::get(
+                            $variable,
+                            'user_viewable',
+                            false,
+                        ),
+                        'user_editable' => (bool) Arr::get(
+                            $variable,
+                            'user_editable',
+                            false,
+                        ),
+                        'rules' => (string) Arr::get(
+                            $variable,
+                            'rules',
+                            'nullable|string',
+                        ),
+                        'field_type' => (string) Arr::get(
+                            $variable,
+                            'field_type',
+                            'text',
+                        ),
+                    ],
+                )
                 ->values()
                 ->all(),
         ];

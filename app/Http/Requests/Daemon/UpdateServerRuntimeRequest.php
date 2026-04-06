@@ -20,7 +20,11 @@ class UpdateServerRuntimeRequest extends FormRequest
         return [
             'uuid' => ['required', 'uuid'],
             'version' => ['required', 'string', 'max:50'],
-            'status' => ['required', 'string', 'in:installing,install_failed,offline,starting,running'],
+            'status' => [
+                'required',
+                'string',
+                'in:installing,install_failed,offline,starting,running',
+            ],
             'last_error' => ['nullable', 'string', 'max:65535'],
         ];
     }

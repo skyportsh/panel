@@ -15,6 +15,8 @@ use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -28,51 +30,65 @@ class NodesController extends Controller
     public function index(Request $request): Response
     {
         $nodes = Node::query()
-            ->with(['allocations.server:id,allocation_id', 'location:id,name,country'])
-            ->when($request->input('search'), function ($query, string $search) {
+            ->with([
+                'allocations.server:id,allocation_id',
+                'location:id,name,country',
+            ])
+            ->when($request->input('search'), function (
+                $query,
+                string $search,
+            ) {
                 $query->where(function ($subQuery) use ($search) {
-                    $subQuery->where('name', 'like', "%{$search}%")
+                    $subQuery
+                        ->where('name', 'like', "%{$search}%")
                         ->orWhere('fqdn', 'like', "%{$search}%")
-                        ->orWhereHas('location', function ($locationQuery) use ($search) {
-                            $locationQuery->where('name', 'like', "%{$search}%")
+                        ->orWhereHas('location', function ($locationQuery) use (
+                            $search,
+                        ) {
+                            $locationQuery
+                                ->where('name', 'like', "%{$search}%")
                                 ->orWhere('country', 'like', "%{$search}%");
                         });
                 });
             })
             ->orderByDesc('updated_at')
             ->paginate(10)
-            ->through(fn (Node $node): array => [
-                'connection_status' => $this->connectionStatus($node),
-                'created_at' => $node->created_at?->toIso8601String(),
-                'daemon_port' => $node->daemon_port,
-                'daemon_uuid' => $node->daemon_uuid,
-                'daemon_version' => $node->daemon_version,
-                'enrolled_at' => $node->enrolled_at?->toIso8601String(),
-                'fqdn' => $node->fqdn,
-                'id' => $node->id,
-                'last_seen_at' => $node->last_seen_at?->toIso8601String(),
-                'location' => [
-                    'country' => $node->location->country,
-                    'id' => $node->location->id,
-                    'name' => $node->location->name,
+            ->through(
+                fn (Node $node): array => [
+                    'connection_status' => $this->connectionStatus($node),
+                    'created_at' => $node->created_at?->toIso8601String(),
+                    'daemon_port' => $node->daemon_port,
+                    'daemon_uuid' => $node->daemon_uuid,
+                    'daemon_version' => $node->daemon_version,
+                    'enrolled_at' => $node->enrolled_at?->toIso8601String(),
+                    'fqdn' => $node->fqdn,
+                    'id' => $node->id,
+                    'last_seen_at' => $node->last_seen_at?->toIso8601String(),
+                    'location' => [
+                        'country' => $node->location->country,
+                        'id' => $node->location->id,
+                        'name' => $node->location->name,
+                    ],
+                    'allocations' => $node->allocations
+                        ->sortBy('port')
+                        ->values()
+                        ->map(
+                            fn (Allocation $allocation): array => [
+                                'bind_ip' => $allocation->bind_ip,
+                                'id' => $allocation->id,
+                                'ip_alias' => $allocation->ip_alias,
+                                'is_assigned' => $allocation->server !== null,
+                                'port' => $allocation->port,
+                            ],
+                        )
+                        ->all(),
+                    'name' => $node->name,
+                    'sftp_port' => $node->sftp_port,
+                    'status' => $node->status,
+                    'updated_at' => $node->updated_at?->toIso8601String(),
+                    'use_ssl' => $node->use_ssl,
                 ],
-                'allocations' => $node->allocations
-                    ->sortBy('port')
-                    ->values()
-                    ->map(fn (Allocation $allocation): array => [
-                        'bind_ip' => $allocation->bind_ip,
-                        'id' => $allocation->id,
-                        'ip_alias' => $allocation->ip_alias,
-                        'is_assigned' => $allocation->server !== null,
-                        'port' => $allocation->port,
-                    ])
-                    ->all(),
-                'name' => $node->name,
-                'sftp_port' => $node->sftp_port,
-                'status' => $node->status,
-                'updated_at' => $node->updated_at?->toIso8601String(),
-                'use_ssl' => $node->use_ssl,
-            ])
+            )
             ->withQueryString();
 
         $locations = Location::query()
@@ -90,12 +106,12 @@ class NodesController extends Controller
 
     public function store(StoreNodeRequest $request): RedirectResponse
     {
-        Node::create([
+        Node::query()->create([
             ...$request->validated(),
             'use_ssl' => $request->boolean('use_ssl'),
         ]);
 
-        return back()->with('success', 'Node created.');
+        return Redirect::back()->with('success', 'Node created.');
     }
 
     public function generateConfigurationToken(Node $node): JsonResponse
@@ -109,17 +125,23 @@ class NodesController extends Controller
         ]);
     }
 
-    public function storeAllocation(StoreNodeAllocationRequest $request, Node $node): RedirectResponse
-    {
+    public function storeAllocation(
+        StoreNodeAllocationRequest $request,
+        Node $node,
+    ): RedirectResponse {
         $validated = $request->validated();
         $bindIp = $validated['bind_ip'];
         $ipAlias = $validated['ip_alias'] ?: $node->fqdn;
-        $ports = $validated['mode'] === 'range'
-            ? range((int) $validated['start_port'], (int) $validated['end_port'])
-            : [(int) $validated['port']];
+        $ports =
+            $validated['mode'] === 'range'
+                ? range(
+                    (int) $validated['start_port'],
+                    (int) $validated['end_port'],
+                )
+                : [(int) $validated['port']];
 
         foreach ($ports as $port) {
-            Allocation::firstOrCreate(
+            Allocation::query()->firstOrCreate(
                 [
                     'node_id' => $node->id,
                     'bind_ip' => $bindIp,
@@ -131,11 +153,19 @@ class NodesController extends Controller
             );
         }
 
-        return back()->with('success', count($ports).' '.str('allocation')->plural(count($ports)).' created.');
+        return Redirect::back()->with(
+            'success',
+            count($ports).
+                ' '.
+                Str::plural('allocation', count($ports)).
+                ' created.',
+        );
     }
 
-    public function update(UpdateNodeRequest $request, Node $node): RedirectResponse
-    {
+    public function update(
+        UpdateNodeRequest $request,
+        Node $node,
+    ): RedirectResponse {
         $node->loadMissing('credential', 'location');
         $targetNode = clone $node;
 
@@ -147,19 +177,25 @@ class NodesController extends Controller
         $node->refresh()->loadMissing('location');
 
         if ($this->nodeRemoteUpdateService->push($targetNode, $node)) {
-            return back()->with('success', 'Node updated. skyportd applied the new configuration.');
+            return Redirect::back()->with(
+                'success',
+                'Node updated. skyportd applied the new configuration.',
+            );
         }
 
-        return back()
+        return Redirect::back()
             ->with('success', 'Node updated.')
-            ->with('warning', 'skyportd could not be updated automatically. This node will need to be reconfigured.');
+            ->with(
+                'warning',
+                'skyportd could not be updated automatically. This node will need to be reconfigured.',
+            );
     }
 
     public function destroy(Node $node): RedirectResponse
     {
         $node->delete();
 
-        return back()->with('success', 'Node deleted.');
+        return Redirect::back()->with('success', 'Node deleted.');
     }
 
     public function bulkDestroy(Request $request): RedirectResponse
@@ -172,9 +208,12 @@ class NodesController extends Controller
         $ids = $validated['ids'];
         $count = count($ids);
 
-        Node::whereIn('id', $ids)->delete();
+        Node::query()->whereIn('id', $ids)->delete();
 
-        return back()->with('success', $count.' '.str('node')->plural($count).' deleted.');
+        return Redirect::back()->with(
+            'success',
+            $count.' '.Str::plural('node', $count).' deleted.',
+        );
     }
 
     private function connectionStatus(Node $node): string
@@ -183,7 +222,10 @@ class NodesController extends Controller
             return $node->status;
         }
 
-        if ($node->last_seen_at instanceof CarbonInterface && $node->last_seen_at->isAfter(now()->subSeconds(15))) {
+        if (
+            $node->last_seen_at instanceof CarbonInterface &&
+            $node->last_seen_at->isAfter(now()->subSeconds(15))
+        ) {
             return 'online';
         }
 

@@ -463,7 +463,8 @@ function CreateAllocationModal({
                 setSubmitting(true);
             },
             onFinish: () => {
-                const remaining = minimumMs - (Date.now() - submitStart.current);
+                const remaining =
+                    minimumMs - (Date.now() - submitStart.current);
                 setTimeout(() => setSubmitting(false), Math.max(0, remaining));
             },
             onSuccess: () => {
@@ -471,7 +472,9 @@ function CreateAllocationModal({
                 onClose();
             },
             onError: (errors) => {
-                Object.values(errors).forEach((message) => toast.error(message));
+                Object.values(errors).forEach((message) =>
+                    toast.error(message),
+                );
             },
         });
     };
@@ -491,14 +494,24 @@ function CreateAllocationModal({
                         <Label>Mode</Label>
                         <Select
                             value={form.data.mode}
-                            onValueChange={(value: 'single' | 'range') => form.setData('mode', value)}
+                            onValueChange={(value: 'single' | 'range') =>
+                                form.setData('mode', value)
+                            }
                         >
                             <SelectTrigger className="w-full">
-                                <span>{form.data.mode === 'single' ? 'Single port' : 'Port range'}</span>
+                                <span>
+                                    {form.data.mode === 'single'
+                                        ? 'Single port'
+                                        : 'Port range'}
+                                </span>
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="single">Single port</SelectItem>
-                                <SelectItem value="range">Port range</SelectItem>
+                                <SelectItem value="single">
+                                    Single port
+                                </SelectItem>
+                                <SelectItem value="range">
+                                    Port range
+                                </SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -509,18 +522,24 @@ function CreateAllocationModal({
                             <Input
                                 id="allocation-bind-ip"
                                 value={form.data.bind_ip}
-                                onChange={(event) => form.setData('bind_ip', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('bind_ip', event.target.value)
+                                }
                                 placeholder="0.0.0.0"
                                 required
                             />
                             <InputError message={form.errors.bind_ip} />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="allocation-ip-alias">IP alias</Label>
+                            <Label htmlFor="allocation-ip-alias">
+                                IP alias
+                            </Label>
                             <Input
                                 id="allocation-ip-alias"
                                 value={form.data.ip_alias}
-                                onChange={(event) => form.setData('ip_alias', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('ip_alias', event.target.value)
+                                }
                                 placeholder={node.fqdn}
                             />
                             <InputError message={form.errors.ip_alias} />
@@ -536,7 +555,9 @@ function CreateAllocationModal({
                                 min={1}
                                 max={65535}
                                 value={form.data.port}
-                                onChange={(event) => form.setData('port', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('port', event.target.value)
+                                }
                                 required
                             />
                             <InputError message={form.errors.port} />
@@ -544,27 +565,41 @@ function CreateAllocationModal({
                     ) : (
                         <div className="grid gap-2 sm:grid-cols-2 sm:gap-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="allocation-start-port">Start port</Label>
+                                <Label htmlFor="allocation-start-port">
+                                    Start port
+                                </Label>
                                 <Input
                                     id="allocation-start-port"
                                     type="number"
                                     min={1}
                                     max={65535}
                                     value={form.data.start_port}
-                                    onChange={(event) => form.setData('start_port', event.target.value)}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'start_port',
+                                            event.target.value,
+                                        )
+                                    }
                                     required
                                 />
                                 <InputError message={form.errors.start_port} />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="allocation-end-port">End port</Label>
+                                <Label htmlFor="allocation-end-port">
+                                    End port
+                                </Label>
                                 <Input
                                     id="allocation-end-port"
                                     type="number"
                                     min={1}
                                     max={65535}
                                     value={form.data.end_port}
-                                    onChange={(event) => form.setData('end_port', event.target.value)}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'end_port',
+                                            event.target.value,
+                                        )
+                                    }
                                     required
                                 />
                                 <InputError message={form.errors.end_port} />
@@ -573,7 +608,11 @@ function CreateAllocationModal({
                     )}
 
                     <div className="flex justify-end">
-                        <Button type="submit" size="sm" disabled={submitting || form.processing}>
+                        <Button
+                            type="submit"
+                            size="sm"
+                            disabled={submitting || form.processing}
+                        >
                             {(submitting || form.processing) && <Spinner />}
                             Create allocation
                         </Button>
@@ -1124,7 +1163,8 @@ function NodeModal({
                                         Allocations
                                     </h3>
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                        Bind ports to this node for server assignments.
+                                        Bind ports to this node for server
+                                        assignments.
                                     </p>
                                 </div>
                                 <Button
@@ -1145,22 +1185,28 @@ function NodeModal({
                                             <span>Status</span>
                                         </div>
                                         <div className="divide-y divide-border/60">
-                                            {node.allocations.map((allocation) => (
-                                                <div
-                                                    key={allocation.id}
-                                                    className="grid grid-cols-[160px_1fr_120px] gap-4 px-4 py-3"
-                                                >
-                                                    <p className="font-mono text-xs text-foreground">
-                                                        {allocation.bind_ip}:{allocation.port}
-                                                    </p>
-                                                    <p className="truncate text-xs text-muted-foreground">
-                                                        {allocation.ip_alias || node.fqdn}
-                                                    </p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {allocation.is_assigned ? 'Assigned' : 'Available'}
-                                                    </p>
-                                                </div>
-                                            ))}
+                                            {node.allocations.map(
+                                                (allocation) => (
+                                                    <div
+                                                        key={allocation.id}
+                                                        className="grid grid-cols-[160px_1fr_120px] gap-4 px-4 py-3"
+                                                    >
+                                                        <p className="font-mono text-xs text-foreground">
+                                                            {allocation.bind_ip}
+                                                            :{allocation.port}
+                                                        </p>
+                                                        <p className="truncate text-xs text-muted-foreground">
+                                                            {allocation.ip_alias ||
+                                                                node.fqdn}
+                                                        </p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {allocation.is_assigned
+                                                                ? 'Assigned'
+                                                                : 'Available'}
+                                                        </p>
+                                                    </div>
+                                                ),
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -1170,7 +1216,8 @@ function NodeModal({
                                         No allocations yet
                                     </p>
                                     <p className="mt-1 text-sm text-muted-foreground">
-                                        Create a single port or range to assign server primary ports.
+                                        Create a single port or range to assign
+                                        server primary ports.
                                     </p>
                                 </div>
                             )}
@@ -1231,6 +1278,7 @@ function NodeModal({
 }
 
 export default function Nodes({ nodes, locations, filters }: Props) {
+    const hasLocations = locations.length > 0;
     const [search, setSearch] = useState(filters.search);
     const viewingNodeDialog = useDialogState<AdminNode>();
     const creatingNodeDialog = useDialogState<boolean>();
@@ -1396,14 +1444,27 @@ export default function Nodes({ nodes, locations, filters }: Props) {
                     entityName="node"
                     emptyMessage="No nodes found"
                     actions={
-                        <Button
-                            size="table"
-                            onClick={() => creatingNodeDialog.show(true)}
-                            disabled={locations.length === 0}
-                        >
-                            <Plus className="h-3.5 w-3.5" />
-                            Create new
-                        </Button>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <span>
+                                    <Button
+                                        size="table"
+                                        onClick={() =>
+                                            creatingNodeDialog.show(true)
+                                        }
+                                        disabled={!hasLocations}
+                                    >
+                                        <Plus className="h-3.5 w-3.5" />
+                                        Create new
+                                    </Button>
+                                </span>
+                            </TooltipTrigger>
+                            {!hasLocations ? (
+                                <TooltipContent side="top">
+                                    Create a location before adding a node.
+                                </TooltipContent>
+                            ) : null}
+                        </Tooltip>
                     }
                 />
             </AdminLayout>

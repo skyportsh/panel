@@ -21,7 +21,12 @@ class UpdateLocationRequest extends FormRequest
         $locationId = $this->route('location')?->id;
 
         return [
-            'name' => ['required', 'string', 'max:255', Rule::unique('locations', 'name')->ignore($locationId)],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('locations', 'name')->ignore($locationId),
+            ],
             'country' => ['required', 'string', 'max:255'],
         ];
     }

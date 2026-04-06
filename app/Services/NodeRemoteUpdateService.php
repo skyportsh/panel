@@ -8,7 +8,9 @@ use Throwable;
 
 class NodeRemoteUpdateService
 {
-    public function __construct(private NodeConfigurationService $nodeConfigurationService) {}
+    public function __construct(
+        private NodeConfigurationService $nodeConfigurationService,
+    ) {}
 
     public function push(Node $targetNode, Node $configurationNode): bool
     {
@@ -34,7 +36,9 @@ class NodeRemoteUpdateService
                 ->acceptJson()
                 ->withToken($callbackToken)
                 ->post($url, [
-                    ...$this->nodeConfigurationService->configurationPayload($configurationNode),
+                    ...$this->nodeConfigurationService->configurationPayload(
+                        $configurationNode,
+                    ),
                     'panel_version' => config('app.version'),
                     'uuid' => $targetNode->daemon_uuid,
                 ]);

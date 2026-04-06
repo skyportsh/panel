@@ -8,6 +8,7 @@ use App\Models\NodeCredential;
 use App\Models\Server;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
@@ -64,6 +65,26 @@ test('admin can access servers page', function () {
             ->has('allocations', 1)
             ->has('cargo', 1)
             ->has('filters'));
+});
+
+test('admin servers page renders with empty data when server tables are unavailable', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    Schema::drop('servers');
+    Schema::drop('allocations');
+
+    actingAs($admin);
+
+    get('/admin/servers')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/servers')
+            ->has('servers.data', 0)
+            ->has('users', 1)
+            ->has('nodes', 0)
+            ->has('allocations', 0)
+            ->has('cargo', 0)
+            ->where('filters.search', ''));
 });
 
 test('admin can search servers', function () {

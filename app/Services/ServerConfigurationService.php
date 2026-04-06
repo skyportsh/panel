@@ -75,7 +75,8 @@ class ServerConfigurationService
                 'startup_command' => $server->cargo->startup_command,
                 'variables' => $server->cargo->variables ?? [],
             ],
-            'created_at' => $server->created_at?->toIso8601String() ?? now()->toIso8601String(),
+            'created_at' => $server->created_at?->toIso8601String() ??
+                now()->toIso8601String(),
             'id' => $server->id,
             'limits' => [
                 'cpu_limit' => $server->cpu_limit,
@@ -85,7 +86,8 @@ class ServerConfigurationService
             'name' => $server->name,
             'node_id' => $server->node_id,
             'status' => $server->status,
-            'updated_at' => $server->updated_at?->toIso8601String() ?? now()->toIso8601String(),
+            'updated_at' => $server->updated_at?->toIso8601String() ??
+                now()->toIso8601String(),
             'user' => [
                 'email' => $server->user->email,
                 'id' => $server->user->id,

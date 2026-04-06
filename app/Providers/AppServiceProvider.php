@@ -26,7 +26,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Hash::extend('argon2id', function ($app): CompatibleArgon2IdHasher {
-            return new CompatibleArgon2IdHasher($app['config']->get('hashing.argon') ?? []);
+            return new CompatibleArgon2IdHasher(
+                $app['config']->get('hashing.argon') ?? [],
+            );
         });
 
         $this->configureDefaults();
@@ -39,18 +41,17 @@ class AppServiceProvider extends ServiceProvider
     {
         Date::use(CarbonImmutable::class);
 
-        DB::prohibitDestructiveCommands(
-            app()->isProduction(),
-        );
+        DB::prohibitDestructiveCommands(app()->isProduction());
 
-        Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(12)
-                ->mixedCase()
-                ->letters()
-                ->numbers()
-                ->symbols()
-                ->uncompromised()
-            : null,
+        Password::defaults(
+            fn (): ?Password => app()->isProduction()
+                ? Password::min(12)
+                    ->mixedCase()
+                    ->letters()
+                    ->numbers()
+                    ->symbols()
+                    ->uncompromised()
+                : null,
         );
     }
 }

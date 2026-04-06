@@ -19,7 +19,12 @@ class StoreCargoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255', Rule::unique('cargos', 'name')],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('cargos', 'name'),
+            ],
             'author' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'startup' => ['required', 'string'],

@@ -9,6 +9,8 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,10 +19,16 @@ class UsersController extends Controller
     public function index(Request $request): Response
     {
         $users = User::query()
-            ->when($request->input('search'), function ($query, string $search) {
+            ->when($request->input('search'), function (
+                $query,
+                string $search,
+            ) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
+                    $q->where('name', 'like', "%{$search}%")->orWhere(
+                        'email',
+                        'like',
+                        "%{$search}%",
+                    );
                 });
             })
             ->when($request->boolean('admin_only'), function ($query) {
@@ -41,63 +49,71 @@ class UsersController extends Controller
 
     public function store(StoreUserRequest $request): RedirectResponse
     {
-        User::create([
+        User::query()->create([
             'name' => $request->validated('name'),
             'email' => $request->validated('email'),
             'password' => $request->validated('password'),
             'is_admin' => $request->boolean('is_admin'),
         ]);
 
-        return back()->with('success', 'User created.');
+        return Redirect::back()->with('success', 'User created.');
     }
 
-    public function update(UpdateUserRequest $request, User $user): RedirectResponse
-    {
+    public function update(
+        UpdateUserRequest $request,
+        User $user,
+    ): RedirectResponse {
         $user->update($request->validated());
 
-        return back()->with('success', 'User updated.');
+        return Redirect::back()->with('success', 'User updated.');
     }
 
     public function suspend(Request $request, User $user): RedirectResponse
     {
         if ($user->is($request->user())) {
-            return back()->withErrors(['suspend' => 'You cannot suspend yourself.']);
+            return Redirect::back()->withErrors([
+                'suspend' => 'You cannot suspend yourself.',
+            ]);
         }
 
         $user->update(['suspended_at' => now()]);
 
-        return back()->with('success', "{$user->name} has been suspended.");
+        return Redirect::back()->with('success', "{$user->name} has been suspended.");
     }
 
     public function unsuspend(User $user): RedirectResponse
     {
         $user->update(['suspended_at' => null]);
 
-        return back()->with('success', "{$user->name} has been unsuspended.");
+        return Redirect::back()->with('success', "{$user->name} has been unsuspended.");
     }
 
     public function impersonate(Request $request, User $user): RedirectResponse
     {
         if ($user->is($request->user())) {
-            return back()->withErrors(['impersonate' => 'You cannot impersonate yourself.']);
+            return Redirect::back()->withErrors([
+                'impersonate' => 'You cannot impersonate yourself.',
+            ]);
         }
 
         $request->session()->put('impersonator_id', $request->user()->id);
 
         Auth::login($user);
 
-        return redirect()->route('home');
+        return Redirect::route('home');
     }
 
     public function destroy(Request $request, User $user): RedirectResponse
     {
         if ($user->is($request->user())) {
-            return back()->withErrors(['delete' => 'You cannot delete yourself.']);
+            return Redirect::back()->withErrors([
+                'delete' => 'You cannot delete yourself.',
+            ]);
         }
 
         $user->delete();
 
-        return back()->with('success', "{$user->name} has been deleted.");
+        return Redirect::back()->with('success', "{$user->name} has been deleted.");
     }
 
     public function bulkDestroy(Request $request): RedirectResponse
@@ -107,14 +123,18 @@ class UsersController extends Controller
             'ids.*' => ['required', 'integer', 'exists:users,id'],
         ]);
 
-        $ids = collect($request->input('ids'))
-            ->reject(fn (int $id) => $id === $request->user()->id);
+        $ids = collect($request->input('ids'))->reject(
+            fn (int $id) => $id === $request->user()->id,
+        );
 
-        User::whereIn('id', $ids)->delete();
+        User::query()->whereIn('id', $ids)->delete();
 
         $count = $ids->count();
 
-        return back()->with('success', "{$count} ".str('user')->plural($count).' deleted.');
+        return Redirect::back()->with(
+            'success',
+            "{$count} ".Str::plural('user', $count).' deleted.',
+        );
     }
 
     public function stopImpersonating(Request $request): RedirectResponse
@@ -125,6 +145,6 @@ class UsersController extends Controller
             Auth::loginUsingId($adminId);
         }
 
-        return redirect()->route('admin.users.index');
+        return Redirect::route('admin.users.index');
     }
 }

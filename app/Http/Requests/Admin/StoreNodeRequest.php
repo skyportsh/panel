@@ -19,9 +19,19 @@ class StoreNodeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255', Rule::unique('nodes', 'name')],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('nodes', 'name'),
+            ],
             'location_id' => ['required', 'integer', 'exists:locations,id'],
-            'fqdn' => ['required', 'string', 'max:255', Rule::unique('nodes', 'fqdn')],
+            'fqdn' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('nodes', 'fqdn'),
+            ],
             'daemon_port' => ['required', 'integer', 'between:1,65535'],
             'sftp_port' => ['required', 'integer', 'between:1,65535'],
             'use_ssl' => ['nullable', 'boolean'],

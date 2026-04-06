@@ -8,6 +8,7 @@ use App\Http\Requests\Settings\TwoFactorAuthenticationRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Fortify\Features;
@@ -63,6 +64,6 @@ class SecurityController extends Controller implements HasMiddleware
             'password' => $request->password,
         ]);
 
-        return back();
+        return Redirect::back();
     }
 }

@@ -17,8 +17,11 @@ class PasskeyService
     /**
      * @return array{publicKey: array<string, mixed>}
      */
-    public function registrationOptions(User $user, Session $session, string $rpId): array
-    {
+    public function registrationOptions(
+        User $user,
+        Session $session,
+        string $rpId,
+    ): array {
         $challenge = Base64Url::encode(random_bytes(32));
 
         $session->put(self::REGISTRATION_SESSION_KEY, [
@@ -34,13 +37,16 @@ class PasskeyService
                     'userVerification' => 'preferred',
                 ],
                 'challenge' => $challenge,
-                'excludeCredentials' => $user->passkeys()
+                'excludeCredentials' => $user
+                    ->passkeys()
                     ->get(['credential_id', 'transports'])
-                    ->map(fn (Passkey $passkey): array => [
-                        'id' => $passkey->credential_id,
-                        'transports' => $passkey->transports ?? [],
-                        'type' => 'public-key',
-                    ])
+                    ->map(
+                        fn (Passkey $passkey): array => [
+                            'id' => $passkey->credential_id,
+                            'transports' => $passkey->transports ?? [],
+                            'type' => 'public-key',
+                        ],
+                    )
                     ->values()
                     ->all(),
                 'pubKeyCredParams' => [
@@ -64,45 +70,81 @@ class PasskeyService
     /**
      * @param  array{name?: ?string, credential: array<string, mixed>}  $payload
      */
-    public function register(User $user, Session $session, array $payload, string $origin, string $rpId): Passkey
-    {
+    public function register(
+        User $user,
+        Session $session,
+        array $payload,
+        string $origin,
+        string $rpId,
+    ): Passkey {
         $registrationSession = $session->pull(self::REGISTRATION_SESSION_KEY);
 
-        if (! is_array($registrationSession) || ($registrationSession['user_id'] ?? null) !== $user->getKey()) {
+        if (
+            ! is_array($registrationSession) ||
+            ($registrationSession['user_id'] ?? null) !== $user->getKey()
+        ) {
             throw ValidationException::withMessages([
                 'passkey' => 'Your passkey setup session has expired. Try again.',
             ]);
         }
 
         $credential = $payload['credential'];
-        $clientDataJson = Base64Url::decode($credential['response']['clientDataJSON']);
+        $clientDataJson = Base64Url::decode(
+            $credential['response']['clientDataJSON'],
+        );
         $clientData = json_decode($clientDataJson, true);
 
         if (! is_array($clientData)) {
-            throw $this->validationException('passkey', 'The passkey response was invalid.');
+            throw $this->validationException(
+                'passkey',
+                'The passkey response was invalid.',
+            );
         }
 
-        $this->assertClientData($clientData, 'webauthn.create', $registrationSession['challenge'], $origin);
+        $this->assertClientData(
+            $clientData,
+            'webauthn.create',
+            $registrationSession['challenge'],
+            $origin,
+        );
 
-        $attestationObject = Base64Url::decode($credential['response']['attestationObject']);
+        $attestationObject = Base64Url::decode(
+            $credential['response']['attestationObject'],
+        );
         $attestation = CborDecoder::decodeFirst($attestationObject)['value'];
 
-        if (! is_array($attestation) || ! isset($attestation['authData']) || ! is_string($attestation['authData'])) {
-            throw $this->validationException('passkey', 'The passkey attestation was invalid.');
+        if (
+            ! is_array($attestation) ||
+            ! isset($attestation['authData']) ||
+            ! is_string($attestation['authData'])
+        ) {
+            throw $this->validationException(
+                'passkey',
+                'The passkey attestation was invalid.',
+            );
         }
 
-        $authenticatorData = $this->parseAuthenticatorData($attestation['authData'], true);
+        $authenticatorData = $this->parseAuthenticatorData(
+            $attestation['authData'],
+            true,
+        );
         $this->assertRpIdHash($authenticatorData['rpIdHash'], $rpId);
 
         $credentialId = Base64Url::encode($authenticatorData['credentialId']);
         $rawId = Base64Url::encode(Base64Url::decode($credential['rawId']));
 
         if (! hash_equals($credentialId, $rawId)) {
-            throw $this->validationException('passkey', 'The passkey identifier did not match the attestation.');
+            throw $this->validationException(
+                'passkey',
+                'The passkey identifier did not match the attestation.',
+            );
         }
 
         if (Passkey::query()->where('credential_id', $credentialId)->exists()) {
-            throw $this->validationException('passkey', 'This passkey has already been registered.');
+            throw $this->validationException(
+                'passkey',
+                'This passkey has already been registered.',
+            );
         }
 
         return $user->passkeys()->create([
@@ -110,7 +152,9 @@ class PasskeyService
             'counter' => $authenticatorData['signCount'],
             'credential_id' => $credentialId,
             'name' => $this->passkeyName($user, $payload['name'] ?? null),
-            'public_key' => CoseKey::toPem($authenticatorData['credentialPublicKey']),
+            'public_key' => CoseKey::toPem(
+                $authenticatorData['credentialPublicKey'],
+            ),
             'transports' => $credential['response']['transports'] ?? [],
         ]);
     }
@@ -140,9 +184,16 @@ class PasskeyService
     /**
      * @param  array{credential: array<string, mixed>, remember?: bool}  $payload
      */
-    public function authenticate(StatefulGuard $guard, Session $session, array $payload, string $origin, string $rpId): User
-    {
-        $authenticationSession = $session->pull(self::AUTHENTICATION_SESSION_KEY);
+    public function authenticate(
+        StatefulGuard $guard,
+        Session $session,
+        array $payload,
+        string $origin,
+        string $rpId,
+    ): User {
+        $authenticationSession = $session->pull(
+            self::AUTHENTICATION_SESSION_KEY,
+        );
 
         if (! is_array($authenticationSession)) {
             throw ValidationException::withMessages([
@@ -151,50 +202,99 @@ class PasskeyService
         }
 
         $credential = $payload['credential'];
-        $credentialId = Base64Url::encode(Base64Url::decode($credential['rawId']));
-        $passkey = Passkey::query()->with('user')->where('credential_id', $credentialId)->first();
+        $credentialId = Base64Url::encode(
+            Base64Url::decode($credential['rawId']),
+        );
+        $passkey = Passkey::query()
+            ->with('user')
+            ->where('credential_id', $credentialId)
+            ->first();
 
         if ($passkey === null) {
-            throw $this->validationException('passkey', 'We could not find a matching passkey.');
+            throw $this->validationException(
+                'passkey',
+                'We could not find a matching passkey.',
+            );
         }
 
-        $clientDataJson = Base64Url::decode($credential['response']['clientDataJSON']);
+        $clientDataJson = Base64Url::decode(
+            $credential['response']['clientDataJSON'],
+        );
         $clientData = json_decode($clientDataJson, true);
 
         if (! is_array($clientData)) {
-            throw $this->validationException('passkey', 'The passkey response was invalid.');
+            throw $this->validationException(
+                'passkey',
+                'The passkey response was invalid.',
+            );
         }
 
-        $this->assertClientData($clientData, 'webauthn.get', $authenticationSession['challenge'], $origin);
+        $this->assertClientData(
+            $clientData,
+            'webauthn.get',
+            $authenticationSession['challenge'],
+            $origin,
+        );
 
-        $authenticatorDataBinary = Base64Url::decode($credential['response']['authenticatorData']);
-        $authenticatorData = $this->parseAuthenticatorData($authenticatorDataBinary, false);
+        $authenticatorDataBinary = Base64Url::decode(
+            $credential['response']['authenticatorData'],
+        );
+        $authenticatorData = $this->parseAuthenticatorData(
+            $authenticatorDataBinary,
+            false,
+        );
         $this->assertRpIdHash($authenticatorData['rpIdHash'], $rpId);
 
         if (($authenticatorData['flags'] & 0x01) !== 0x01) {
-            throw $this->validationException('passkey', 'The passkey assertion did not prove user presence.');
+            throw $this->validationException(
+                'passkey',
+                'The passkey assertion did not prove user presence.',
+            );
         }
 
         $signature = Base64Url::decode($credential['response']['signature']);
-        $signedBytes = $authenticatorDataBinary.hash('sha256', $clientDataJson, true);
-        $verification = openssl_verify($signedBytes, $signature, $passkey->public_key, OPENSSL_ALGO_SHA256);
+        $signedBytes =
+            $authenticatorDataBinary.hash('sha256', $clientDataJson, true);
+        $verification = openssl_verify(
+            $signedBytes,
+            $signature,
+            $passkey->public_key,
+            OPENSSL_ALGO_SHA256,
+        );
 
         if ($verification !== 1) {
-            throw $this->validationException('passkey', 'The passkey signature could not be verified.');
+            throw $this->validationException(
+                'passkey',
+                'The passkey signature could not be verified.',
+            );
         }
 
-        if ($authenticatorData['signCount'] > 0 && $authenticatorData['signCount'] <= $passkey->counter) {
-            throw $this->validationException('passkey', 'This passkey response could not be trusted.');
+        if (
+            $authenticatorData['signCount'] > 0 &&
+            $authenticatorData['signCount'] <= $passkey->counter
+        ) {
+            throw $this->validationException(
+                'passkey',
+                'This passkey response could not be trusted.',
+            );
         }
 
         if ($passkey->user->isSuspended()) {
-            throw $this->validationException('passkey', 'This account is suspended.');
+            throw $this->validationException(
+                'passkey',
+                'This account is suspended.',
+            );
         }
 
-        $passkey->forceFill([
-            'counter' => max($passkey->counter, $authenticatorData['signCount']),
-            'last_used_at' => now(),
-        ])->save();
+        $passkey
+            ->forceFill([
+                'counter' => max(
+                    $passkey->counter,
+                    $authenticatorData['signCount'],
+                ),
+                'last_used_at' => now(),
+            ])
+            ->save();
 
         $guard->login($passkey->user, (bool) ($payload['remember'] ?? false));
         $session->regenerate();
@@ -212,10 +312,15 @@ class PasskeyService
      *     credentialPublicKey: array<int|string, mixed>|null
      * }
      */
-    private function parseAuthenticatorData(string $payload, bool $requireAttestedCredentialData): array
-    {
+    private function parseAuthenticatorData(
+        string $payload,
+        bool $requireAttestedCredentialData,
+    ): array {
         if (strlen($payload) < 37) {
-            throw $this->validationException('passkey', 'The authenticator data was incomplete.');
+            throw $this->validationException(
+                'passkey',
+                'The authenticator data was incomplete.',
+            );
         }
 
         $offset = 0;
@@ -239,14 +344,20 @@ class PasskeyService
 
         if (($flags & 0x40) !== 0x40) {
             if ($requireAttestedCredentialData) {
-                throw $this->validationException('passkey', 'The authenticator data did not contain a credential.');
+                throw $this->validationException(
+                    'passkey',
+                    'The authenticator data did not contain a credential.',
+                );
             }
 
             return $result;
         }
 
         if (strlen($payload) < $offset + 18) {
-            throw $this->validationException('passkey', 'The authenticator attestation data was incomplete.');
+            throw $this->validationException(
+                'passkey',
+                'The authenticator attestation data was incomplete.',
+            );
         }
 
         $aaguid = substr($payload, $offset, 16);
@@ -259,13 +370,21 @@ class PasskeyService
         $offset += $credentialLength;
 
         if (strlen($credentialId) !== $credentialLength) {
-            throw $this->validationException('passkey', 'The authenticator credential data was invalid.');
+            throw $this->validationException(
+                'passkey',
+                'The authenticator credential data was invalid.',
+            );
         }
 
-        $credentialPublicKey = CborDecoder::decodeFirst(substr($payload, $offset))['value'];
+        $credentialPublicKey = CborDecoder::decodeFirst(
+            substr($payload, $offset),
+        )['value'];
 
         if (! is_array($credentialPublicKey)) {
-            throw $this->validationException('passkey', 'The credential public key was invalid.');
+            throw $this->validationException(
+                'passkey',
+                'The credential public key was invalid.',
+            );
         }
 
         $result['aaguid'] = $aaguid;
@@ -278,20 +397,33 @@ class PasskeyService
     /**
      * @param  array<string, mixed>  $clientData
      */
-    private function assertClientData(array $clientData, string $expectedType, string $expectedChallenge, string $origin): void
-    {
+    private function assertClientData(
+        array $clientData,
+        string $expectedType,
+        string $expectedChallenge,
+        string $origin,
+    ): void {
         if (($clientData['type'] ?? null) !== $expectedType) {
-            throw $this->validationException('passkey', 'The passkey response type was invalid.');
+            throw $this->validationException(
+                'passkey',
+                'The passkey response type was invalid.',
+            );
         }
 
         if (($clientData['challenge'] ?? null) !== $expectedChallenge) {
-            throw $this->validationException('passkey', 'The passkey challenge did not match.');
+            throw $this->validationException(
+                'passkey',
+                'The passkey challenge did not match.',
+            );
         }
 
         $clientOrigin = $clientData['origin'] ?? null;
 
         if (! is_string($clientOrigin)) {
-            throw $this->validationException('passkey', 'The passkey response came from an unexpected origin.');
+            throw $this->validationException(
+                'passkey',
+                'The passkey response came from an unexpected origin.',
+            );
         }
 
         $expectedOrigins = array_filter([
@@ -299,15 +431,27 @@ class PasskeyService
             $this->normalizeOrigin((string) config('app.url')),
         ]);
 
-        if (! in_array($this->normalizeOrigin($clientOrigin), $expectedOrigins, true)) {
-            throw $this->validationException('passkey', 'The passkey response came from an unexpected origin.');
+        if (
+            ! in_array(
+                $this->normalizeOrigin($clientOrigin),
+                $expectedOrigins,
+                true,
+            )
+        ) {
+            throw $this->validationException(
+                'passkey',
+                'The passkey response came from an unexpected origin.',
+            );
         }
     }
 
     private function assertRpIdHash(string $rpIdHash, string $rpId): void
     {
         if (! hash_equals(hash('sha256', $rpId, true), $rpIdHash)) {
-            throw $this->validationException('passkey', 'The passkey response targeted an unexpected relying party.');
+            throw $this->validationException(
+                'passkey',
+                'The passkey response targeted an unexpected relying party.',
+            );
         }
     }
 
@@ -344,8 +488,10 @@ class PasskeyService
         );
     }
 
-    private function validationException(string $field, string $message): ValidationException
-    {
+    private function validationException(
+        string $field,
+        string $message,
+    ): ValidationException {
         return ValidationException::withMessages([$field => $message]);
     }
 

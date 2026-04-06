@@ -8,6 +8,8 @@ use App\Http\Requests\Admin\UpdateLocationRequest;
 use App\Models\Location;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,9 +19,13 @@ class LocationsController extends Controller
     {
         $locations = Location::query()
             ->withCount('nodes')
-            ->when($request->input('search'), function ($query, string $search) {
+            ->when($request->input('search'), function (
+                $query,
+                string $search,
+            ) {
                 $query->where(function ($subQuery) use ($search) {
-                    $subQuery->where('name', 'like', "%{$search}%")
+                    $subQuery
+                        ->where('name', 'like', "%{$search}%")
                         ->orWhere('country', 'like', "%{$search}%");
                 });
             })
@@ -37,23 +43,25 @@ class LocationsController extends Controller
 
     public function store(StoreLocationRequest $request): RedirectResponse
     {
-        Location::create($request->validated());
+        Location::query()->create($request->validated());
 
-        return back()->with('success', 'Location created.');
+        return Redirect::back()->with('success', 'Location created.');
     }
 
-    public function update(UpdateLocationRequest $request, Location $location): RedirectResponse
-    {
+    public function update(
+        UpdateLocationRequest $request,
+        Location $location,
+    ): RedirectResponse {
         $location->update($request->validated());
 
-        return back()->with('success', 'Location updated.');
+        return Redirect::back()->with('success', 'Location updated.');
     }
 
     public function destroy(Location $location): RedirectResponse
     {
         $location->delete();
 
-        return back()->with('success', 'Location deleted.');
+        return Redirect::back()->with('success', 'Location deleted.');
     }
 
     public function bulkDestroy(Request $request): RedirectResponse
@@ -66,8 +74,11 @@ class LocationsController extends Controller
         $ids = $validated['ids'];
         $count = count($ids);
 
-        Location::whereIn('id', $ids)->delete();
+        Location::query()->whereIn('id', $ids)->delete();
 
-        return back()->with('success', $count.' '.str('location')->plural($count).' deleted.');
+        return Redirect::back()->with(
+            'success',
+            $count.' '.Str::plural('location', $count).' deleted.',
+        );
     }
 }

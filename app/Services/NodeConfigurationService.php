@@ -12,14 +12,17 @@ class NodeConfigurationService
 {
     private const DEFAULT_DAEMON_UUID = '00000000-0000-0000-0000-000000000000';
 
-    public function __construct(private PanelVersionService $panelVersionService) {}
+    public function __construct(
+        private PanelVersionService $panelVersionService,
+    ) {}
 
     public function issue(Node $node): array
     {
         $token = Str::random(64);
         $expiresAt = CarbonImmutable::now()->addHour();
 
-        $credential = $node->credential ?? new NodeCredential(['node_id' => $node->id]);
+        $credential =
+            $node->credential ?? new NodeCredential(['node_id' => $node->id]);
 
         $credential->fill([
             'enrollment_token_hash' => $this->hash($token),
@@ -31,12 +34,14 @@ class NodeConfigurationService
         ]);
         $credential->save();
 
-        $node->forceFill([
-            'status' => 'configured',
-            'daemon_uuid' => null,
-            'daemon_version' => null,
-            'enrolled_at' => null,
-        ])->save();
+        $node
+            ->forceFill([
+                'status' => 'configured',
+                'daemon_uuid' => null,
+                'daemon_version' => null,
+                'enrolled_at' => null,
+            ])
+            ->save();
 
         return [
             'expires_at' => $expiresAt,
@@ -52,15 +57,24 @@ class NodeConfigurationService
             ->first();
 
         if (! $credential || ! $credential->node) {
-            throw new InvalidArgumentException('The enrollment token is invalid.');
+            throw new InvalidArgumentException(
+                'The enrollment token is invalid.',
+            );
         }
 
-        if (! $credential->enrollment_expires_at || $credential->enrollment_expires_at->isPast()) {
-            throw new InvalidArgumentException('The enrollment token has expired.');
+        if (
+            ! $credential->enrollment_expires_at ||
+            $credential->enrollment_expires_at->isPast()
+        ) {
+            throw new InvalidArgumentException(
+                'The enrollment token has expired.',
+            );
         }
 
         if ($credential->enrollment_used_at) {
-            throw new InvalidArgumentException('The enrollment token has already been used.');
+            throw new InvalidArgumentException(
+                'The enrollment token has already been used.',
+            );
         }
 
         $this->panelVersionService->ensureCompatible($payload['version']);
@@ -79,12 +93,14 @@ class NodeConfigurationService
         ]);
         $credential->save();
 
-        $node->forceFill([
-            'status' => 'online',
-            'daemon_uuid' => $daemonUuid,
-            'daemon_version' => $payload['version'],
-            'enrolled_at' => $issuedAt,
-        ])->save();
+        $node
+            ->forceFill([
+                'status' => 'online',
+                'daemon_uuid' => $daemonUuid,
+                'daemon_version' => $payload['version'],
+                'enrolled_at' => $issuedAt,
+            ])
+            ->save();
 
         $node = $node->fresh('location') ?? $node;
 
@@ -125,13 +141,16 @@ class NodeConfigurationService
             'location_name' => $node->location->name,
             'name' => $node->name,
             'sftp_port' => $node->sftp_port,
-            'updated_at' => $node->updated_at?->toIso8601String() ?? now()->toIso8601String(),
+            'updated_at' => $node->updated_at?->toIso8601String() ??
+                now()->toIso8601String(),
             'use_ssl' => $node->use_ssl,
         ];
     }
 
-    private function resolveDaemonUuid(string $requestedUuid, Node $node): string
-    {
+    private function resolveDaemonUuid(
+        string $requestedUuid,
+        Node $node,
+    ): string {
         if ($requestedUuid !== self::DEFAULT_DAEMON_UUID) {
             return $requestedUuid;
         }

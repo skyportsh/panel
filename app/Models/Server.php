@@ -8,18 +8,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable([
-    'user_id',
-    'node_id',
-    'cargo_id',
-    'allocation_id',
-    'name',
-    'memory_mib',
-    'cpu_limit',
-    'disk_mib',
-    'status',
-    'last_error',
-])]
+#[
+    Fillable([
+        'user_id',
+        'node_id',
+        'cargo_id',
+        'allocation_id',
+        'name',
+        'memory_mib',
+        'cpu_limit',
+        'disk_mib',
+        'status',
+        'last_error',
+    ]),
+]
 class Server extends Model
 {
     /** @use HasFactory<ServerFactory> */

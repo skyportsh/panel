@@ -45,19 +45,25 @@ class NodeHeartbeatService
         $node = $credential->node;
 
         if ($node->daemon_uuid && $node->daemon_uuid !== $payload['uuid']) {
-            throw new InvalidArgumentException('The daemon identity does not match this node.');
+            throw new InvalidArgumentException(
+                'The daemon identity does not match this node.',
+            );
         }
 
-        $node->forceFill([
-            'status' => 'online',
-            'daemon_version' => $payload['version'],
-            'last_seen_at' => Carbon::now(),
-        ])->save();
+        $node
+            ->forceFill([
+                'status' => 'online',
+                'daemon_version' => $payload['version'],
+                'last_seen_at' => Carbon::now(),
+            ])
+            ->save();
 
         $node = $node->fresh(['location']) ?? $node;
 
         return [
-            'configuration' => $this->nodeConfigurationService->configurationPayload($node),
+            'configuration' => $this->nodeConfigurationService->configurationPayload(
+                $node,
+            ),
             'node' => $node,
         ];
     }

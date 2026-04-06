@@ -21,9 +21,19 @@ class UpdateNodeRequest extends FormRequest
         $nodeId = $this->route('node')?->id;
 
         return [
-            'name' => ['required', 'string', 'max:255', Rule::unique('nodes', 'name')->ignore($nodeId)],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('nodes', 'name')->ignore($nodeId),
+            ],
             'location_id' => ['required', 'integer', 'exists:locations,id'],
-            'fqdn' => ['required', 'string', 'max:255', Rule::unique('nodes', 'fqdn')->ignore($nodeId)],
+            'fqdn' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('nodes', 'fqdn')->ignore($nodeId),
+            ],
             'daemon_port' => ['required', 'integer', 'between:1,65535'],
             'sftp_port' => ['required', 'integer', 'between:1,65535'],
             'use_ssl' => ['nullable', 'boolean'],

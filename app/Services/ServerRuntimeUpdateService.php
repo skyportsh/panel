@@ -8,10 +8,15 @@ use InvalidArgumentException;
 
 class ServerRuntimeUpdateService
 {
-    public function __construct(private PanelVersionService $panelVersionService) {}
+    public function __construct(
+        private PanelVersionService $panelVersionService,
+    ) {}
 
-    public function record(string $daemonSecret, Server $server, array $payload): Server
-    {
+    public function record(
+        string $daemonSecret,
+        Server $server,
+        array $payload,
+    ): Server {
         $credential = NodeCredential::query()
             ->with('node')
             ->where('daemon_secret_hash', hash('sha256', $daemonSecret))
@@ -23,18 +28,27 @@ class ServerRuntimeUpdateService
 
         $this->panelVersionService->ensureCompatible($payload['version']);
 
-        if ($credential->node->daemon_uuid && $credential->node->daemon_uuid !== $payload['uuid']) {
-            throw new InvalidArgumentException('The daemon identity does not match this node.');
+        if (
+            $credential->node->daemon_uuid &&
+            $credential->node->daemon_uuid !== $payload['uuid']
+        ) {
+            throw new InvalidArgumentException(
+                'The daemon identity does not match this node.',
+            );
         }
 
         if ($server->node_id !== $credential->node->id) {
-            throw new InvalidArgumentException('The server does not belong to this node.');
+            throw new InvalidArgumentException(
+                'The server does not belong to this node.',
+            );
         }
 
-        $server->forceFill([
-            'last_error' => $payload['last_error'] ?? null,
-            'status' => $payload['status'],
-        ])->save();
+        $server
+            ->forceFill([
+                'last_error' => $payload['last_error'] ?? null,
+                'status' => $payload['status'],
+            ])
+            ->save();
 
         return $server->fresh() ?? $server;
     }

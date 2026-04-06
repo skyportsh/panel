@@ -24,7 +24,6 @@ use Laravel\Octane\Listeners\StopWorkerIfNecessary;
 use Laravel\Octane\Octane;
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Octane Server
@@ -114,9 +113,7 @@ return [
             StopWorkerIfNecessary::class,
         ],
 
-        WorkerStopping::class => [
-            CloseMonologHandlers::class,
-        ],
+        WorkerStopping::class => [CloseMonologHandlers::class],
     ],
 
     /*
@@ -130,9 +127,7 @@ return [
     |
     */
 
-    'warm' => [
-        ...Octane::defaultServicesToWarm(),
-    ],
+    'warm' => [...Octane::defaultServicesToWarm()],
 
     'flush' => [
         //
@@ -220,5 +215,4 @@ return [
     */
 
     'max_execution_time' => 30,
-
 ];

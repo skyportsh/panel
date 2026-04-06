@@ -6,12 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateAppSettingsRequest;
 use App\Services\AppSettingsService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class SettingsController extends Controller
 {
-    public function __construct(private AppSettingsService $appSettingsService) {}
+    public function __construct(
+        private AppSettingsService $appSettingsService,
+    ) {}
 
     public function index(): Response
     {
@@ -26,6 +29,6 @@ class SettingsController extends Controller
     {
         $this->appSettingsService->setAppName($request->validated('app_name'));
 
-        return back()->with('success', 'Settings updated.');
+        return Redirect::back()->with('success', 'Settings updated.');
     }
 }
