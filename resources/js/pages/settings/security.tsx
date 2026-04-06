@@ -1,24 +1,24 @@
-import { Form, Head } from '@inertiajs/react';
-import { KeyRound, ShieldCheck, Trash2 } from 'lucide-react';
-import { useRef, useState } from 'react';
-import { toast } from '@/components/ui/sonner';
-import PasskeyController from '@/actions/App/Http/Controllers/Settings/PasskeyController';
-import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
-import Heading from '@/components/heading';
-import InputError from '@/components/input-error';
-import PasswordInput from '@/components/password-input';
-import TwoFactorRecoveryCodes from '@/components/two-factor-recovery-codes';
-import TwoFactorSetupModal from '@/components/two-factor-setup-modal';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
-import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
-import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
-import { passkeysAreSupported, registerPasskey } from '@/lib/passkeys';
-import { edit } from '@/routes/security';
-import { disable, enable } from '@/routes/two-factor';
-import type { BreadcrumbItem, Passkey } from '@/types';
+import { Form, Head } from "@inertiajs/react";
+import { KeyRound, ShieldCheck, Trash2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { toast } from "@/components/ui/sonner";
+import PasskeyController from "@/actions/App/Http/Controllers/Settings/PasskeyController";
+import SecurityController from "@/actions/App/Http/Controllers/Settings/SecurityController";
+import Heading from "@/components/heading";
+import InputError from "@/components/input-error";
+import PasswordInput from "@/components/password-input";
+import TwoFactorRecoveryCodes from "@/components/two-factor-recovery-codes";
+import TwoFactorSetupModal from "@/components/two-factor-setup-modal";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
+import { useTwoFactorAuth } from "@/hooks/use-two-factor-auth";
+import AppLayout from "@/layouts/app-layout";
+import SettingsLayout from "@/layouts/settings/layout";
+import { passkeysAreSupported, registerPasskey } from "@/lib/passkeys";
+import { edit } from "@/routes/security";
+import { disable, enable } from "@/routes/two-factor";
+import type { BreadcrumbItem, Passkey } from "@/types";
 
 type Props = {
     canManageTwoFactor?: boolean;
@@ -29,7 +29,7 @@ type Props = {
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Security settings',
+        title: "Security settings",
         href: edit(),
     },
 ];
@@ -37,7 +37,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 function csrfToken(): string {
     return (
         document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
-            ?.content ?? ''
+            ?.content ?? ""
     );
 }
 
@@ -72,7 +72,7 @@ export default function Security({
 
     const handleAddPasskey = async (): Promise<void> => {
         if (!passkeysAreSupported()) {
-            toast.error('This browser does not support passkeys.');
+            toast.error("This browser does not support passkeys.");
 
             return;
         }
@@ -83,16 +83,16 @@ export default function Security({
             await registerPasskey(
                 PasskeyController.create.url(),
                 PasskeyController.store.url(),
-                'Passkey',
+                "Passkey",
             );
 
-            toast.success('Passkey added');
+            toast.success("Passkey added");
             window.location.reload();
         } catch (error) {
             const message =
                 error instanceof Error
                     ? error.message
-                    : 'Unable to add passkey.';
+                    : "Unable to add passkey.";
             toast.error(message);
         } finally {
             setRegisteringPasskey(false);
@@ -106,28 +106,28 @@ export default function Security({
             const response = await fetch(
                 PasskeyController.destroy.url(passkey.id),
                 {
-                    credentials: 'same-origin',
+                    credentials: "same-origin",
                     headers: {
-                        Accept: 'application/json',
-                        'X-CSRF-TOKEN': csrfToken(),
+                        Accept: "application/json",
+                        "X-CSRF-TOKEN": csrfToken(),
                     },
-                    method: 'DELETE',
+                    method: "DELETE",
                 },
             );
 
             if (!response.ok) {
-                throw new Error('Unable to remove passkey.');
+                throw new Error("Unable to remove passkey.");
             }
 
             setPasskeysList((current) =>
                 current.filter(({ id }) => id !== passkey.id),
             );
-            toast.success('Passkey removed');
+            toast.success("Passkey removed");
         } catch (error) {
             const message =
                 error instanceof Error
                     ? error.message
-                    : 'Unable to remove passkey.';
+                    : "Unable to remove passkey.";
             toast.error(message);
         } finally {
             setRemovingPasskeyId(null);
@@ -156,8 +156,8 @@ export default function Security({
                                 </p>
                                 <p className="text-sm text-muted-foreground">
                                     {passkeysList.length > 0
-                                        ? 'You will be prompted to use a saved passkey when you visit the login page.'
-                                        : 'No passkeys added yet.'}
+                                        ? "You will be prompted to use a saved passkey when you visit the login page."
+                                        : "No passkeys added yet."}
                                 </p>
                             </div>
 
@@ -186,7 +186,7 @@ export default function Security({
                                             <p className="text-sm text-muted-foreground">
                                                 {passkey.last_used_at
                                                     ? `Last used ${new Date(passkey.last_used_at).toLocaleString()}`
-                                                    : 'Not used yet'}
+                                                    : "Not used yet"}
                                             </p>
                                         </div>
 
@@ -221,9 +221,9 @@ export default function Security({
                         {...SecurityController.update.form()}
                         options={{ preserveScroll: true }}
                         resetOnError={[
-                            'password',
-                            'password_confirmation',
-                            'current_password',
+                            "password",
+                            "password_confirmation",
+                            "current_password",
                         ]}
                         resetOnSuccess
                         onStart={() => {
@@ -238,7 +238,7 @@ export default function Security({
                                 Math.max(0, remaining),
                             );
                         }}
-                        onSuccess={() => toast.success('Password updated')}
+                        onSuccess={() => toast.success("Password updated")}
                         onError={(validationErrors) => {
                             if (validationErrors.password) {
                                 passwordInput.current?.focus();

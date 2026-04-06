@@ -1,15 +1,15 @@
-import { Head } from '@inertiajs/react';
-import { FolderTree } from 'lucide-react';
-import { show as serverConsole } from '@/actions/App/Http/Controllers/Client/ServerConsoleController';
-import { show as serverFilesystem } from '@/actions/App/Http/Controllers/Client/ServerFilesystemController';
-import AppLayout from '@/layouts/app-layout';
+import { Head } from "@inertiajs/react";
+import { FolderTree } from "lucide-react";
+import { show as serverConsole } from "@/actions/App/Http/Controllers/Client/ServerConsoleController";
+import { show as serverFilesystem } from "@/actions/App/Http/Controllers/Client/ServerFilesystemController";
+import AppLayout from "@/layouts/app-layout";
 import {
     formatServerAddress,
     statusLabel,
     statusTone,
-} from '@/lib/server-runtime';
-import { home } from '@/routes';
-import type { BreadcrumbItem } from '@/types';
+} from "@/lib/server-runtime";
+import { home } from "@/routes";
+import type { BreadcrumbItem } from "@/types";
 
 type Props = {
     server: {
@@ -31,7 +31,7 @@ type Props = {
 export default function ServerFilesystem({ server }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Home',
+            title: "Home",
             href: home(),
         },
         {
@@ -39,7 +39,7 @@ export default function ServerFilesystem({ server }: Props) {
             href: serverConsole(server.id),
         },
         {
-            title: 'Filesystem',
+            title: "Filesystem",
             href: serverFilesystem(server.id),
         },
     ];

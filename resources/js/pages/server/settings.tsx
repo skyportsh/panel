@@ -1,10 +1,10 @@
-import { Head } from '@inertiajs/react';
-import { AlertTriangle, RotateCcw } from 'lucide-react';
-import { useState } from 'react';
-import { show as serverConsole } from '@/actions/App/Http/Controllers/Client/ServerConsoleController';
-import { store as powerServer } from '@/actions/App/Http/Controllers/Client/ServerPowerController';
-import { show as serverSettings } from '@/actions/App/Http/Controllers/Client/ServerSettingsController';
-import { Button } from '@/components/ui/button';
+import { Head } from "@inertiajs/react";
+import { AlertTriangle, RotateCcw } from "lucide-react";
+import { useState } from "react";
+import { show as serverConsole } from "@/actions/App/Http/Controllers/Client/ServerConsoleController";
+import { store as powerServer } from "@/actions/App/Http/Controllers/Client/ServerPowerController";
+import { show as serverSettings } from "@/actions/App/Http/Controllers/Client/ServerSettingsController";
+import { Button } from "@/components/ui/button";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -14,17 +14,17 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Spinner } from '@/components/ui/spinner';
-import { toast } from '@/components/ui/sonner';
-import AppLayout from '@/layouts/app-layout';
+} from "@/components/ui/alert-dialog";
+import { Spinner } from "@/components/ui/spinner";
+import { toast } from "@/components/ui/sonner";
+import AppLayout from "@/layouts/app-layout";
 import {
     formatServerAddress,
     statusLabel,
     statusTone,
-} from '@/lib/server-runtime';
-import { home } from '@/routes';
-import type { BreadcrumbItem } from '@/types';
+} from "@/lib/server-runtime";
+import { home } from "@/routes";
+import type { BreadcrumbItem } from "@/types";
 
 type Props = {
     server: {
@@ -51,7 +51,7 @@ function csrfToken(): string {
     return (
         document
             .querySelector('meta[name="csrf-token"]')
-            ?.getAttribute('content') ?? ''
+            ?.getAttribute("content") ?? ""
     );
 }
 
@@ -62,7 +62,7 @@ export default function ServerSettings({ server }: Props) {
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Home',
+            title: "Home",
             href: home(),
         },
         {
@@ -70,7 +70,7 @@ export default function ServerSettings({ server }: Props) {
             href: serverConsole(server.id),
         },
         {
-            title: 'Settings',
+            title: "Settings",
             href: serverSettings(server.id),
         },
     ];
@@ -80,34 +80,35 @@ export default function ServerSettings({ server }: Props) {
 
         try {
             const response = await fetch(powerServer.url(server.id), {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken(),
-                    'X-Requested-With': 'XMLHttpRequest',
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": csrfToken(),
+                    "X-Requested-With": "XMLHttpRequest",
                 },
-                body: JSON.stringify({ signal: 'reinstall' }),
+                body: JSON.stringify({ signal: "reinstall" }),
             });
 
-            const payload = (await response.json().catch(() => null)) as
-                | { message?: string }
-                | null;
+            const payload = (await response.json().catch(() => null)) as {
+                message?: string;
+            } | null;
 
             if (!response.ok) {
                 throw new Error(
-                    payload?.message || 'The reinstall request could not be sent.',
+                    payload?.message ||
+                        "The reinstall request could not be sent.",
                 );
             }
 
-            setRuntimeState('installing');
+            setRuntimeState("installing");
             setConfirmOpen(false);
-            toast.success('Server reinstall requested');
+            toast.success("Server reinstall requested");
         } catch (error) {
             toast.error(
                 error instanceof Error
                     ? error.message
-                    : 'The reinstall request could not be sent.',
+                    : "The reinstall request could not be sent.",
             );
         } finally {
             setSubmitting(false);
@@ -142,7 +143,7 @@ export default function ServerSettings({ server }: Props) {
                     </div>
 
                     <div className="px-5 py-10 sm:px-6">
-                        <div className="rounded-2xl border border-[#d92400]/20 bg-[#d92400]/[0.04] p-5">
+                        <div className="rounded-2xl border border-[#d92400]/20 bg-[#d92400]/4 p-5">
                             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-2 text-[#d92400] dark:text-[#ff8a6b]">

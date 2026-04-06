@@ -1,19 +1,19 @@
-import { Head, router, useForm } from '@inertiajs/react';
-import { Ellipsis, Plus, Trash2 } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { Head, router, useForm } from "@inertiajs/react";
+import { Ellipsis, Plus, Trash2 } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
 import {
     bulkDestroy,
     destroy,
     index as adminLocations,
     store,
     update,
-} from '@/actions/App/Http/Controllers/Admin/LocationsController';
-import { ConfirmDeleteDialog, DataTable } from '@/components/admin/data-table';
-import type { Column, PaginatedData } from '@/components/admin/data-table';
-import { CountryFlagIcon, CountryFlagOption } from '@/components/country-flag';
-import InputError from '@/components/input-error';
-import { toast } from '@/components/ui/sonner';
-import { Button } from '@/components/ui/button';
+} from "@/actions/App/Http/Controllers/Admin/LocationsController";
+import { ConfirmDeleteDialog, DataTable } from "@/components/admin/data-table";
+import type { Column, PaginatedData } from "@/components/admin/data-table";
+import { CountryFlagIcon, CountryFlagOption } from "@/components/country-flag";
+import InputError from "@/components/input-error";
+import { toast } from "@/components/ui/sonner";
+import { Button } from "@/components/ui/button";
 import {
     Dialog,
     DialogContent,
@@ -21,31 +21,31 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
-} from '@/components/ui/select';
-import { SlidingTabs } from '@/components/ui/sliding-tabs';
-import type { Tab } from '@/components/ui/sliding-tabs';
-import { Spinner } from '@/components/ui/spinner';
-import { countryFlags } from '@/data/country-flags';
-import { useDialogState } from '@/hooks/use-dialog-state';
-import AdminLayout from '@/layouts/admin/layout';
-import AppLayout from '@/layouts/app-layout';
-import { formatDate, formatRelativeTime } from '@/lib/format';
-import { cn } from '@/lib/utils';
-import type { BreadcrumbItem } from '@/types';
+} from "@/components/ui/select";
+import { SlidingTabs } from "@/components/ui/sliding-tabs";
+import type { Tab } from "@/components/ui/sliding-tabs";
+import { Spinner } from "@/components/ui/spinner";
+import { countryFlags } from "@/data/country-flags";
+import { useDialogState } from "@/hooks/use-dialog-state";
+import AdminLayout from "@/layouts/admin/layout";
+import AppLayout from "@/layouts/app-layout";
+import { formatDate, formatRelativeTime } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import type { BreadcrumbItem } from "@/types";
 
 type AdminLocation = {
     id: number;
@@ -67,8 +67,8 @@ type LocationFormData = {
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Admin', href: adminLocations.url() },
-    { title: 'Locations', href: adminLocations.url() },
+    { title: "Admin", href: adminLocations.url() },
+    { title: "Locations", href: adminLocations.url() },
 ];
 
 const countryOptions = countryFlags
@@ -76,9 +76,9 @@ const countryOptions = countryFlags
     .toSorted((left, right) => left.localeCompare(right));
 
 const tabs: Tab[] = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'edit', label: 'Edit' },
-    { id: 'danger', label: 'Danger' },
+    { id: "overview", label: "Overview" },
+    { id: "edit", label: "Edit" },
+    { id: "danger", label: "Danger" },
 ];
 
 function StackedStatCard({
@@ -123,11 +123,11 @@ function CountrySelect({
             <SelectTrigger className="w-full">
                 <span
                     className={cn(
-                        'truncate',
-                        !value && 'text-muted-foreground',
+                        "truncate",
+                        !value && "text-muted-foreground",
                     )}
                 >
-                    {value || 'Choose a country'}
+                    {value || "Choose a country"}
                 </span>
             </SelectTrigger>
             <SelectContent>
@@ -160,7 +160,7 @@ function LocationFormFields({
                 <Input
                     id="location-name"
                     value={data.name}
-                    onChange={(event) => setData('name', event.target.value)}
+                    onChange={(event) => setData("name", event.target.value)}
                     placeholder="Frankfurt"
                     required
                 />
@@ -171,7 +171,7 @@ function LocationFormFields({
                 <Label>Country</Label>
                 <CountrySelect
                     value={data.country}
-                    onChange={(value) => setData('country', value)}
+                    onChange={(value) => setData("country", value)}
                 />
                 <InputError message={errors.country} />
             </div>
@@ -187,8 +187,8 @@ function CreateLocationModal({
     onClose: () => void;
 }) {
     const form = useForm<LocationFormData>({
-        name: '',
-        country: '',
+        name: "",
+        country: "",
     });
     const minimumMs = 500;
     const submitStart = useRef(0);
@@ -208,7 +208,7 @@ function CreateLocationModal({
                 setTimeout(() => setSubmitting(false), Math.max(0, remaining));
             },
             onSuccess: () => {
-                toast.success('Location created');
+                toast.success("Location created");
                 onClose();
             },
             onError: (errors) => {
@@ -262,7 +262,7 @@ function LocationModal({
     onClose: () => void;
     onDelete: (location: AdminLocation) => void;
 }) {
-    const [tab, setTab] = useState('overview');
+    const [tab, setTab] = useState("overview");
     const form = useForm<LocationFormData>({
         name: location.name,
         country: location.country,
@@ -285,7 +285,7 @@ function LocationModal({
                 setTimeout(() => setSubmitting(false), Math.max(0, remaining));
             },
             onSuccess: () => {
-                toast.success('Location updated');
+                toast.success("Location updated");
             },
             onError: (errors) => {
                 Object.values(errors).forEach((message) =>
@@ -331,28 +331,28 @@ function LocationModal({
                 <div className="border-t border-border/60" />
 
                 <div className="flex-1 overflow-y-auto px-6 py-6">
-                    {tab === 'overview' ? (
+                    {tab === "overview" ? (
                         <div className="flex gap-6">
                             <div className="min-w-0 flex-1 space-y-1">
                                 {[
                                     {
-                                        label: 'Location ID',
+                                        label: "Location ID",
                                         value: `#${location.id}`,
                                     },
-                                    { label: 'Name', value: location.name },
+                                    { label: "Name", value: location.name },
                                     {
-                                        label: 'Country',
+                                        label: "Country",
                                         value: location.country,
                                     },
                                     {
-                                        label: 'Created',
+                                        label: "Created",
                                         value: formatDate(
                                             location.created_at,
                                             true,
                                         ),
                                     },
                                     {
-                                        label: 'Last updated',
+                                        label: "Last updated",
                                         value: formatDate(
                                             location.updated_at,
                                             true,
@@ -373,14 +373,14 @@ function LocationModal({
                                 ))}
                             </div>
 
-                            <div className="w-[300px] shrink-0 space-y-3">
+                            <div className="w-75 shrink-0 space-y-3">
                                 <StackedStatCard
                                     label="Nodes"
                                     value={String(location.nodes_count)}
                                     description={
                                         location.nodes_count === 1
-                                            ? 'Attached node'
-                                            : 'Attached nodes'
+                                            ? "Attached node"
+                                            : "Attached nodes"
                                     }
                                 />
                                 <StackedStatCard
@@ -392,7 +392,7 @@ function LocationModal({
                         </div>
                     ) : null}
 
-                    {tab === 'edit' ? (
+                    {tab === "edit" ? (
                         <div className="max-w-xl">
                             <h3 className="text-sm font-semibold text-foreground">
                                 Details
@@ -424,7 +424,7 @@ function LocationModal({
                         </div>
                     ) : null}
 
-                    {tab === 'danger' ? (
+                    {tab === "danger" ? (
                         <div className="max-w-xl space-y-4">
                             <div className="overflow-hidden rounded-lg bg-muted/40">
                                 <div className="px-4 py-2.5">
@@ -490,8 +490,8 @@ export default function Locations({ locations, filters }: Props) {
 
     const columns: Column<AdminLocation>[] = [
         {
-            label: 'Location',
-            width: 'w-[42%]',
+            label: "Location",
+            width: "w-[42%]",
             render: (location) => (
                 <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/60">
@@ -509,8 +509,8 @@ export default function Locations({ locations, filters }: Props) {
             ),
         },
         {
-            label: 'Nodes',
-            width: 'w-[18%]',
+            label: "Nodes",
+            width: "w-[18%]",
             render: (location) => (
                 <div className="text-sm font-medium text-foreground">
                     {location.nodes_count}
@@ -518,8 +518,8 @@ export default function Locations({ locations, filters }: Props) {
             ),
         },
         {
-            label: 'Last updated',
-            width: 'flex-1',
+            label: "Last updated",
+            width: "flex-1",
             render: (location) => (
                 <span className="text-xs text-muted-foreground">
                     {formatRelativeTime(location.updated_at)}
@@ -607,7 +607,7 @@ export default function Locations({ locations, filters }: Props) {
                         setDeletingLocation(null);
                     }
                 }}
-                title={`Delete ${deletingLocation?.name ?? 'location'}?`}
+                title={`Delete ${deletingLocation?.name ?? "location"}?`}
                 description="This action cannot be undone. The selected location will be permanently removed."
                 loading={singleDeleting}
                 onConfirm={() => {

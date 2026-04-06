@@ -1,20 +1,20 @@
-import { Head, Link } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
-import Heading from '@/components/heading';
+import { Head, Link } from "@inertiajs/react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useState } from "react";
+import Heading from "@/components/heading";
 import {
     Dialog,
     DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
-} from '@/components/ui/dialog';
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
-import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
-import { cn } from '@/lib/utils';
-import { edit as editActivity } from '@/routes/activity';
-import type { BreadcrumbItem } from '@/types';
+} from "@/components/ui/dialog";
+import { PlaceholderPattern } from "@/components/ui/placeholder-pattern";
+import AppLayout from "@/layouts/app-layout";
+import SettingsLayout from "@/layouts/settings/layout";
+import { cn } from "@/lib/utils";
+import { edit as editActivity } from "@/routes/activity";
+import type { BreadcrumbItem } from "@/types";
 
 type ActivityItem = {
     action: string;
@@ -54,7 +54,7 @@ type Props = {
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Activity',
+        title: "Activity",
         href: editActivity(),
     },
 ];
@@ -65,27 +65,27 @@ function formatTimestamp(value: string | null): {
 } {
     if (!value) {
         return {
-            absolute: 'Unknown time',
-            relative: 'Unknown',
+            absolute: "Unknown time",
+            relative: "Unknown",
         };
     }
 
     const date = new Date(value);
-    const absolute = new Intl.DateTimeFormat('en-GB', {
-        dateStyle: 'medium',
-        timeStyle: 'short',
+    const absolute = new Intl.DateTimeFormat("en-GB", {
+        dateStyle: "medium",
+        timeStyle: "short",
     }).format(date);
     const differenceInMinutes = Math.round(
         (date.getTime() - Date.now()) / 60000,
     );
-    const relativeFormatter = new Intl.RelativeTimeFormat('en', {
-        numeric: 'auto',
+    const relativeFormatter = new Intl.RelativeTimeFormat("en", {
+        numeric: "auto",
     });
 
     if (Math.abs(differenceInMinutes) < 60) {
         return {
             absolute,
-            relative: relativeFormatter.format(differenceInMinutes, 'minute'),
+            relative: relativeFormatter.format(differenceInMinutes, "minute"),
         };
     }
 
@@ -94,7 +94,7 @@ function formatTimestamp(value: string | null): {
     if (Math.abs(differenceInHours) < 24) {
         return {
             absolute,
-            relative: relativeFormatter.format(differenceInHours, 'hour'),
+            relative: relativeFormatter.format(differenceInHours, "hour"),
         };
     }
 
@@ -102,27 +102,27 @@ function formatTimestamp(value: string | null): {
         absolute,
         relative: relativeFormatter.format(
             Math.round(differenceInHours / 24),
-            'day',
+            "day",
         ),
     };
 }
 
 function deviceLabel(userAgent: string | null): string {
-    const agent = userAgent?.toLowerCase() ?? '';
+    const agent = userAgent?.toLowerCase() ?? "";
 
     if (
-        agent.includes('iphone') ||
-        agent.includes('android') ||
-        agent.includes('mobile')
+        agent.includes("iphone") ||
+        agent.includes("android") ||
+        agent.includes("mobile")
     ) {
-        return 'Mobile device';
+        return "Mobile device";
     }
 
-    if (agent.includes('ipad') || agent.includes('tablet')) {
-        return 'Tablet';
+    if (agent.includes("ipad") || agent.includes("tablet")) {
+        return "Tablet";
     }
 
-    return 'Desktop browser';
+    return "Desktop browser";
 }
 
 function DetailRow({ label, value }: { label: string; value: string | null }) {
@@ -133,7 +133,7 @@ function DetailRow({ label, value }: { label: string; value: string | null }) {
     return (
         <div className="grid gap-1">
             <p className="text-xs text-muted-foreground">{label}</p>
-            <p className="text-sm break-words text-foreground">{value}</p>
+            <p className="text-sm wrap-reak-word text-foreground">{value}</p>
         </div>
     );
 }
@@ -245,7 +245,7 @@ export default function Activity({ activities, links, meta }: Props) {
                         {meta.lastPage > 1 ? (
                             <div className="flex flex-wrap items-center justify-between gap-4">
                                 <p className="text-sm text-muted-foreground">
-                                    Showing {meta.from ?? 0}-{meta.to ?? 0} of{' '}
+                                    Showing {meta.from ?? 0}-{meta.to ?? 0} of{" "}
                                     {meta.total.toLocaleString()}
                                 </p>
 
@@ -254,13 +254,13 @@ export default function Activity({ activities, links, meta }: Props) {
                                     aria-label="Activity pagination"
                                 >
                                     <Link
-                                        href={links[0]?.url ?? '#'}
+                                        href={links[0]?.url ?? "#"}
                                         preserveScroll
                                         className={cn(
-                                            'flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-all duration-150 ease-out active:scale-95 active:duration-0',
+                                            "flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-all duration-150 ease-out active:scale-95 active:duration-0",
                                             links[0]?.url
-                                                ? 'hover:bg-muted hover:text-foreground'
-                                                : 'pointer-events-none opacity-30',
+                                                ? "hover:bg-muted hover:text-foreground"
+                                                : "pointer-events-none opacity-30",
                                         )}
                                     >
                                         <ChevronLeft className="h-3.5 w-3.5" />
@@ -296,13 +296,13 @@ export default function Activity({ activities, links, meta }: Props) {
                                         return (
                                             <Link
                                                 key={`page-${page}`}
-                                                href={link.url ?? '#'}
+                                                href={link.url ?? "#"}
                                                 preserveScroll
                                                 className={cn(
-                                                    'flex h-7 w-7 items-center justify-center rounded-md text-[11px] font-medium transition-all duration-150 ease-out active:scale-95 active:duration-0',
+                                                    "flex h-7 w-7 items-center justify-center rounded-md text-[11px] font-medium transition-all duration-150 ease-out active:scale-95 active:duration-0",
                                                     link.active
-                                                        ? 'bg-muted text-foreground'
-                                                        : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+                                                        ? "bg-muted text-foreground"
+                                                        : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
                                                 )}
                                             >
                                                 {page}
@@ -312,14 +312,14 @@ export default function Activity({ activities, links, meta }: Props) {
 
                                     <Link
                                         href={
-                                            links[links.length - 1]?.url ?? '#'
+                                            links[links.length - 1]?.url ?? "#"
                                         }
                                         preserveScroll
                                         className={cn(
-                                            'flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-all duration-150 ease-out active:scale-95 active:duration-0',
+                                            "flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-all duration-150 ease-out active:scale-95 active:duration-0",
                                             links[links.length - 1]?.url
-                                                ? 'hover:bg-muted hover:text-foreground'
-                                                : 'pointer-events-none opacity-30',
+                                                ? "hover:bg-muted hover:text-foreground"
+                                                : "pointer-events-none opacity-30",
                                         )}
                                     >
                                         <ChevronRight className="h-3.5 w-3.5" />

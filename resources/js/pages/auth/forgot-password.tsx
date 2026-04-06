@@ -1,15 +1,15 @@
 // Components
-import { Form, Head } from '@inertiajs/react';
-import { useEffect } from 'react';
-import { toast } from '@/components/ui/sonner';
-import TextLink from '@/components/text-link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
-import AuthLayout from '@/layouts/auth-layout';
-import { login } from '@/routes';
-import { email } from '@/routes/password';
+import { Form, Head } from "@inertiajs/react";
+import { useEffect } from "react";
+import { toast } from "@/components/ui/sonner";
+import TextLink from "@/components/text-link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
+import AuthLayout from "@/layouts/auth-layout";
+import { login } from "@/routes";
+import { email } from "@/routes/password";
 
 export default function ForgotPassword({ status }: { status?: string }) {
     useEffect(() => {

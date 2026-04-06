@@ -1,6 +1,6 @@
-import { Head, router, useForm } from '@inertiajs/react';
-import { Download, Ellipsis, FileUp, Plus, Trash2, Upload } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { Head, router, useForm } from "@inertiajs/react";
+import { Download, Ellipsis, FileUp, Plus, Trash2, Upload } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
 import {
     bulkDestroy,
     destroy,
@@ -8,12 +8,12 @@ import {
     index as adminCargo,
     store,
     update,
-} from '@/actions/App/Http/Controllers/Admin/CargoController';
-import { ConfirmDeleteDialog, DataTable } from '@/components/admin/data-table';
-import type { Column, PaginatedData } from '@/components/admin/data-table';
-import CargoIcon from '@/components/cargo-icon';
-import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
+} from "@/actions/App/Http/Controllers/Admin/CargoController";
+import { ConfirmDeleteDialog, DataTable } from "@/components/admin/data-table";
+import type { Column, PaginatedData } from "@/components/admin/data-table";
+import CargoIcon from "@/components/cargo-icon";
+import InputError from "@/components/input-error";
+import { Button } from "@/components/ui/button";
 import {
     Dialog,
     DialogContent,
@@ -21,25 +21,25 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { toast } from '@/components/ui/sonner';
-import { SlidingTabs } from '@/components/ui/sliding-tabs';
-import type { Tab } from '@/components/ui/sliding-tabs';
-import { Spinner } from '@/components/ui/spinner';
-import { useDialogState } from '@/hooks/use-dialog-state';
-import AdminLayout from '@/layouts/admin/layout';
-import AppLayout from '@/layouts/app-layout';
-import { formatDate } from '@/lib/format';
-import { cn } from '@/lib/utils';
-import type { BreadcrumbItem } from '@/types';
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/sonner";
+import { SlidingTabs } from "@/components/ui/sliding-tabs";
+import type { Tab } from "@/components/ui/sliding-tabs";
+import { Spinner } from "@/components/ui/spinner";
+import { useDialogState } from "@/hooks/use-dialog-state";
+import AdminLayout from "@/layouts/admin/layout";
+import AppLayout from "@/layouts/app-layout";
+import { formatDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import type { BreadcrumbItem } from "@/types";
 
 type CargoVariable = {
     name: string;
@@ -57,7 +57,7 @@ type CargoDefinition = {
     meta: {
         version: string;
         source: string;
-        source_format: 'native' | 'pterodactyl';
+        source_format: "native" | "pterodactyl";
         update_url?: string | null;
     };
     exported_at: string;
@@ -90,7 +90,7 @@ type AdminCargo = {
     slug: string;
     author: string;
     description: string;
-    source_type: 'native' | 'pterodactyl';
+    source_type: "native" | "pterodactyl";
     cargofile: string;
     definition: CargoDefinition;
     docker_images_count: number;
@@ -120,20 +120,20 @@ type EditCargoFormData = {
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Admin', href: adminCargo.url() },
-    { title: 'Cargo', href: adminCargo.url() },
+    { title: "Admin", href: adminCargo.url() },
+    { title: "Cargo", href: adminCargo.url() },
 ];
 
 const tabs: Tab[] = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'edit', label: 'Edit' },
-    { id: 'variables', label: 'Variables' },
-    { id: 'install', label: 'Install' },
-    { id: 'danger', label: 'Danger' },
+    { id: "overview", label: "Overview" },
+    { id: "edit", label: "Edit" },
+    { id: "variables", label: "Variables" },
+    { id: "install", label: "Install" },
+    { id: "danger", label: "Danger" },
 ];
 
-function sourceLabel(sourceType: AdminCargo['source_type']): string {
-    return sourceType === 'pterodactyl' ? 'Pterodactyl egg' : 'Skyport Cargo';
+function sourceLabel(sourceType: AdminCargo["source_type"]): string {
+    return sourceType === "pterodactyl" ? "Pterodactyl egg" : "Skyport Cargo";
 }
 
 function stringifyCargofile(definition: CargoDefinition): string {
@@ -187,7 +187,7 @@ function JsonEditor({
             value={value}
             onChange={(event) => onChange(event.target.value)}
             placeholder={placeholder}
-            className="min-h-[320px] w-full rounded-lg border border-input bg-background px-3 py-2 font-mono text-xs text-foreground shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+            className="min-h-80 w-full rounded-lg border border-input bg-background px-3 py-2 font-mono text-xs text-foreground shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
             spellCheck={false}
         />
     );
@@ -201,10 +201,10 @@ function CreateCargoModal({
     onClose: () => void;
 }) {
     const form = useForm<CreateCargoFormData>({
-        name: '',
-        author: '',
-        description: '',
-        startup: './start.sh',
+        name: "",
+        author: "",
+        description: "",
+        startup: "./start.sh",
     });
     const minimumMs = 500;
     const submitStart = useRef(0);
@@ -224,7 +224,7 @@ function CreateCargoModal({
                 setTimeout(() => setSubmitting(false), Math.max(0, remaining));
             },
             onSuccess: () => {
-                toast.success('Cargo created');
+                toast.success("Cargo created");
                 onClose();
             },
             onError: (errors) => {
@@ -253,7 +253,7 @@ function CreateCargoModal({
                             id="cargo-name"
                             value={form.data.name}
                             onChange={(event) =>
-                                form.setData('name', event.target.value)
+                                form.setData("name", event.target.value)
                             }
                             placeholder="Paper"
                             required
@@ -267,7 +267,7 @@ function CreateCargoModal({
                             id="cargo-author"
                             value={form.data.author}
                             onChange={(event) =>
-                                form.setData('author', event.target.value)
+                                form.setData("author", event.target.value)
                             }
                             placeholder="hello@skyport.sh"
                             required
@@ -281,7 +281,7 @@ function CreateCargoModal({
                             id="cargo-description"
                             value={form.data.description}
                             onChange={(event) =>
-                                form.setData('description', event.target.value)
+                                form.setData("description", event.target.value)
                             }
                             placeholder="Describe what this cargo runs and how operators should use it."
                             className="min-h-24 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
@@ -295,7 +295,7 @@ function CreateCargoModal({
                             id="cargo-startup"
                             value={form.data.startup}
                             onChange={(event) =>
-                                form.setData('startup', event.target.value)
+                                form.setData("startup", event.target.value)
                             }
                             placeholder="./start.sh"
                             required
@@ -326,13 +326,13 @@ function ImportCargoModal({
     onClose: () => void;
 }) {
     const form = useForm<ImportCargoFormData>({
-        content: '',
+        content: "",
     });
     const minimumMs = 500;
     const submitStart = useRef(0);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [submitting, setSubmitting] = useState(false);
-    const [selectedFileName, setSelectedFileName] = useState('');
+    const [selectedFileName, setSelectedFileName] = useState("");
 
     const handleFileChange = async (
         event: React.ChangeEvent<HTMLInputElement>,
@@ -340,21 +340,21 @@ function ImportCargoModal({
         const file = event.target.files?.[0];
 
         if (!file) {
-            setSelectedFileName('');
-            form.setData('content', '');
+            setSelectedFileName("");
+            form.setData("content", "");
             return;
         }
 
         setSelectedFileName(file.name);
-        form.clearErrors('content');
-        form.setData('content', await file.text());
+        form.clearErrors("content");
+        form.setData("content", await file.text());
     };
 
     const submit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         if (!form.data.content) {
-            form.setError('content', 'Please choose a cargo file to import.');
+            form.setError("content", "Please choose a cargo file to import.");
             return;
         }
 
@@ -370,7 +370,7 @@ function ImportCargoModal({
                 setTimeout(() => setSubmitting(false), Math.max(0, remaining));
             },
             onSuccess: () => {
-                toast.success('Cargo imported');
+                toast.success("Cargo imported");
                 onClose();
             },
             onError: (errors) => {
@@ -398,12 +398,12 @@ function ImportCargoModal({
                             Supported formats
                         </p>
                         <p className="mt-1">
-                            • Skyport .cargofile JSON ({'{'} meta.version:
-                            &nbsp;SPDL_v1 {'}'})
+                            • Skyport .cargofile JSON ({"{"} meta.version:
+                            &nbsp;SPDL_v1 {"}"})
                         </p>
                         <p>
-                            • Pterodactyl egg JSON ({'{'} meta.version:
-                            &nbsp;PTDL_v1/PTDL_v2 {'}'})
+                            • Pterodactyl egg JSON ({"{"} meta.version:
+                            &nbsp;PTDL_v1/PTDL_v2 {"}"})
                         </p>
                     </div>
 
@@ -421,7 +421,7 @@ function ImportCargoModal({
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <div className="min-w-0">
                                     <p className="text-sm font-medium text-foreground">
-                                        {selectedFileName || 'No file selected'}
+                                        {selectedFileName || "No file selected"}
                                     </p>
                                     <p className="mt-1 text-xs text-muted-foreground">
                                         Choose a .cargofile or egg export from
@@ -470,7 +470,7 @@ function CargoModal({
     onClose: () => void;
     onDelete: (cargo: AdminCargo) => void;
 }) {
-    const [tab, setTab] = useState('overview');
+    const [tab, setTab] = useState("overview");
     const form = useForm<EditCargoFormData>({
         cargofile: cargo.cargofile || stringifyCargofile(cargo.definition),
     });
@@ -492,7 +492,7 @@ function CargoModal({
                 setTimeout(() => setSubmitting(false), Math.max(0, remaining));
             },
             onSuccess: () => {
-                toast.success('Cargo updated');
+                toast.success("Cargo updated");
             },
             onError: (errors) => {
                 Object.values(errors).forEach((message) => {
@@ -504,17 +504,17 @@ function CargoModal({
 
     const exportCargofile = () => {
         const blob = new Blob([form.data.cargofile], {
-            type: 'application/json;charset=utf-8',
+            type: "application/json;charset=utf-8",
         });
         const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
+        const link = document.createElement("a");
 
         link.href = url;
         link.download = `${cargo.slug || cargo.name}.cargofile`;
         link.click();
 
         URL.revokeObjectURL(url);
-        toast.success('Cargo exported');
+        toast.success("Cargo exported");
     };
 
     return (
@@ -550,27 +550,27 @@ function CargoModal({
                 <div className="border-t border-border/60" />
 
                 <div className="flex-1 overflow-y-auto px-6 py-6">
-                    {tab === 'overview' ? (
+                    {tab === "overview" ? (
                         <div className="flex gap-6">
                             <div className="min-w-0 flex-1 space-y-1">
                                 {[
                                     {
-                                        label: 'Cargo ID',
+                                        label: "Cargo ID",
                                         value: `#${cargo.id}`,
                                     },
-                                    { label: 'Name', value: cargo.name },
-                                    { label: 'Slug', value: cargo.slug },
+                                    { label: "Name", value: cargo.name },
+                                    { label: "Slug", value: cargo.slug },
                                     {
-                                        label: 'Source',
+                                        label: "Source",
                                         value: sourceLabel(cargo.source_type),
                                     },
-                                    { label: 'Author', value: cargo.author },
+                                    { label: "Author", value: cargo.author },
                                     {
-                                        label: 'Startup',
+                                        label: "Startup",
                                         value: cargo.definition.startup,
                                     },
                                     {
-                                        label: 'Created',
+                                        label: "Created",
                                         value: formatDate(
                                             cargo.created_at,
                                             true,
@@ -598,7 +598,7 @@ function CargoModal({
                                             </h3>
                                             <p className="mt-1 text-sm text-muted-foreground">
                                                 {cargo.description ||
-                                                    'No description provided.'}
+                                                    "No description provided."}
                                             </p>
                                         </div>
                                         <Button
@@ -620,8 +620,8 @@ function CargoModal({
                                     value={String(cargo.variables_count)}
                                     description={
                                         cargo.variables_count === 1
-                                            ? 'Environment variable'
-                                            : 'Environment variables'
+                                            ? "Environment variable"
+                                            : "Environment variables"
                                     }
                                 />
                                 <StackedStatCard
@@ -638,7 +638,7 @@ function CargoModal({
                         </div>
                     ) : null}
 
-                    {tab === 'edit' ? (
+                    {tab === "edit" ? (
                         <div className="max-w-5xl">
                             <div className="flex items-start justify-between gap-4">
                                 <div>
@@ -672,7 +672,7 @@ function CargoModal({
                                         id="cargo-cargofile"
                                         value={form.data.cargofile}
                                         onChange={(value) =>
-                                            form.setData('cargofile', value)
+                                            form.setData("cargofile", value)
                                         }
                                     />
                                     <InputError
@@ -695,7 +695,7 @@ function CargoModal({
                         </div>
                     ) : null}
 
-                    {tab === 'variables' ? (
+                    {tab === "variables" ? (
                         <div className="space-y-4">
                             <div>
                                 <h3 className="text-sm font-semibold text-foreground">
@@ -731,7 +731,7 @@ function CargoModal({
                                                             </p>
                                                             <p className="mt-1 text-xs text-muted-foreground">
                                                                 {variable.description ||
-                                                                    'No description provided.'}
+                                                                    "No description provided."}
                                                             </p>
                                                         </div>
                                                         <p className="truncate font-mono text-xs text-foreground">
@@ -741,18 +741,18 @@ function CargoModal({
                                                         </p>
                                                         <p className="truncate text-xs text-muted-foreground">
                                                             {variable.default_value ||
-                                                                '—'}
+                                                                "—"}
                                                         </p>
                                                         <div className="space-y-1 text-xs text-muted-foreground">
                                                             <p>
                                                                 {variable.user_viewable
-                                                                    ? 'Visible'
-                                                                    : 'Hidden'}
+                                                                    ? "Visible"
+                                                                    : "Hidden"}
                                                             </p>
                                                             <p>
                                                                 {variable.user_editable
-                                                                    ? 'Editable'
-                                                                    : 'Locked'}
+                                                                    ? "Editable"
+                                                                    : "Locked"}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -775,14 +775,14 @@ function CargoModal({
                         </div>
                     ) : null}
 
-                    {tab === 'install' ? (
+                    {tab === "install" ? (
                         <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
                             <div className="space-y-3">
                                 <StackedStatCard
                                     label="Container"
                                     value={
                                         cargo.definition.scripts.installation
-                                            .container || '—'
+                                            .container || "—"
                                     }
                                     description="Installer image"
                                 />
@@ -790,13 +790,13 @@ function CargoModal({
                                     label="Entrypoint"
                                     value={
                                         cargo.definition.scripts.installation
-                                            .entrypoint || '—'
+                                            .entrypoint || "—"
                                     }
                                     description="Installer entrypoint"
                                 />
                                 <StackedStatCard
                                     label="Stop command"
-                                    value={cargo.definition.config.stop || '—'}
+                                    value={cargo.definition.config.stop || "—"}
                                     description="Panel stop instruction"
                                 />
                             </div>
@@ -812,17 +812,17 @@ function CargoModal({
                                     </p>
                                 </div>
                                 <div className="overflow-hidden rounded-lg border border-border/70 bg-background">
-                                    <pre className="max-h-[420px] overflow-auto px-4 py-4 font-mono text-xs text-foreground whitespace-pre-wrap">
+                                    <pre className="max-h-105 overflow-auto px-4 py-4 font-mono text-xs text-foreground whitespace-pre-wrap">
                                         {cargo.definition.scripts.installation
                                             .script ||
-                                            '# No installation script provided'}
+                                            "# No installation script provided"}
                                     </pre>
                                 </div>
                             </div>
                         </div>
                     ) : null}
 
-                    {tab === 'danger' ? (
+                    {tab === "danger" ? (
                         <div className="max-w-xl space-y-4">
                             <div className="overflow-hidden rounded-lg bg-muted/40">
                                 <div className="px-4 py-2.5">
@@ -887,8 +887,8 @@ export default function Cargo({ cargo, filters }: Props) {
 
     const columns: Column<AdminCargo>[] = [
         {
-            label: 'Cargo',
-            width: 'w-[40%]',
+            label: "Cargo",
+            width: "w-[40%]",
             render: (item) => (
                 <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/60">
@@ -906,15 +906,15 @@ export default function Cargo({ cargo, filters }: Props) {
             ),
         },
         {
-            label: 'Source',
-            width: 'w-[18%]',
+            label: "Source",
+            width: "w-[18%]",
             render: (item) => (
                 <span
                     className={cn(
-                        'inline-flex rounded-full px-2 py-1 text-xs font-medium',
-                        item.source_type === 'pterodactyl'
-                            ? 'bg-sky-500/10 text-sky-600 dark:text-sky-400'
-                            : 'bg-[#d92400]/12 text-[#d92400] dark:text-[#ff8a6b]',
+                        "inline-flex rounded-full px-2 py-1 text-xs font-medium",
+                        item.source_type === "pterodactyl"
+                            ? "bg-sky-500/10 text-sky-600 dark:text-sky-400"
+                            : "bg-[#d92400]/12 text-[#d92400] dark:text-[#ff8a6b]",
                     )}
                 >
                     {sourceLabel(item.source_type)}
@@ -922,8 +922,8 @@ export default function Cargo({ cargo, filters }: Props) {
             ),
         },
         {
-            label: 'Contents',
-            width: 'w-[18%]',
+            label: "Contents",
+            width: "w-[18%]",
             render: (item) => (
                 <div className="text-xs text-muted-foreground">
                     <p>{item.variables_count} vars</p>
@@ -1027,7 +1027,7 @@ export default function Cargo({ cargo, filters }: Props) {
                         setDeletingCargo(null);
                     }
                 }}
-                title={`Delete ${deletingCargo?.name ?? 'cargo'}?`}
+                title={`Delete ${deletingCargo?.name ?? "cargo"}?`}
                 description="This action cannot be undone. The selected cargo will be permanently removed."
                 loading={singleDeleting}
                 onConfirm={() => {

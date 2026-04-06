@@ -1,22 +1,22 @@
-import { Form, Head, usePage } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
-import { toast } from '@/components/ui/sonner';
-import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
-import DeleteUser from '@/components/delete-user';
-import Heading from '@/components/heading';
-import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
-import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
-import { edit } from '@/routes/profile';
-import type { BreadcrumbItem } from '@/types';
+import { Form, Head, usePage } from "@inertiajs/react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "@/components/ui/sonner";
+import ProfileController from "@/actions/App/Http/Controllers/Settings/ProfileController";
+import DeleteUser from "@/components/delete-user";
+import Heading from "@/components/heading";
+import InputError from "@/components/input-error";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
+import AppLayout from "@/layouts/app-layout";
+import SettingsLayout from "@/layouts/settings/layout";
+import { edit } from "@/routes/profile";
+import type { BreadcrumbItem } from "@/types";
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Profile settings',
+        title: "Profile settings",
         href: edit(),
     },
 ];
@@ -28,8 +28,8 @@ export default function Profile({ status }: { status?: string }) {
     const MIN_MS = 600;
 
     useEffect(() => {
-        if (status === 'verification-link-sent') {
-            toast.success('Verification link sent to your email address.');
+        if (status === "verification-link-sent") {
+            toast.success("Verification link sent to your email address.");
         }
     }, [status]);
 
@@ -62,7 +62,7 @@ export default function Profile({ status }: { status?: string }) {
                                 Math.max(0, rem),
                             );
                         }}
-                        onSuccess={() => toast.success('Profile saved')}
+                        onSuccess={() => toast.success("Profile saved")}
                         className="space-y-6"
                     >
                         {({ errors }) => (

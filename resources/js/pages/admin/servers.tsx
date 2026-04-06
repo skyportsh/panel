@@ -1,6 +1,6 @@
-import { Head, router, useForm } from '@inertiajs/react';
-import { Download, Ellipsis, Plus, RotateCcw, Trash2 } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { Head, router, useForm } from "@inertiajs/react";
+import { Download, Ellipsis, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
 import {
     bulkDestroy,
     destroy,
@@ -9,43 +9,43 @@ import {
     reinstall,
     store,
     update,
-} from '@/actions/App/Http/Controllers/Admin/ServersController';
-import { ConfirmDeleteDialog, DataTable } from '@/components/admin/data-table';
-import type { Column, PaginatedData } from '@/components/admin/data-table';
-import InputError from '@/components/input-error';
-import ServerIcon from '@/components/server-icon';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
+} from "@/actions/App/Http/Controllers/Admin/ServersController";
+import { ConfirmDeleteDialog, DataTable } from "@/components/admin/data-table";
+import type { Column, PaginatedData } from "@/components/admin/data-table";
+import InputError from "@/components/input-error";
+import ServerIcon from "@/components/server-icon";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { PlaceholderPattern } from "@/components/ui/placeholder-pattern";
 import {
     Dialog,
     DialogContent,
     DialogContentFull,
     DialogHeader,
     DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
-} from '@/components/ui/select';
-import { SlidingTabs } from '@/components/ui/sliding-tabs';
-import type { Tab } from '@/components/ui/sliding-tabs';
-import { Spinner } from '@/components/ui/spinner';
-import { toast } from '@/components/ui/sonner';
-import AdminLayout from '@/layouts/admin/layout';
-import AppLayout from '@/layouts/app-layout';
-import { formatDate } from '@/lib/format';
-import { cn } from '@/lib/utils';
-import type { BreadcrumbItem } from '@/types';
+} from "@/components/ui/select";
+import { SlidingTabs } from "@/components/ui/sliding-tabs";
+import type { Tab } from "@/components/ui/sliding-tabs";
+import { Spinner } from "@/components/ui/spinner";
+import { toast } from "@/components/ui/sonner";
+import AdminLayout from "@/layouts/admin/layout";
+import AppLayout from "@/layouts/app-layout";
+import { formatDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import type { BreadcrumbItem } from "@/types";
 
 type UserOption = {
     id: number;
@@ -82,7 +82,7 @@ type AdminServer = {
     last_error: string | null;
     created_at: string;
     updated_at: string;
-    allocation: Omit<AllocationOption, 'node_id' | 'server_id'>;
+    allocation: Omit<AllocationOption, "node_id" | "server_id">;
     user: UserOption;
     node: NodeOption;
     cargo: CargoOption;
@@ -99,24 +99,24 @@ type Props = {
 
 type ServerFormData = {
     name: string;
-    user_id: number | '';
-    node_id: number | '';
-    cargo_id: number | '';
-    allocation_id: number | '';
+    user_id: number | "";
+    node_id: number | "";
+    cargo_id: number | "";
+    allocation_id: number | "";
     memory_mib: number;
     cpu_limit: number;
     disk_mib: number;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Admin', href: adminServers.url() },
-    { title: 'Servers', href: adminServers.url() },
+    { title: "Admin", href: adminServers.url() },
+    { title: "Servers", href: adminServers.url() },
 ];
 
 const tabs: Tab[] = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'edit', label: 'Edit' },
-    { id: 'danger', label: 'Danger' },
+    { id: "overview", label: "Overview" },
+    { id: "edit", label: "Edit" },
+    { id: "danger", label: "Danger" },
 ];
 
 function formatLimit(value: number, suffix: string): string {
@@ -124,23 +124,23 @@ function formatLimit(value: number, suffix: string): string {
 }
 
 function formatCpuLimit(value: number): string {
-    return value === 0 ? 'Unlimited' : `${value}%`;
+    return value === 0 ? "Unlimited" : `${value}%`;
 }
 
 function statusLabel(status: string): string {
     switch (status) {
-        case 'running':
-            return 'Running';
-        case 'installing':
-            return 'Installing';
-        case 'starting':
-            return 'Starting';
-        case 'offline':
-            return 'Offline';
-        case 'install_failed':
-            return 'Install failed';
+        case "running":
+            return "Running";
+        case "installing":
+            return "Installing";
+        case "starting":
+            return "Starting";
+        case "offline":
+            return "Offline";
+        case "install_failed":
+            return "Install failed";
         default:
-            return 'Installing';
+            return "Installing";
     }
 }
 
@@ -165,7 +165,7 @@ function StackedStatCard({
             <div className="rounded-lg border border-border/70 bg-background p-5">
                 <p
                     className={cn(
-                        'text-3xl font-semibold text-foreground',
+                        "text-3xl font-semibold text-foreground",
                         valueClassName,
                     )}
                 >
@@ -189,7 +189,7 @@ function OptionSelect({
     renderLabel,
     disabled = false,
 }: {
-    value: number | '';
+    value: number | "";
     onChange: (value: number) => void;
     options: Array<{ id: number }>;
     placeholder: string;
@@ -200,15 +200,15 @@ function OptionSelect({
 
     return (
         <Select
-            value={value === '' ? '' : String(value)}
+            value={value === "" ? "" : String(value)}
             onValueChange={(selectedValue) => onChange(Number(selectedValue))}
             disabled={disabled}
         >
             <SelectTrigger className="w-full">
                 <span
                     className={cn(
-                        'truncate',
-                        !selected && 'text-muted-foreground',
+                        "truncate",
+                        !selected && "text-muted-foreground",
                     )}
                 >
                     {selected ? renderLabel(selected) : placeholder}
@@ -261,7 +261,7 @@ function ServerFormFields({
                 <Input
                     id="server-name"
                     value={data.name}
-                    onChange={(event) => setData('name', event.target.value)}
+                    onChange={(event) => setData("name", event.target.value)}
                     placeholder="Paper Survival"
                     required
                 />
@@ -272,7 +272,7 @@ function ServerFormFields({
                 <Label htmlFor="server-user">User</Label>
                 <OptionSelect
                     value={data.user_id}
-                    onChange={(value) => setData('user_id', value)}
+                    onChange={(value) => setData("user_id", value)}
                     options={users}
                     placeholder="Choose a user"
                     renderLabel={(user: UserOption) =>
@@ -288,8 +288,8 @@ function ServerFormFields({
                     <OptionSelect
                         value={data.node_id}
                         onChange={(value) => {
-                            setData('node_id', value);
-                            setData('allocation_id', '');
+                            setData("node_id", value);
+                            setData("allocation_id", "");
                         }}
                         options={nodes}
                         placeholder="Choose a node"
@@ -302,7 +302,7 @@ function ServerFormFields({
                     <Label htmlFor="server-cargo">Cargo</Label>
                     <OptionSelect
                         value={data.cargo_id}
-                        onChange={(value) => setData('cargo_id', value)}
+                        onChange={(value) => setData("cargo_id", value)}
                         options={cargo}
                         placeholder="Choose a cargo"
                         renderLabel={(cargoItem: CargoOption) => cargoItem.name}
@@ -316,12 +316,12 @@ function ServerFormFields({
                 <Label htmlFor="server-allocation">Primary allocation</Label>
                 <OptionSelect
                     value={data.allocation_id}
-                    onChange={(value) => setData('allocation_id', value)}
+                    onChange={(value) => setData("allocation_id", value)}
                     options={availableAllocations}
                     placeholder={
-                        data.node_id === ''
-                            ? 'Choose a node first'
-                            : 'Choose an allocation'
+                        data.node_id === ""
+                            ? "Choose a node first"
+                            : "Choose an allocation"
                     }
                     renderLabel={(allocation: AllocationOption) =>
                         `${allocation.ip_alias ?? allocation.bind_ip}:${allocation.port}`
@@ -339,7 +339,7 @@ function ServerFormFields({
                         min={1}
                         value={data.memory_mib}
                         onChange={(event) =>
-                            setData('memory_mib', Number(event.target.value))
+                            setData("memory_mib", Number(event.target.value))
                         }
                         required
                     />
@@ -353,7 +353,7 @@ function ServerFormFields({
                         min={0}
                         value={data.cpu_limit}
                         onChange={(event) =>
-                            setData('cpu_limit', Number(event.target.value))
+                            setData("cpu_limit", Number(event.target.value))
                         }
                         required
                     />
@@ -367,7 +367,7 @@ function ServerFormFields({
                         min={1}
                         value={data.disk_mib}
                         onChange={(event) =>
-                            setData('disk_mib', Number(event.target.value))
+                            setData("disk_mib", Number(event.target.value))
                         }
                         required
                     />
@@ -392,11 +392,11 @@ function CreateServerModal({
     onClose: () => void;
 }) {
     const form = useForm<ServerFormData>({
-        name: '',
-        user_id: users[0]?.id ?? '',
-        node_id: nodes[0]?.id ?? '',
-        cargo_id: cargo[0]?.id ?? '',
-        allocation_id: '',
+        name: "",
+        user_id: users[0]?.id ?? "",
+        node_id: nodes[0]?.id ?? "",
+        cargo_id: cargo[0]?.id ?? "",
+        allocation_id: "",
         memory_mib: 2048,
         cpu_limit: 100,
         disk_mib: 10240,
@@ -419,7 +419,7 @@ function CreateServerModal({
                 setTimeout(() => setSubmitting(false), Math.max(0, remaining));
             },
             onSuccess: () => {
-                toast.success('Server created');
+                toast.success("Server created");
                 onClose();
             },
             onError: (errors) => {
@@ -480,7 +480,7 @@ function ServerModal({
     onClose: () => void;
     onDelete: (server: AdminServer) => void;
 }) {
-    const [tab, setTab] = useState('overview');
+    const [tab, setTab] = useState("overview");
     const [confirmingReinstall, setConfirmingReinstall] = useState(false);
     const [reinstalling, setReinstalling] = useState(false);
     const form = useForm<ServerFormData>({
@@ -511,7 +511,7 @@ function ServerModal({
                 setTimeout(() => setSubmitting(false), Math.max(0, remaining));
             },
             onSuccess: () => {
-                toast.success('Server updated');
+                toast.success("Server updated");
             },
             onError: (errors) => {
                 Object.values(errors).forEach((message) => {
@@ -550,9 +550,9 @@ function ServerModal({
                 <div className="border-t border-border/60" />
 
                 <div className="flex-1 overflow-y-auto px-6 py-6">
-                    {tab === 'overview' ? (
+                    {tab === "overview" ? (
                         <div className="space-y-4">
-                            {server.status === 'install_failed' ? (
+                            {server.status === "install_failed" ? (
                                 <div className="relative overflow-hidden rounded-lg border border-[#d92400]/30 bg-[#d92400]/8 px-4 py-3">
                                     <PlaceholderPattern
                                         patternSize={8}
@@ -578,8 +578,8 @@ function ServerModal({
                                                     server.id,
                                                 )}
                                                 className={buttonVariants({
-                                                    size: 'table',
-                                                    variant: 'outline',
+                                                    size: "table",
+                                                    variant: "outline",
                                                 })}
                                             >
                                                 <Download className="h-3.5 w-3.5" />
@@ -590,9 +590,7 @@ function ServerModal({
                                                 variant="destructive"
                                                 disabled={reinstalling}
                                                 onClick={() =>
-                                                    setConfirmingReinstall(
-                                                        true,
-                                                    )
+                                                    setConfirmingReinstall(true)
                                                 }
                                             >
                                                 {reinstalling && <Spinner />}
@@ -613,55 +611,55 @@ function ServerModal({
                                 <div className="min-w-0 flex-1 space-y-1">
                                     {[
                                         {
-                                            label: 'Server ID',
+                                            label: "Server ID",
                                             value: `#${server.id}`,
                                         },
-                                        { label: 'Name', value: server.name },
+                                        { label: "Name", value: server.name },
                                         {
-                                            label: 'User',
+                                            label: "User",
                                             value: server.user.name,
                                         },
                                         {
-                                            label: 'Node',
+                                            label: "Node",
                                             value: server.node.name,
                                         },
                                         {
-                                            label: 'Cargo',
+                                            label: "Cargo",
                                             value: server.cargo.name,
                                         },
                                         {
-                                            label: 'Allocation',
+                                            label: "Allocation",
                                             value: `${server.allocation.ip_alias ?? server.allocation.bind_ip}:${server.allocation.port}`,
                                         },
                                         {
-                                            label: 'Memory',
+                                            label: "Memory",
                                             value: formatLimit(
                                                 server.memory_mib,
-                                                'MiB',
+                                                "MiB",
                                             ),
                                         },
                                         {
-                                            label: 'CPU',
+                                            label: "CPU",
                                             value: formatCpuLimit(
                                                 server.cpu_limit,
                                             ),
                                         },
                                         {
-                                            label: 'Disk',
+                                            label: "Disk",
                                             value: formatLimit(
                                                 server.disk_mib,
-                                                'MiB',
+                                                "MiB",
                                             ),
                                         },
                                         {
-                                            label: 'Created',
+                                            label: "Created",
                                             value: formatDate(
                                                 server.created_at,
                                                 true,
                                             ),
                                         },
                                         {
-                                            label: 'Last updated',
+                                            label: "Last updated",
                                             value: formatDate(
                                                 server.updated_at,
                                                 true,
@@ -687,15 +685,15 @@ function ServerModal({
                                         label="Status"
                                         value={statusLabel(server.status)}
                                         description={
-                                            server.status === 'install_failed'
-                                                ? 'Download the install log or force a reinstall.'
-                                                : 'Daemon lifecycle status'
+                                            server.status === "install_failed"
+                                                ? "Download the install log or force a reinstall."
+                                                : "Daemon lifecycle status"
                                         }
                                         valueClassName={
-                                            server.status === 'install_failed'
-                                                ? 'text-[#d92400] dark:text-[#ff8a6b]'
-                                                : server.status === 'running'
-                                                  ? 'text-emerald-600 dark:text-emerald-400'
+                                            server.status === "install_failed"
+                                                ? "text-[#d92400] dark:text-[#ff8a6b]"
+                                                : server.status === "running"
+                                                  ? "text-emerald-600 dark:text-emerald-400"
                                                   : undefined
                                         }
                                     />
@@ -709,7 +707,7 @@ function ServerModal({
                         </div>
                     ) : null}
 
-                    {tab === 'edit' ? (
+                    {tab === "edit" ? (
                         <div className="max-w-3xl space-y-4">
                             <div>
                                 <h3 className="text-sm font-semibold text-foreground">
@@ -761,7 +759,7 @@ function ServerModal({
                         </div>
                     ) : null}
 
-                    {tab === 'danger' ? (
+                    {tab === "danger" ? (
                         <div className="max-w-xl space-y-4">
                             <div className="overflow-hidden rounded-lg bg-muted/40">
                                 <div className="px-4 py-2.5">
@@ -829,14 +827,20 @@ function ServerModal({
                 confirmLabel="Force reinstall"
                 onConfirm={() => {
                     setReinstalling(true);
-                    router.post(reinstall.url(server.id), {}, {
-                        preserveScroll: true,
-                        onSuccess: () => {
-                            toast.success(`${server.name} reinstall requested`);
-                            setConfirmingReinstall(false);
+                    router.post(
+                        reinstall.url(server.id),
+                        {},
+                        {
+                            preserveScroll: true,
+                            onSuccess: () => {
+                                toast.success(
+                                    `${server.name} reinstall requested`,
+                                );
+                                setConfirmingReinstall(false);
+                            },
+                            onFinish: () => setReinstalling(false),
                         },
-                        onFinish: () => setReinstalling(false),
-                    });
+                    );
                 }}
             />
         </Dialog>
@@ -880,8 +884,8 @@ export default function Servers({
 
     const columns: Column<AdminServer>[] = [
         {
-            label: 'Server',
-            width: 'w-[34%]',
+            label: "Server",
+            width: "w-[34%]",
             render: (server) => (
                 <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/60">
@@ -899,8 +903,8 @@ export default function Servers({
             ),
         },
         {
-            label: 'User',
-            width: 'w-[24%]',
+            label: "User",
+            width: "w-[24%]",
             render: (server) => (
                 <div className="min-w-0">
                     <p className="truncate text-sm text-foreground">
@@ -913,8 +917,8 @@ export default function Servers({
             ),
         },
         {
-            label: 'Node / Cargo',
-            width: 'flex-1 min-w-0',
+            label: "Node / Cargo",
+            width: "flex-1 min-w-0",
             render: (server) => (
                 <div className="text-xs text-muted-foreground">
                     <p>{server.node.name}</p>
@@ -1007,7 +1011,7 @@ export default function Servers({
                         setDeletingServer(null);
                     }
                 }}
-                title={`Delete ${deletingServer?.name ?? 'server'}?`}
+                title={`Delete ${deletingServer?.name ?? "server"}?`}
                 description="This action cannot be undone. The selected server will be permanently removed."
                 loading={singleDeleting}
                 onConfirm={() => {

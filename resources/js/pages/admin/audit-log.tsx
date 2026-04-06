@@ -1,20 +1,20 @@
-import { Head, router } from '@inertiajs/react';
-import { useState } from 'react';
-import { index as adminAuditLog } from '@/actions/App/Http/Controllers/Admin/AuditLogController';
-import { index as adminDashboard } from '@/actions/App/Http/Controllers/Admin/DashboardController';
-import { DataTable } from '@/components/admin/data-table';
-import type { Column, PaginatedData } from '@/components/admin/data-table';
+import { Head, router } from "@inertiajs/react";
+import { useState } from "react";
+import { index as adminAuditLog } from "@/actions/App/Http/Controllers/Admin/AuditLogController";
+import { index as adminDashboard } from "@/actions/App/Http/Controllers/Admin/DashboardController";
+import { DataTable } from "@/components/admin/data-table";
+import type { Column, PaginatedData } from "@/components/admin/data-table";
 import {
     Dialog,
     DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
-} from '@/components/ui/dialog';
-import AdminLayout from '@/layouts/admin/layout';
-import AppLayout from '@/layouts/app-layout';
-import { cn } from '@/lib/utils';
-import type { BreadcrumbItem } from '@/types';
+} from "@/components/ui/dialog";
+import AdminLayout from "@/layouts/admin/layout";
+import AppLayout from "@/layouts/app-layout";
+import { cn } from "@/lib/utils";
+import type { BreadcrumbItem } from "@/types";
 
 type ActivityUser = {
     id: number;
@@ -46,70 +46,69 @@ type Props = {
     filters: { search: string };
 };
 
-
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Admin',
+        title: "Admin",
         href: adminDashboard.url(),
     },
     {
-        title: 'Audit Log',
+        title: "Activity",
         href: adminAuditLog.url(),
     },
 ];
 
 function methodColor(method: string): string {
     switch (method.toUpperCase()) {
-        case 'GET':
-            return 'text-emerald-500';
-        case 'POST':
-            return 'text-sky-500';
-        case 'PATCH':
-        case 'PUT':
-            return 'text-amber-500';
-        case 'DELETE':
-            return 'text-red-500';
+        case "GET":
+            return "text-emerald-500";
+        case "POST":
+            return "text-sky-500";
+        case "PATCH":
+        case "PUT":
+            return "text-amber-500";
+        case "DELETE":
+            return "text-red-500";
         default:
-            return 'text-muted-foreground';
+            return "text-muted-foreground";
     }
 }
 
 function statusColor(code: number | null): string {
     if (!code) {
-        return 'text-muted-foreground';
+        return "text-muted-foreground";
     }
 
     if (code < 300) {
-        return 'text-emerald-500';
+        return "text-emerald-500";
     }
 
     if (code < 400) {
-        return 'text-sky-500';
+        return "text-sky-500";
     }
 
     if (code < 500) {
-        return 'text-amber-500';
+        return "text-amber-500";
     }
 
-    return 'text-red-500';
+    return "text-red-500";
 }
 
 function deviceLabel(userAgent: string | null): string {
-    const agent = userAgent?.toLowerCase() ?? '';
+    const agent = userAgent?.toLowerCase() ?? "";
 
     if (
-        agent.includes('iphone') ||
-        agent.includes('android') ||
-        agent.includes('mobile')
+        agent.includes("iphone") ||
+        agent.includes("android") ||
+        agent.includes("mobile")
     ) {
-        return 'Mobile device';
+        return "Mobile device";
     }
 
-    if (agent.includes('ipad') || agent.includes('tablet')) {
-        return 'Tablet';
+    if (agent.includes("ipad") || agent.includes("tablet")) {
+        return "Tablet";
     }
 
-    return 'Desktop browser';
+    return "Desktop browser";
 }
 
 function DetailRow({ label, value }: { label: string; value: string | null }) {
@@ -120,29 +119,29 @@ function DetailRow({ label, value }: { label: string; value: string | null }) {
     return (
         <div className="grid gap-1">
             <p className="text-xs text-muted-foreground">{label}</p>
-            <p className="break-words text-sm text-foreground">{value}</p>
+            <p className="wrap-break-word text-sm text-foreground">{value}</p>
         </div>
     );
 }
 
 const columns: Column<ActivityItem>[] = [
     {
-        label: 'User',
-        width: 'w-[25%] shrink-0 pr-4',
+        label: "User",
+        width: "w-[25%] shrink-0 pr-4",
         render: (item) => (
             <>
                 <p className="truncate text-sm font-medium text-foreground">
-                    {item.user?.name ?? 'System'}
+                    {item.user?.name ?? "System"}
                 </p>
                 <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                    {item.user?.email ?? '—'}
+                    {item.user?.email ?? "—"}
                 </p>
             </>
         ),
     },
     {
-        label: 'Activity',
-        width: 'w-[30%] shrink-0 pr-4',
+        label: "Activity",
+        width: "w-[30%] shrink-0 pr-4",
         render: (item) => (
             <>
                 <p className="truncate text-sm font-medium text-foreground">
@@ -155,12 +154,12 @@ const columns: Column<ActivityItem>[] = [
         ),
     },
     {
-        label: 'Method',
-        width: 'w-[10%] shrink-0',
+        label: "Method",
+        width: "w-[10%] shrink-0",
         render: (item) => (
             <span
                 className={cn(
-                    'font-mono text-xs font-medium',
+                    "font-mono text-xs font-medium",
                     methodColor(item.method),
                 )}
             >
@@ -169,25 +168,25 @@ const columns: Column<ActivityItem>[] = [
         ),
     },
     {
-        label: 'Status',
-        width: 'w-[10%] shrink-0',
+        label: "Status",
+        width: "w-[10%] shrink-0",
         render: (item) => (
             <span
                 className={cn(
-                    'font-mono text-xs font-medium',
+                    "font-mono text-xs font-medium",
                     statusColor(item.statusCode),
                 )}
             >
-                {item.statusCode ?? '—'}
+                {item.statusCode ?? "—"}
             </span>
         ),
     },
     {
-        label: 'Time',
-        width: 'flex-1',
+        label: "Time",
+        width: "flex-1",
         render: (item) => (
             <p className="text-sm text-muted-foreground">
-                {item.createdAtHuman ?? 'Unknown'}
+                {item.createdAtHuman ?? "Unknown"}
             </p>
         ),
     },
@@ -209,10 +208,10 @@ export default function AuditLog({ activities, filters }: Props) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Admin — Audit Log" />
+            <Head title="Admin — Activity" />
 
             <AdminLayout
-                title="Audit Log"
+                title="Activity"
                 description="Platform-wide activity across all users."
             >
                 <DataTable
@@ -253,7 +252,7 @@ export default function AuditLog({ activities, filters }: Props) {
                                         value={
                                             selectedActivity.user
                                                 ? `${selectedActivity.user.name} (${selectedActivity.user.email})`
-                                                : 'System'
+                                                : "System"
                                         }
                                     />
                                     <DetailRow
@@ -261,10 +260,10 @@ export default function AuditLog({ activities, filters }: Props) {
                                         value={
                                             selectedActivity.createdAt
                                                 ? new Intl.DateTimeFormat(
-                                                      'en-GB',
+                                                      "en-GB",
                                                       {
-                                                          dateStyle: 'medium',
-                                                          timeStyle: 'short',
+                                                          dateStyle: "medium",
+                                                          timeStyle: "short",
                                                       },
                                                   ).format(
                                                       new Date(

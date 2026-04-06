@@ -1,4 +1,4 @@
-import { Form, Head, router } from '@inertiajs/react';
+import { Form, Head, router } from "@inertiajs/react";
 import {
     Crown,
     Ellipsis,
@@ -8,9 +8,9 @@ import {
     Trash2,
     UserX,
     UserRoundCog,
-} from 'lucide-react';
-import { useRef, useState } from 'react';
-import { toast } from '@/components/ui/sonner';
+} from "lucide-react";
+import { useRef, useState } from "react";
+import { toast } from "@/components/ui/sonner";
 import {
     destroy,
     impersonate,
@@ -19,44 +19,44 @@ import {
     suspend,
     unsuspend,
     update,
-} from '@/actions/App/Http/Controllers/Admin/UsersController';
-import { bulkDestroy } from '@/actions/App/Http/Controllers/Admin/UsersController';
-import { ConfirmDeleteDialog, DataTable } from '@/components/admin/data-table';
-import type { Column, PaginatedData } from '@/components/admin/data-table';
-import InputError from '@/components/input-error';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+} from "@/actions/App/Http/Controllers/Admin/UsersController";
+import { bulkDestroy } from "@/actions/App/Http/Controllers/Admin/UsersController";
+import { ConfirmDeleteDialog, DataTable } from "@/components/admin/data-table";
+import type { Column, PaginatedData } from "@/components/admin/data-table";
+import InputError from "@/components/input-error";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
     Dialog,
     DialogContent,
     DialogContentFull,
     DialogHeader,
     DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { SlidingTabs } from '@/components/ui/sliding-tabs';
-import type { Tab } from '@/components/ui/sliding-tabs';
-import { Spinner } from '@/components/ui/spinner';
-import { Switch } from '@/components/ui/switch';
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { SlidingTabs } from "@/components/ui/sliding-tabs";
+import type { Tab } from "@/components/ui/sliding-tabs";
+import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
 import {
     Tooltip,
     TooltipContent,
     TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { useInitials } from '@/hooks/use-initials';
-import { useDialogState } from '@/hooks/use-dialog-state';
-import AdminLayout from '@/layouts/admin/layout';
-import AppLayout from '@/layouts/app-layout';
-import { formatDate, formatRelativeTime } from '@/lib/format';
-import { cn } from '@/lib/utils';
-import type { BreadcrumbItem, User } from '@/types';
+} from "@/components/ui/tooltip";
+import { useInitials } from "@/hooks/use-initials";
+import { useDialogState } from "@/hooks/use-dialog-state";
+import AdminLayout from "@/layouts/admin/layout";
+import AppLayout from "@/layouts/app-layout";
+import { formatDate, formatRelativeTime } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import type { BreadcrumbItem, User } from "@/types";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -73,8 +73,8 @@ type Props = {
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Admin', href: adminUsers.url() },
-    { title: 'Users', href: adminUsers.url() },
+    { title: "Admin", href: adminUsers.url() },
+    { title: "Users", href: adminUsers.url() },
 ];
 
 // ─── User detail modal ────────────────────────────────────────────────────────
@@ -93,7 +93,7 @@ function UserModal({
     onSuspensionRequested: (user: AdminUser) => void;
 }) {
     const getInitials = useInitials();
-    const [tab, setTab] = useState('overview');
+    const [tab, setTab] = useState("overview");
     const isSuspended = user.suspended_at !== null;
 
     const MIN_MS = 600;
@@ -153,39 +153,39 @@ function UserModal({
 
                 <div className="flex-1 overflow-y-auto px-6 py-6">
                     {/* Overview tab */}
-                    {tab === 'overview' && (
+                    {tab === "overview" && (
                         <div className="flex gap-6">
                             {/* Left — user info list */}
                             <div className="min-w-0 flex-1 space-y-1">
                                 {[
-                                    { label: 'User ID', value: `#${user.id}` },
-                                    { label: 'Name', value: user.name },
-                                    { label: 'Email', value: user.email },
+                                    { label: "User ID", value: `#${user.id}` },
+                                    { label: "Name", value: user.name },
+                                    { label: "Email", value: user.email },
                                     {
-                                        label: 'Role',
+                                        label: "Role",
                                         value: user.is_admin
-                                            ? 'Administrator'
-                                            : 'User',
+                                            ? "Administrator"
+                                            : "User",
                                     },
                                     {
-                                        label: 'Joined',
+                                        label: "Joined",
                                         value: formatDate(
                                             user.created_at,
                                             true,
                                         ),
                                     },
                                     {
-                                        label: 'Last updated',
+                                        label: "Last updated",
                                         value: formatDate(
                                             user.updated_at,
                                             true,
                                         ),
                                     },
                                     {
-                                        label: 'Two-factor',
+                                        label: "Two-factor",
                                         value: user.two_factor_confirmed_at
                                             ? `Enabled ${formatDate(user.two_factor_confirmed_at)}`
-                                            : 'Disabled',
+                                            : "Disabled",
                                     },
                                 ].map(({ label, value }) => (
                                     <div
@@ -218,7 +218,7 @@ function UserModal({
                             )}
 
                             {/* Right — stat cards (table style) */}
-                            <div className="w-[300px] shrink-0 space-y-3">
+                            <div className="w-75 shrink-0 space-y-3">
                                 {/* Status card */}
                                 <div className="overflow-hidden rounded-lg bg-muted/40">
                                     <div className="px-4 py-2.5">
@@ -229,19 +229,19 @@ function UserModal({
                                     <div className="rounded-lg border border-border/70 bg-background p-5">
                                         <p
                                             className={cn(
-                                                'text-3xl font-semibold',
+                                                "text-3xl font-semibold",
                                                 isSuspended
-                                                    ? 'text-destructive'
-                                                    : 'text-emerald-600 dark:text-emerald-400',
+                                                    ? "text-destructive"
+                                                    : "text-emerald-600 dark:text-emerald-400",
                                             )}
                                         >
                                             {isSuspended
-                                                ? 'Suspended'
-                                                : 'Active'}
+                                                ? "Suspended"
+                                                : "Active"}
                                         </p>
                                         {isSuspended && user.suspended_at && (
                                             <p className="mt-1 text-xs text-muted-foreground">
-                                                Since{' '}
+                                                Since{" "}
                                                 {formatDate(
                                                     user.suspended_at,
                                                     true,
@@ -269,7 +269,7 @@ function UserModal({
                     )}
 
                     {/* Edit tab */}
-                    {tab === 'edit' && (
+                    {tab === "edit" && (
                         <div className="grid grid-cols-2 gap-8">
                             {/* Update profile */}
                             <div>
@@ -296,7 +296,7 @@ function UserModal({
                                         );
                                     }}
                                     onSuccess={() =>
-                                        toast.success('Profile updated')
+                                        toast.success("Profile updated")
                                     }
                                     onError={(errors) =>
                                         Object.values(errors).forEach((m) =>
@@ -376,7 +376,7 @@ function UserModal({
                                         );
                                     }}
                                     onSuccess={() =>
-                                        toast.success('Password updated')
+                                        toast.success("Password updated")
                                     }
                                     onError={(errors) =>
                                         Object.values(errors).forEach((m) =>
@@ -513,36 +513,36 @@ function UserModal({
                     )}
 
                     {/* Danger tab */}
-                    {tab === 'danger' && (
+                    {tab === "danger" && (
                         <div className="space-y-3">
                             {/* Suspend / Unsuspend */}
                             <div className="overflow-hidden rounded-lg bg-muted/40">
                                 <div className="flex items-center justify-between px-4 py-2.5">
                                     <span className="text-xs font-medium text-muted-foreground">
                                         {isSuspended
-                                            ? 'Unsuspend account'
-                                            : 'Suspend account'}
+                                            ? "Unsuspend account"
+                                            : "Suspend account"}
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-between rounded-lg border border-border/70 bg-background p-4">
                                     <p className="text-sm text-muted-foreground">
                                         {isSuspended
-                                            ? 'Allow this user to access the platform again.'
-                                            : 'Prevent this user from logging in.'}
+                                            ? "Allow this user to access the platform again."
+                                            : "Prevent this user from logging in."}
                                     </p>
                                     <Button
                                         type="button"
                                         variant={
                                             isSuspended
-                                                ? 'outline'
-                                                : 'destructive'
+                                                ? "outline"
+                                                : "destructive"
                                         }
                                         size="sm"
                                         onClick={() =>
                                             onSuspensionRequested(user)
                                         }
                                     >
-                                        {isSuspended ? 'Unsuspend' : 'Suspend'}
+                                        {isSuspended ? "Unsuspend" : "Suspend"}
                                     </Button>
                                 </div>
                             </div>
@@ -561,7 +561,7 @@ function UserModal({
                                     <Form
                                         {...impersonate.form(user.id)}
                                         onStart={() =>
-                                            setActioning('impersonate')
+                                            setActioning("impersonate")
                                         }
                                         onFinish={() => setActioning(null)}
                                         onError={(errors) =>
@@ -576,11 +576,11 @@ function UserModal({
                                                 variant="outline"
                                                 size="sm"
                                                 disabled={
-                                                    actioning === 'impersonate'
+                                                    actioning === "impersonate"
                                                 }
                                             >
                                                 {actioning ===
-                                                    'impersonate' && (
+                                                    "impersonate" && (
                                                     <Spinner />
                                                 )}
                                                 Impersonate
@@ -662,7 +662,7 @@ function CreateUserModal({
                         );
                     }}
                     onSuccess={() => {
-                        toast.success('User created');
+                        toast.success("User created");
                         onClose();
                     }}
                     onError={(errors) =>
@@ -809,8 +809,8 @@ export default function Users({ users, filters }: Props) {
                 onSuccess: () => {
                     toast.success(
                         user.suspended_at
-                            ? 'User unsuspended'
-                            : 'User suspended',
+                            ? "User unsuspended"
+                            : "User suspended",
                     );
                     options?.onSuccess?.();
                 },
@@ -825,8 +825,8 @@ export default function Users({ users, filters }: Props) {
 
     const columns: Column<AdminUser>[] = [
         {
-            label: 'User',
-            width: 'w-[45%]',
+            label: "User",
+            width: "w-[45%]",
             render: (user) => (
                 <div className="flex items-center gap-3">
                     <Avatar className="h-7 w-7 shrink-0 overflow-hidden rounded">
@@ -853,16 +853,16 @@ export default function Users({ users, filters }: Props) {
                                         >
                                             <Crown
                                                 className={cn(
-                                                    'h-3.5 w-3.5 shrink-0 text-yellow-500',
-                                                    adminOnly && 'fill-current',
+                                                    "h-3.5 w-3.5 shrink-0 text-yellow-500",
+                                                    adminOnly && "fill-current",
                                                 )}
                                             />
                                         </button>
                                     </TooltipTrigger>
                                     <TooltipContent>
                                         {adminOnly
-                                            ? 'Show all users'
-                                            : 'Filter admins'}
+                                            ? "Show all users"
+                                            : "Filter admins"}
                                     </TooltipContent>
                                 </Tooltip>
                             )}
@@ -875,8 +875,8 @@ export default function Users({ users, filters }: Props) {
             ),
         },
         {
-            label: 'Last updated',
-            width: 'w-[20%]',
+            label: "Last updated",
+            width: "w-[20%]",
             render: (user) => (
                 <div className="text-xs text-muted-foreground">
                     <Tooltip>
@@ -893,8 +893,8 @@ export default function Users({ users, filters }: Props) {
             ),
         },
         {
-            label: '2FA',
-            width: 'flex-1',
+            label: "2FA",
+            width: "flex-1",
             render: (user) => (
                 <div className="flex items-center">
                     {user.two_factor_confirmed_at ? (
@@ -937,7 +937,7 @@ export default function Users({ users, filters }: Props) {
                         }}
                     >
                         <UserX className="mr-2 h-4 w-4" />
-                        {user.suspended_at ? 'Unsuspend' : 'Suspend'}
+                        {user.suspended_at ? "Unsuspend" : "Suspend"}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         className="cursor-pointer"
@@ -1018,15 +1018,15 @@ export default function Users({ users, filters }: Props) {
                         setSuspensionUser(null);
                     }
                 }}
-                title={`${suspensionUser?.suspended_at ? 'Unsuspend' : 'Suspend'} ${suspensionUser?.name}?`}
+                title={`${suspensionUser?.suspended_at ? "Unsuspend" : "Suspend"} ${suspensionUser?.name}?`}
                 description={
                     suspensionUser?.suspended_at
-                        ? 'This will restore this account and allow the user to sign in again.'
-                        : 'This will immediately block this account from signing in until it is unsuspended.'
+                        ? "This will restore this account and allow the user to sign in again."
+                        : "This will immediately block this account from signing in until it is unsuspended."
                 }
                 loading={singleSuspending}
                 confirmLabel={
-                    suspensionUser?.suspended_at ? 'Unsuspend' : 'Suspend'
+                    suspensionUser?.suspended_at ? "Unsuspend" : "Suspend"
                 }
                 onConfirm={() => {
                     if (!suspensionUser) {

@@ -1,4 +1,4 @@
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from "@inertiajs/react";
 import {
     Copy,
     Ellipsis,
@@ -8,8 +8,8 @@ import {
     ShieldCheck,
     ShieldX,
     Trash2,
-} from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+} from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
     bulkDestroy,
     destroy,
@@ -17,12 +17,12 @@ import {
     store,
     storeAllocation,
     update,
-} from '@/actions/App/Http/Controllers/Admin/NodesController';
-import { ConfirmDeleteDialog, DataTable } from '@/components/admin/data-table';
-import type { Column, PaginatedData } from '@/components/admin/data-table';
-import { CountryFlagIcon, CountryFlagOption } from '@/components/country-flag';
-import InputError from '@/components/input-error';
-import { toast } from '@/components/ui/sonner';
+} from "@/actions/App/Http/Controllers/Admin/NodesController";
+import { ConfirmDeleteDialog, DataTable } from "@/components/admin/data-table";
+import type { Column, PaginatedData } from "@/components/admin/data-table";
+import { CountryFlagIcon, CountryFlagOption } from "@/components/country-flag";
+import InputError from "@/components/input-error";
+import { toast } from "@/components/ui/sonner";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -32,8 +32,8 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import {
     Dialog,
     DialogContent,
@@ -41,36 +41,36 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
-} from '@/components/ui/select';
-import { SlidingTabs } from '@/components/ui/sliding-tabs';
-import type { Tab } from '@/components/ui/sliding-tabs';
-import { Spinner } from '@/components/ui/spinner';
-import { Switch } from '@/components/ui/switch';
+} from "@/components/ui/select";
+import { SlidingTabs } from "@/components/ui/sliding-tabs";
+import type { Tab } from "@/components/ui/sliding-tabs";
+import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
 import {
     Tooltip,
     TooltipContent,
     TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { useDialogState } from '@/hooks/use-dialog-state';
-import AdminLayout from '@/layouts/admin/layout';
-import AppLayout from '@/layouts/app-layout';
-import { formatDate } from '@/lib/format';
-import { cn } from '@/lib/utils';
-import type { BreadcrumbItem } from '@/types';
+} from "@/components/ui/tooltip";
+import { useDialogState } from "@/hooks/use-dialog-state";
+import AdminLayout from "@/layouts/admin/layout";
+import AppLayout from "@/layouts/app-layout";
+import { formatDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import type { BreadcrumbItem } from "@/types";
 
 type LocationOption = {
     id: number;
@@ -98,7 +98,7 @@ type AdminNode = {
     location: LocationOption;
     allocations: NodeAllocation[];
     status?: string;
-    connection_status?: 'online' | 'offline' | 'configured' | 'draft';
+    connection_status?: "online" | "offline" | "configured" | "draft";
     last_seen_at?: string;
     daemon_uuid?: string;
     daemon_version?: string;
@@ -113,7 +113,7 @@ type Props = {
 
 type NodeFormData = {
     name: string;
-    location_id: number | '';
+    location_id: number | "";
     fqdn: string;
     daemon_port: number;
     sftp_port: number;
@@ -121,16 +121,16 @@ type NodeFormData = {
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Admin', href: adminNodes.url() },
-    { title: 'Nodes', href: adminNodes.url() },
+    { title: "Admin", href: adminNodes.url() },
+    { title: "Nodes", href: adminNodes.url() },
 ];
 
 const tabs: Tab[] = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'edit', label: 'Edit' },
-    { id: 'allocations', label: 'Allocations' },
-    { id: 'configure', label: 'Configure' },
-    { id: 'danger', label: 'Danger' },
+    { id: "overview", label: "Overview" },
+    { id: "edit", label: "Edit" },
+    { id: "allocations", label: "Allocations" },
+    { id: "configure", label: "Configure" },
+    { id: "danger", label: "Danger" },
 ];
 
 function StackedStatCard({
@@ -154,7 +154,7 @@ function StackedStatCard({
             <div className="rounded-lg border border-border/70 bg-background p-5">
                 <p
                     className={cn(
-                        'text-3xl font-semibold text-foreground',
+                        "text-3xl font-semibold text-foreground",
                         valueClassName,
                     )}
                 >
@@ -172,14 +172,14 @@ function StackedStatCard({
 
 function resolveNodePresence(
     node: AdminNode,
-): 'online' | 'offline' | 'unconfigured' {
-    const status = node.connection_status ?? node.status ?? 'draft';
+): "online" | "offline" | "unconfigured" {
+    const status = node.connection_status ?? node.status ?? "draft";
 
-    if (!node.daemon_uuid || status === 'draft' || status === 'configured') {
-        return 'unconfigured';
+    if (!node.daemon_uuid || status === "draft" || status === "configured") {
+        return "unconfigured";
     }
 
-    return status === 'online' ? 'online' : 'offline';
+    return status === "online" ? "online" : "offline";
 }
 
 function formatDetailedRelativeTime(
@@ -187,7 +187,7 @@ function formatDetailedRelativeTime(
     now: number,
 ): string {
     if (!value) {
-        return 'never';
+        return "never";
     }
 
     const seconds = Math.max(
@@ -196,21 +196,21 @@ function formatDetailedRelativeTime(
     );
 
     if (seconds < 60) {
-        return 'just now';
+        return "just now";
     }
 
     const minutes = Math.round(seconds / 60);
     if (minutes < 60) {
-        return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+        return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
     }
 
     const hours = Math.round(minutes / 60);
     if (hours < 24) {
-        return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+        return `${hours} hour${hours === 1 ? "" : "s"} ago`;
     }
 
     const days = Math.round(hours / 24);
-    return `${days} day${days === 1 ? '' : 's'} ago`;
+    return `${days} day${days === 1 ? "" : "s"} ago`;
 }
 
 function NodeConnectionIndicator({
@@ -221,7 +221,7 @@ function NodeConnectionIndicator({
     now: number;
 }) {
     const presence = resolveNodePresence(node);
-    const isOnline = presence === 'online';
+    const isOnline = presence === "online";
 
     return (
         <Tooltip>
@@ -232,30 +232,30 @@ function NodeConnectionIndicator({
                     ) : null}
                     <Heart
                         className={cn(
-                            'relative size-4 origin-center transition-colors',
+                            "relative size-4 origin-center transition-colors",
                             isOnline
-                                ? 'fill-emerald-700 text-emerald-700 animate-[node-heartbeat_1.6s_ease-in-out_infinite] dark:fill-emerald-600 dark:text-emerald-600'
-                                : 'fill-transparent text-muted-foreground/60',
+                                ? "fill-emerald-700 text-emerald-700 animate-[node-heartbeat_1.6s_ease-in-out_infinite] dark:fill-emerald-600 dark:text-emerald-600"
+                                : "fill-transparent text-muted-foreground/60",
                         )}
                         aria-hidden="true"
                     />
                 </span>
             </TooltipTrigger>
             <TooltipContent side="top" className="px-3 py-2 text-left">
-                {presence === 'online' ? (
+                {presence === "online" ? (
                     <div className="space-y-0.5">
                         <p className="text-sm font-medium">Online</p>
                         <p className="text-xs text-muted-foreground">
                             {node.daemon_version
                                 ? `skyportd ${node.daemon_version}`
-                                : 'skyportd unknown'}
+                                : "skyportd unknown"}
                         </p>
                     </div>
-                ) : presence === 'offline' ? (
+                ) : presence === "offline" ? (
                     <div className="space-y-0.5">
                         <p className="text-sm font-medium">Offline</p>
                         <p className="text-xs text-muted-foreground">
-                            Last seen{' '}
+                            Last seen{" "}
                             {formatDetailedRelativeTime(node.last_seen_at, now)}
                         </p>
                     </div>
@@ -272,7 +272,7 @@ function LocationSelect({
     onChange,
     locations,
 }: {
-    value: number | '';
+    value: number | "";
     onChange: (value: number) => void;
     locations: LocationOption[];
 }) {
@@ -282,19 +282,19 @@ function LocationSelect({
 
     return (
         <Select
-            value={value === '' ? '' : String(value)}
+            value={value === "" ? "" : String(value)}
             onValueChange={(selected) => onChange(Number(selected))}
         >
             <SelectTrigger className="w-full">
                 <span
                     className={cn(
-                        'truncate',
-                        !selectedLocation && 'text-muted-foreground',
+                        "truncate",
+                        !selectedLocation && "text-muted-foreground",
                     )}
                 >
                     {selectedLocation
                         ? selectedLocation.name
-                        : 'Choose a location'}
+                        : "Choose a location"}
                 </span>
             </SelectTrigger>
             <SelectContent>
@@ -333,7 +333,7 @@ function NodeFormFields({
                 <Input
                     id="node-name"
                     value={data.name}
-                    onChange={(event) => setData('name', event.target.value)}
+                    onChange={(event) => setData("name", event.target.value)}
                     placeholder="London 01"
                     required
                 />
@@ -344,7 +344,7 @@ function NodeFormFields({
                 <Label>Location</Label>
                 <LocationSelect
                     value={data.location_id}
-                    onChange={(value) => setData('location_id', value)}
+                    onChange={(value) => setData("location_id", value)}
                     locations={locations}
                 />
                 <InputError message={errors.location_id} />
@@ -355,7 +355,7 @@ function NodeFormFields({
                 <Input
                     id="node-fqdn"
                     value={data.fqdn}
-                    onChange={(event) => setData('fqdn', event.target.value)}
+                    onChange={(event) => setData("fqdn", event.target.value)}
                     placeholder="node-01.example.com"
                     required
                 />
@@ -370,7 +370,7 @@ function NodeFormFields({
                         type="number"
                         value={data.daemon_port}
                         onChange={(event) =>
-                            setData('daemon_port', Number(event.target.value))
+                            setData("daemon_port", Number(event.target.value))
                         }
                         min={1}
                         max={65535}
@@ -386,7 +386,7 @@ function NodeFormFields({
                         type="number"
                         value={data.sftp_port}
                         onChange={(event) =>
-                            setData('sftp_port', Number(event.target.value))
+                            setData("sftp_port", Number(event.target.value))
                         }
                         min={1}
                         max={65535}
@@ -406,7 +406,7 @@ function NodeFormFields({
                 <Switch
                     id="node-use-ssl"
                     checked={data.use_ssl}
-                    onCheckedChange={(checked) => setData('use_ssl', checked)}
+                    onCheckedChange={(checked) => setData("use_ssl", checked)}
                 />
             </div>
         </div>
@@ -416,7 +416,7 @@ function NodeFormFields({
 function csrfToken(): string {
     return (
         document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
-            ?.content ?? ''
+            ?.content ?? ""
     );
 }
 
@@ -427,7 +427,7 @@ type ConfigurationData = {
 };
 
 type AllocationFormData = {
-    mode: 'single' | 'range';
+    mode: "single" | "range";
     bind_ip: string;
     ip_alias: string;
     port: string;
@@ -443,12 +443,12 @@ function CreateAllocationModal({
     onClose: () => void;
 }) {
     const form = useForm<AllocationFormData>({
-        mode: 'single',
-        bind_ip: '0.0.0.0',
+        mode: "single",
+        bind_ip: "0.0.0.0",
         ip_alias: node.fqdn,
-        port: '',
-        start_port: '',
-        end_port: '',
+        port: "",
+        start_port: "",
+        end_port: "",
     });
     const minimumMs = 500;
     const submitStart = useRef(0);
@@ -468,7 +468,7 @@ function CreateAllocationModal({
                 setTimeout(() => setSubmitting(false), Math.max(0, remaining));
             },
             onSuccess: () => {
-                toast.success('Allocation created');
+                toast.success("Allocation created");
                 onClose();
             },
             onError: (errors) => {
@@ -494,15 +494,15 @@ function CreateAllocationModal({
                         <Label>Mode</Label>
                         <Select
                             value={form.data.mode}
-                            onValueChange={(value: 'single' | 'range') =>
-                                form.setData('mode', value)
+                            onValueChange={(value: "single" | "range") =>
+                                form.setData("mode", value)
                             }
                         >
                             <SelectTrigger className="w-full">
                                 <span>
-                                    {form.data.mode === 'single'
-                                        ? 'Single port'
-                                        : 'Port range'}
+                                    {form.data.mode === "single"
+                                        ? "Single port"
+                                        : "Port range"}
                                 </span>
                             </SelectTrigger>
                             <SelectContent>
@@ -523,7 +523,7 @@ function CreateAllocationModal({
                                 id="allocation-bind-ip"
                                 value={form.data.bind_ip}
                                 onChange={(event) =>
-                                    form.setData('bind_ip', event.target.value)
+                                    form.setData("bind_ip", event.target.value)
                                 }
                                 placeholder="0.0.0.0"
                                 required
@@ -538,7 +538,7 @@ function CreateAllocationModal({
                                 id="allocation-ip-alias"
                                 value={form.data.ip_alias}
                                 onChange={(event) =>
-                                    form.setData('ip_alias', event.target.value)
+                                    form.setData("ip_alias", event.target.value)
                                 }
                                 placeholder={node.fqdn}
                             />
@@ -546,7 +546,7 @@ function CreateAllocationModal({
                         </div>
                     </div>
 
-                    {form.data.mode === 'single' ? (
+                    {form.data.mode === "single" ? (
                         <div className="grid gap-2">
                             <Label htmlFor="allocation-port">Port</Label>
                             <Input
@@ -556,7 +556,7 @@ function CreateAllocationModal({
                                 max={65535}
                                 value={form.data.port}
                                 onChange={(event) =>
-                                    form.setData('port', event.target.value)
+                                    form.setData("port", event.target.value)
                                 }
                                 required
                             />
@@ -576,7 +576,7 @@ function CreateAllocationModal({
                                     value={form.data.start_port}
                                     onChange={(event) =>
                                         form.setData(
-                                            'start_port',
+                                            "start_port",
                                             event.target.value,
                                         )
                                     }
@@ -596,7 +596,7 @@ function CreateAllocationModal({
                                     value={form.data.end_port}
                                     onChange={(event) =>
                                         form.setData(
-                                            'end_port',
+                                            "end_port",
                                             event.target.value,
                                         )
                                     }
@@ -635,11 +635,11 @@ function ConfigureTab({
     const [generating, setGenerating] = useState(false);
     const [copied, setCopied] = useState(false);
     const [showReconfigureWarning, setShowReconfigureWarning] = useState(false);
-    const connectionStatus = node.connection_status ?? node.status ?? 'draft';
+    const connectionStatus = node.connection_status ?? node.status ?? "draft";
 
-    const currentStatus = node.daemon_uuid ? connectionStatus : 'draft';
+    const currentStatus = node.daemon_uuid ? connectionStatus : "draft";
     const requiresReconfigureWarning =
-        currentStatus === 'online' || currentStatus === 'offline';
+        currentStatus === "online" || currentStatus === "offline";
 
     const generateConfigurationToken = async () => {
         setGenerating(true);
@@ -647,28 +647,28 @@ function ConfigureTab({
             const response = await fetch(
                 `/admin/nodes/${node.id}/configure-token`,
                 {
-                    credentials: 'same-origin',
+                    credentials: "same-origin",
                     headers: {
-                        Accept: 'application/json',
-                        'X-CSRF-TOKEN': csrfToken(),
+                        Accept: "application/json",
+                        "X-CSRF-TOKEN": csrfToken(),
                     },
-                    method: 'POST',
+                    method: "POST",
                 },
             );
 
             if (!response.ok) {
-                throw new Error('Failed to generate configuration token');
+                throw new Error("Failed to generate configuration token");
             }
 
             const data = await response.json();
             setConfigurationData(data);
             onUpdateStatus(data.status);
-            toast.success('Configuration token generated');
+            toast.success("Configuration token generated");
         } catch (error) {
             const message =
                 error instanceof Error
                     ? error.message
-                    : 'Failed to generate configuration token';
+                    : "Failed to generate configuration token";
             toast.error(message);
         } finally {
             setGenerating(false);
@@ -712,22 +712,22 @@ function ConfigureTab({
                         </span>
                         <span
                             className={`text-sm font-medium ${
-                                currentStatus === 'online'
-                                    ? 'text-emerald-600 dark:text-emerald-400'
-                                    : currentStatus === 'offline'
-                                      ? 'text-red-600 dark:text-red-400'
-                                      : currentStatus === 'configured'
-                                        ? 'text-amber-600 dark:text-amber-400'
-                                        : 'text-muted-foreground'
+                                currentStatus === "online"
+                                    ? "text-emerald-600 dark:text-emerald-400"
+                                    : currentStatus === "offline"
+                                      ? "text-red-600 dark:text-red-400"
+                                      : currentStatus === "configured"
+                                        ? "text-amber-600 dark:text-amber-400"
+                                        : "text-muted-foreground"
                             }`}
                         >
-                            {currentStatus === 'online'
-                                ? 'Online'
-                                : currentStatus === 'offline'
-                                  ? 'Offline'
-                                  : currentStatus === 'configured'
-                                    ? 'Configured'
-                                    : 'Not configured yet'}
+                            {currentStatus === "online"
+                                ? "Online"
+                                : currentStatus === "offline"
+                                  ? "Offline"
+                                  : currentStatus === "configured"
+                                    ? "Configured"
+                                    : "Not configured yet"}
                         </span>
                     </div>
 
@@ -791,7 +791,7 @@ function ConfigureTab({
                                 className="h-7 cursor-pointer"
                             >
                                 <Copy className="mr-1.5 h-3.5 w-3.5" />
-                                {copied ? 'Copied!' : 'Copy'}
+                                {copied ? "Copied!" : "Copy"}
                             </Button>
                         </div>
                         <div className="break-all rounded bg-muted/60 px-3 py-2 font-mono text-xs text-foreground">
@@ -819,7 +819,7 @@ function ConfigureTab({
                             Generating...
                         </>
                     ) : (
-                        'Generate Configuration Token'
+                        "Generate Configuration Token"
                     )}
                 </Button>
             </div>
@@ -871,9 +871,9 @@ function CreateNodeModal({
     locations: LocationOption[];
 }) {
     const form = useForm<NodeFormData>({
-        name: '',
-        location_id: locations[0]?.id ?? '',
-        fqdn: '',
+        name: "",
+        location_id: locations[0]?.id ?? "",
+        fqdn: "",
         daemon_port: 2800,
         sftp_port: 3128,
         use_ssl: false,
@@ -896,7 +896,7 @@ function CreateNodeModal({
                 setTimeout(() => setSubmitting(false), Math.max(0, remaining));
             },
             onSuccess: () => {
-                toast.success('Node created');
+                toast.success("Node created");
                 onClose();
             },
             onError: (errors: Record<string, string>) => {
@@ -953,7 +953,7 @@ function NodeModal({
     onDelete: (node: AdminNode) => void;
     locations: LocationOption[];
 }) {
-    const [tab, setTab] = useState('overview');
+    const [tab, setTab] = useState("overview");
     const form = useForm<NodeFormData>({
         name: node.name,
         location_id: node.location.id,
@@ -1044,38 +1044,38 @@ function NodeModal({
                 <div className="border-t border-border/60" />
 
                 <div className="flex-1 overflow-y-auto px-6 py-6">
-                    {tab === 'overview' ? (
+                    {tab === "overview" ? (
                         <div className="flex gap-6">
                             <div className="min-w-0 flex-1 space-y-1">
                                 {[
-                                    { label: 'Node ID', value: `#${node.id}` },
-                                    { label: 'Name', value: node.name },
+                                    { label: "Node ID", value: `#${node.id}` },
+                                    { label: "Name", value: node.name },
                                     {
-                                        label: 'Location',
+                                        label: "Location",
                                         value: node.location.name,
                                     },
                                     {
-                                        label: 'Country',
+                                        label: "Country",
                                         value: node.location.country,
                                     },
-                                    { label: 'FQDN', value: node.fqdn },
+                                    { label: "FQDN", value: node.fqdn },
                                     {
-                                        label: 'Daemon port',
+                                        label: "Daemon port",
                                         value: String(node.daemon_port),
                                     },
                                     {
-                                        label: 'SFTP port',
+                                        label: "SFTP port",
                                         value: String(node.sftp_port),
                                     },
                                     {
-                                        label: 'Created',
+                                        label: "Created",
                                         value: formatDate(
                                             node.created_at,
                                             true,
                                         ),
                                     },
                                     {
-                                        label: 'Last updated',
+                                        label: "Last updated",
                                         value: formatDate(
                                             node.updated_at,
                                             true,
@@ -1096,21 +1096,21 @@ function NodeModal({
                                 ))}
                             </div>
 
-                            <div className="w-[300px] shrink-0 space-y-3">
+                            <div className="w-75 shrink-0 space-y-3">
                                 <StackedStatCard
                                     label="SSL"
                                     value={
-                                        node.use_ssl ? 'Enabled' : 'Disabled'
+                                        node.use_ssl ? "Enabled" : "Disabled"
                                     }
                                     valueClassName={
                                         node.use_ssl
-                                            ? 'text-emerald-600 dark:text-emerald-400'
-                                            : 'text-muted-foreground'
+                                            ? "text-emerald-600 dark:text-emerald-400"
+                                            : "text-muted-foreground"
                                     }
                                     description={
                                         node.use_ssl
-                                            ? 'Secure daemon connections are active.'
-                                            : 'Daemon connections use plain HTTP.'
+                                            ? "Secure daemon connections are active."
+                                            : "Daemon connections use plain HTTP."
                                     }
                                 />
                                 <StackedStatCard
@@ -1122,7 +1122,7 @@ function NodeModal({
                         </div>
                     ) : null}
 
-                    {tab === 'edit' ? (
+                    {tab === "edit" ? (
                         <div className="max-w-2xl">
                             <h3 className="text-sm font-semibold text-foreground">
                                 Configuration
@@ -1155,7 +1155,7 @@ function NodeModal({
                         </div>
                     ) : null}
 
-                    {tab === 'allocations' ? (
+                    {tab === "allocations" ? (
                         <div className="max-w-3xl space-y-4">
                             <div className="flex items-center justify-between gap-4">
                                 <div>
@@ -1201,8 +1201,8 @@ function NodeModal({
                                                         </p>
                                                         <p className="text-xs text-muted-foreground">
                                                             {allocation.is_assigned
-                                                                ? 'Assigned'
-                                                                : 'Available'}
+                                                                ? "Assigned"
+                                                                : "Available"}
                                                         </p>
                                                     </div>
                                                 ),
@@ -1224,7 +1224,7 @@ function NodeModal({
                         </div>
                     ) : null}
 
-                    {tab === 'configure' ? (
+                    {tab === "configure" ? (
                         <ConfigureTab
                             node={node}
                             onUpdateStatus={(status) => {
@@ -1233,7 +1233,7 @@ function NodeModal({
                         />
                     ) : null}
 
-                    {tab === 'danger' ? (
+                    {tab === "danger" ? (
                         <div className="max-w-xl space-y-4">
                             <div className="overflow-hidden rounded-lg bg-muted/40">
                                 <div className="px-4 py-2.5">
@@ -1317,7 +1317,7 @@ export default function Nodes({ nodes, locations, filters }: Props) {
                 window.location.pathname + window.location.search,
                 {},
                 {
-                    only: ['nodes'],
+                    only: ["nodes"],
                     preserveScroll: true,
                     preserveState: true,
                     replace: true,
@@ -1340,8 +1340,8 @@ export default function Nodes({ nodes, locations, filters }: Props) {
 
     const columns: Column<AdminNode>[] = [
         {
-            label: 'Node',
-            width: 'w-[34%]',
+            label: "Node",
+            width: "w-[34%]",
             render: (node) => (
                 <div className="flex min-w-0 items-center gap-2.5">
                     <NodeConnectionIndicator node={node} now={now} />
@@ -1357,8 +1357,8 @@ export default function Nodes({ nodes, locations, filters }: Props) {
             ),
         },
         {
-            label: 'Location',
-            width: 'w-[20%]',
+            label: "Location",
+            width: "w-[20%]",
             render: (node) => (
                 <div className="flex items-center gap-2">
                     <CountryFlagIcon
@@ -1377,8 +1377,8 @@ export default function Nodes({ nodes, locations, filters }: Props) {
             ),
         },
         {
-            label: 'SSL',
-            width: 'w-[8%]',
+            label: "SSL",
+            width: "w-[8%]",
             render: (node) => (
                 <div className="flex items-center">
                     {node.use_ssl ? (
@@ -1494,7 +1494,7 @@ export default function Nodes({ nodes, locations, filters }: Props) {
                         setDeletingNode(null);
                     }
                 }}
-                title={`Delete ${deletingNode?.name ?? 'node'}?`}
+                title={`Delete ${deletingNode?.name ?? "node"}?`}
                 description="This action cannot be undone. The selected node will be permanently removed."
                 loading={singleDeleting}
                 onConfirm={() => {

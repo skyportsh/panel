@@ -1,9 +1,9 @@
-import { Head } from '@inertiajs/react';
-import { AlertCircle, Play, RotateCw, Square, X } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { show as serverConsole } from '@/actions/App/Http/Controllers/Client/ServerConsoleController';
-import { store as powerServer } from '@/actions/App/Http/Controllers/Client/ServerPowerController';
-import { show as websocketCredentials } from '@/actions/App/Http/Controllers/Client/ServerWebsocketController';
+import { Head } from "@inertiajs/react";
+import { AlertCircle, Play, RotateCw, Square, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { show as serverConsole } from "@/actions/App/Http/Controllers/Client/ServerConsoleController";
+import { store as powerServer } from "@/actions/App/Http/Controllers/Client/ServerPowerController";
+import { show as websocketCredentials } from "@/actions/App/Http/Controllers/Client/ServerWebsocketController";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -13,22 +13,22 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
-import { toast } from '@/components/ui/sonner';
-import AppLayout from '@/layouts/app-layout';
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { toast } from "@/components/ui/sonner";
+import AppLayout from "@/layouts/app-layout";
 import {
     formatServerAddress,
     powerActionsForState,
     statusLabel,
     statusTone,
-} from '@/lib/server-runtime';
-import { home } from '@/routes';
-import type { BreadcrumbItem } from '@/types';
+} from "@/lib/server-runtime";
+import { home } from "@/routes";
+import type { BreadcrumbItem } from "@/types";
 
-type ServerPowerSignal = 'kill' | 'restart' | 'start' | 'stop';
-type ConfirmedSignal = 'restart' | 'stop';
+type ServerPowerSignal = "kill" | "restart" | "start" | "stop";
+type ConfirmedSignal = "restart" | "stop";
 
 type Props = {
     server: {
@@ -60,22 +60,22 @@ function csrfToken(): string {
     return (
         document
             .querySelector('meta[name="csrf-token"]')
-            ?.getAttribute('content') ?? ''
+            ?.getAttribute("content") ?? ""
     );
 }
 
 async function fetchWebsocketToken(
     serverId: number,
-): Promise<WebsocketCredentials['data']> {
+): Promise<WebsocketCredentials["data"]> {
     const response = await fetch(websocketCredentials.url(serverId), {
         headers: {
-            Accept: 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
+            Accept: "application/json",
+            "X-Requested-With": "XMLHttpRequest",
         },
     });
 
     if (!response.ok) {
-        throw new Error('Failed to fetch websocket credentials.');
+        throw new Error("Failed to fetch websocket credentials.");
     }
 
     const payload = (await response.json()) as WebsocketCredentials;
@@ -96,18 +96,18 @@ export default function ServerConsole({ server }: Props) {
 
     const effectiveState = useMemo(() => {
         if (
-            submittingAction === 'start' &&
-            (runtimeState === 'offline' || runtimeState === 'install_failed')
+            submittingAction === "start" &&
+            (runtimeState === "offline" || runtimeState === "install_failed")
         ) {
-            return 'starting';
+            return "starting";
         }
 
-        if (submittingAction === 'stop') {
-            return 'stopping';
+        if (submittingAction === "stop") {
+            return "stopping";
         }
 
-        if (submittingAction === 'restart') {
-            return 'restarting';
+        if (submittingAction === "restart") {
+            return "restarting";
         }
 
         return runtimeState;
@@ -119,7 +119,7 @@ export default function ServerConsole({ server }: Props) {
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Home',
+            title: "Home",
             href: home(),
         },
         {
@@ -127,7 +127,7 @@ export default function ServerConsole({ server }: Props) {
             href: serverConsole(server.id),
         },
         {
-            title: 'Console',
+            title: "Console",
             href: serverConsole(server.id),
         },
     ];
@@ -171,38 +171,38 @@ export default function ServerConsole({ server }: Props) {
                 const socket = new WebSocket(credentials.socket);
                 socketRef.current = socket;
 
-                socket.addEventListener('open', () => {
+                socket.addEventListener("open", () => {
                     socket.send(
                         JSON.stringify({
-                            event: 'auth',
+                            event: "auth",
                             args: [credentials.token],
                         }),
                     );
                 });
 
-                socket.addEventListener('message', (event) => {
+                socket.addEventListener("message", (event) => {
                     const payload = JSON.parse(event.data) as {
                         event: string;
                         args?: unknown[];
                     };
 
-                    if (payload.event === 'auth success') {
+                    if (payload.event === "auth success") {
                         socket.send(
-                            JSON.stringify({ event: 'send stats', args: [] }),
+                            JSON.stringify({ event: "send stats", args: [] }),
                         );
 
                         return;
                     }
 
-                    if (payload.event === 'status') {
+                    if (payload.event === "status") {
                         const nextState = String(
-                            payload.args?.[0] ?? 'offline',
+                            payload.args?.[0] ?? "offline",
                         );
 
                         if (
-                            (submittingActionRef.current === 'stop' ||
-                                submittingActionRef.current === 'restart') &&
-                            nextState === 'running'
+                            (submittingActionRef.current === "stop" ||
+                                submittingActionRef.current === "restart") &&
+                            nextState === "running"
                         ) {
                             return;
                         }
@@ -214,7 +214,7 @@ export default function ServerConsole({ server }: Props) {
                         return;
                     }
 
-                    if (payload.event !== 'stats') {
+                    if (payload.event !== "stats") {
                         return;
                     }
 
@@ -224,12 +224,12 @@ export default function ServerConsole({ server }: Props) {
                           }
                         | undefined;
 
-                    const nextState = String(snapshot?.state ?? 'offline');
+                    const nextState = String(snapshot?.state ?? "offline");
 
                     if (
-                        (submittingActionRef.current === 'stop' ||
-                            submittingActionRef.current === 'restart') &&
-                        nextState === 'running'
+                        (submittingActionRef.current === "stop" ||
+                            submittingActionRef.current === "restart") &&
+                        nextState === "running"
                     ) {
                         return;
                     }
@@ -239,7 +239,7 @@ export default function ServerConsole({ server }: Props) {
                     setActionError(null);
                 });
 
-                socket.addEventListener('close', () => {
+                socket.addEventListener("close", () => {
                     socketRef.current = null;
                     scheduleReconnect();
                 });
@@ -265,32 +265,32 @@ export default function ServerConsole({ server }: Props) {
 
         try {
             const response = await fetch(powerServer.url(server.id), {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken(),
-                    'X-Requested-With': 'XMLHttpRequest',
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": csrfToken(),
+                    "X-Requested-With": "XMLHttpRequest",
                 },
                 body: JSON.stringify({ signal }),
             });
 
-            const payload = (await response.json().catch(() => null)) as
-                | { message?: string }
-                | null;
+            const payload = (await response.json().catch(() => null)) as {
+                message?: string;
+            } | null;
 
             if (!response.ok) {
                 throw new Error(
-                    payload?.message || 'The power action could not be sent.',
+                    payload?.message || "The power action could not be sent.",
                 );
             }
 
-            if (signal === 'start') {
-                setRuntimeState('starting');
-            } else if (signal === 'stop') {
-                setRuntimeState('offline');
-            } else if (signal === 'restart') {
-                setRuntimeState('starting');
+            if (signal === "start") {
+                setRuntimeState("starting");
+            } else if (signal === "stop") {
+                setRuntimeState("offline");
+            } else if (signal === "restart") {
+                setRuntimeState("starting");
             }
 
             toast.success(`${statusActionLabel(signal)} signal sent.`);
@@ -298,7 +298,7 @@ export default function ServerConsole({ server }: Props) {
             const message =
                 error instanceof Error
                     ? error.message
-                    : 'The power action could not be sent.';
+                    : "The power action could not be sent.";
 
             setActionError(message);
             setSubmittingAction(null);
@@ -341,14 +341,14 @@ export default function ServerConsole({ server }: Props) {
                                 </div>
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-2 xl:max-w-[26rem] xl:justify-end">
+                            <div className="flex flex-wrap items-center gap-2 xl:max-w-104 xl:justify-end">
                                 <Button
                                     variant="outline"
                                     disabled={
                                         !availability.stop ||
                                         submittingAction !== null
                                     }
-                                    onClick={() => setConfirmingSignal('stop')}
+                                    onClick={() => setConfirmingSignal("stop")}
                                 >
                                     <Square />
                                     Stop
@@ -359,7 +359,7 @@ export default function ServerConsole({ server }: Props) {
                                         submittingAction !== null
                                     }
                                     onClick={() =>
-                                        void sendPowerSignal('start')
+                                        void sendPowerSignal("start")
                                     }
                                 >
                                     <Play />
@@ -372,7 +372,7 @@ export default function ServerConsole({ server }: Props) {
                                         submittingAction !== null
                                     }
                                     onClick={() =>
-                                        setConfirmingSignal('restart')
+                                        setConfirmingSignal("restart")
                                     }
                                 >
                                     <RotateCw />
@@ -383,7 +383,7 @@ export default function ServerConsole({ server }: Props) {
                                         variant="destructive"
                                         disabled={submittingAction !== null}
                                         onClick={() =>
-                                            void sendPowerSignal('kill')
+                                            void sendPowerSignal("kill")
                                         }
                                     >
                                         <X />
@@ -423,20 +423,18 @@ export default function ServerConsole({ server }: Props) {
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>
-                            {confirmingSignal === 'restart'
+                            {confirmingSignal === "restart"
                                 ? `Restart ${server.name}?`
                                 : `Stop ${server.name}?`}
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                            {confirmingSignal === 'restart'
-                                ? 'This will send the configured stop command, wait for the server to shut down, and then start it again.'
-                                : 'This will send the configured stop command and shut the server down.'}
+                            {confirmingSignal === "restart"
+                                ? "This will send the configured stop command, wait for the server to shut down, and then start it again."
+                                : "This will send the configured stop command and shut the server down."}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel
-                            disabled={submittingAction !== null}
-                        >
+                        <AlertDialogCancel disabled={submittingAction !== null}>
                             Cancel
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -456,9 +454,9 @@ export default function ServerConsole({ server }: Props) {
                             }}
                         >
                             {submittingAction !== null && <Spinner />}
-                            {confirmingSignal === 'restart'
-                                ? 'Restart server'
-                                : 'Stop server'}
+                            {confirmingSignal === "restart"
+                                ? "Restart server"
+                                : "Stop server"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -469,13 +467,13 @@ export default function ServerConsole({ server }: Props) {
 
 function statusActionLabel(signal: ServerPowerSignal): string {
     switch (signal) {
-        case 'kill':
-            return 'Kill';
-        case 'restart':
-            return 'Restart';
-        case 'start':
-            return 'Start';
+        case "kill":
+            return "Kill";
+        case "restart":
+            return "Restart";
+        case "start":
+            return "Start";
         default:
-            return 'Stop';
+            return "Stop";
     }
 }

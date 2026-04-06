@@ -1,22 +1,22 @@
-import { Form, Head } from '@inertiajs/react';
-import { REGEXP_ONLY_DIGITS } from 'input-otp';
-import { useMemo, useState } from 'react';
-import { toast } from '@/components/ui/sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Form, Head } from "@inertiajs/react";
+import { REGEXP_ONLY_DIGITS } from "input-otp";
+import { useMemo, useState } from "react";
+import { toast } from "@/components/ui/sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
     InputOTP,
     InputOTPGroup,
     InputOTPSlot,
-} from '@/components/ui/input-otp';
-import { Spinner } from '@/components/ui/spinner';
-import { OTP_MAX_LENGTH } from '@/hooks/use-two-factor-auth';
-import AuthLayout from '@/layouts/auth-layout';
-import { store } from '@/routes/two-factor/login';
+} from "@/components/ui/input-otp";
+import { Spinner } from "@/components/ui/spinner";
+import { OTP_MAX_LENGTH } from "@/hooks/use-two-factor-auth";
+import AuthLayout from "@/layouts/auth-layout";
+import { store } from "@/routes/two-factor/login";
 
 export default function TwoFactorChallenge() {
     const [showRecoveryInput, setShowRecoveryInput] = useState<boolean>(false);
-    const [code, setCode] = useState<string>('');
+    const [code, setCode] = useState<string>("");
 
     const authConfigContent = useMemo<{
         title: string;
@@ -25,25 +25,25 @@ export default function TwoFactorChallenge() {
     }>(() => {
         if (showRecoveryInput) {
             return {
-                title: 'Recovery code',
+                title: "Recovery code",
                 description:
-                    'Please confirm access to your account by entering one of your emergency recovery codes.',
-                toggleText: 'login using an authentication code',
+                    "Please confirm access to your account by entering one of your emergency recovery codes.",
+                toggleText: "login using an authentication code",
             };
         }
 
         return {
-            title: 'Authentication code',
+            title: "Authentication code",
             description:
-                'Enter the authentication code provided by your authenticator application.',
-            toggleText: 'login using a recovery code',
+                "Enter the authentication code provided by your authenticator application.",
+            toggleText: "login using a recovery code",
         };
     }, [showRecoveryInput]);
 
     const toggleRecoveryMode = (clearErrors: () => void): void => {
         setShowRecoveryInput(!showRecoveryInput);
         clearErrors();
-        setCode('');
+        setCode("");
     };
 
     return (

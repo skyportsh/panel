@@ -1,9 +1,9 @@
-import { Head, usePage } from '@inertiajs/react';
-import { useState } from 'react';
-import { toast } from '@/components/ui/sonner';
-import AppearanceTabs from '@/components/appearance-tabs';
-import Heading from '@/components/heading';
-import { Button } from '@/components/ui/button';
+import { Head, usePage } from "@inertiajs/react";
+import { useState } from "react";
+import { toast } from "@/components/ui/sonner";
+import AppearanceTabs from "@/components/appearance-tabs";
+import Heading from "@/components/heading";
+import { Button } from "@/components/ui/button";
 import {
     Select,
     SelectContent,
@@ -12,33 +12,33 @@ import {
     SelectLabel,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select';
-import { Spinner } from '@/components/ui/spinner';
+} from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
 import {
     DEFAULT_LANDING_URL,
     getLandingOptions,
     resolveLandingUrl,
     type LandingOption,
-} from '@/lib/default-landing-pages';
-import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
-import { edit as editPreferences } from '@/routes/preferences';
-import type { BreadcrumbItem } from '@/types';
+} from "@/lib/default-landing-pages";
+import AppLayout from "@/layouts/app-layout";
+import SettingsLayout from "@/layouts/settings/layout";
+import { edit as editPreferences } from "@/routes/preferences";
+import type { BreadcrumbItem } from "@/types";
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Preferences',
+        title: "Preferences",
         href: editPreferences(),
     },
 ];
 
-const STORAGE_KEY = 'default-landing-url';
+const STORAGE_KEY = "default-landing-url";
 
 function DefaultLandingPage() {
     const { auth } = usePage().props;
     const landingOptions = getLandingOptions(auth.user.is_admin);
     const [selected, setSelected] = useState<string>(() =>
-        typeof window !== 'undefined'
+        typeof window !== "undefined"
             ? resolveLandingUrl(
                   localStorage.getItem(STORAGE_KEY),
                   auth.user.is_admin,
@@ -52,7 +52,7 @@ function DefaultLandingPage() {
         setTimeout(() => {
             localStorage.setItem(STORAGE_KEY, selected);
             setSaving(false);
-            toast.success('Default landing page saved');
+            toast.success("Default landing page saved");
         }, 400);
     };
 

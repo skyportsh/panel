@@ -1,19 +1,19 @@
-import { Head, router } from '@inertiajs/react';
-import { Cpu, MemoryStick } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { show as serverConsole } from '@/actions/App/Http/Controllers/Client/ServerConsoleController';
-import { show as websocketCredentials } from '@/actions/App/Http/Controllers/Client/ServerWebsocketController';
-import { DataTable } from '@/components/admin/data-table';
-import type { Column, PaginatedData } from '@/components/admin/data-table';
-import { Switch } from '@/components/ui/switch';
-import AppLayout from '@/layouts/app-layout';
+import { Head, router } from "@inertiajs/react";
+import { Cpu, MemoryStick } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { show as serverConsole } from "@/actions/App/Http/Controllers/Client/ServerConsoleController";
+import { show as websocketCredentials } from "@/actions/App/Http/Controllers/Client/ServerWebsocketController";
+import { DataTable } from "@/components/admin/data-table";
+import type { Column, PaginatedData } from "@/components/admin/data-table";
+import { Switch } from "@/components/ui/switch";
+import AppLayout from "@/layouts/app-layout";
 import {
     formatServerAddress,
     statusLabel,
     statusTone,
-} from '@/lib/server-runtime';
-import { home } from '@/routes';
-import type { Auth, BreadcrumbItem } from '@/types';
+} from "@/lib/server-runtime";
+import { home } from "@/routes";
+import type { Auth, BreadcrumbItem } from "@/types";
 
 type DashboardServer = {
     id: number;
@@ -35,7 +35,7 @@ type DashboardServer = {
 type Props = {
     auth: Auth;
     filters: {
-        scope: 'all' | 'mine';
+        scope: "all" | "mine";
         search: string;
     };
     servers: PaginatedData<DashboardServer>;
@@ -58,49 +58,49 @@ type ServerStats = {
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Home',
+        title: "Home",
         href: home(),
     },
 ];
 
 const defaultStats: ServerStats = {
-    cpu: '—',
-    memory: '—',
+    cpu: "—",
+    memory: "—",
     running: false,
-    state: 'offline',
+    state: "offline",
 };
 
 function formatGiBLimit(memoryMib: number): string {
     const gibibytes = memoryMib / 1024;
     const formatted = Number.isInteger(gibibytes)
         ? gibibytes.toLocaleString()
-        : gibibytes.toFixed(1).replace(/\.0$/, '');
+        : gibibytes.toFixed(1).replace(/\.0$/, "");
 
     return `${formatted} GiB`;
 }
 
 function formatMemoryUsage(memory: string, limitMib: number): string {
     const current =
-        memory === '—' || memory === 'Offline'
-            ? '0 MiB'
-            : (memory.split('/')[0]?.trim() ?? '0 MiB');
+        memory === "—" || memory === "Offline"
+            ? "0 MiB"
+            : (memory.split("/")[0]?.trim() ?? "0 MiB");
 
     return `${current} / ${formatGiBLimit(limitMib)}`;
 }
 
 function formatCpuUsage(cpu: string, limit: number): string {
-    const current = cpu === '—' || cpu === 'Offline' ? '0%' : cpu.trim();
+    const current = cpu === "—" || cpu === "Offline" ? "0%" : cpu.trim();
 
-    return `${current} / ${limit === 0 ? 'Unlimited' : `${limit}%`}`;
+    return `${current} / ${limit === 0 ? "Unlimited" : `${limit}%`}`;
 }
 
 async function fetchWebsocketCredentials(
     serverId: number,
-): Promise<WebsocketCredentials['data']> {
+): Promise<WebsocketCredentials["data"]> {
     const response = await fetch(websocketCredentials.url(serverId), {
         headers: {
-            Accept: 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
+            Accept: "application/json",
+            "X-Requested-With": "XMLHttpRequest",
         },
     });
 
@@ -160,39 +160,39 @@ export default function Home({ auth, filters, servers }: Props) {
                 const socket = new WebSocket(credentials.socket);
                 sockets.current.set(serverId, socket);
 
-                socket.addEventListener('open', () => {
+                socket.addEventListener("open", () => {
                     socket.send(
                         JSON.stringify({
-                            event: 'auth',
+                            event: "auth",
                             args: [credentials.token],
                         }),
                     );
                 });
 
-                socket.addEventListener('message', (event) => {
+                socket.addEventListener("message", (event) => {
                     const payload = JSON.parse(event.data) as {
                         event: string;
                         args?: unknown[];
                     };
 
-                    if (payload.event === 'auth success') {
+                    if (payload.event === "auth success") {
                         socket.send(
-                            JSON.stringify({ event: 'send stats', args: [] }),
+                            JSON.stringify({ event: "send stats", args: [] }),
                         );
 
                         return;
                     }
 
-                    if (payload.event === 'status') {
+                    if (payload.event === "status") {
                         const nextStatus = String(
-                            payload.args?.[0] ?? 'offline',
+                            payload.args?.[0] ?? "offline",
                         );
 
                         setStats((current) => ({
                             ...current,
                             [serverId]: {
                                 ...(current[serverId] ?? defaultStats),
-                                running: nextStatus === 'running',
+                                running: nextStatus === "running",
                                 state: nextStatus,
                             },
                         }));
@@ -200,7 +200,7 @@ export default function Home({ auth, filters, servers }: Props) {
                         return;
                     }
 
-                    if (payload.event !== 'stats') {
+                    if (payload.event !== "stats") {
                         return;
                     }
 
@@ -219,18 +219,18 @@ export default function Home({ auth, filters, servers }: Props) {
                         ...current,
                         [serverId]: {
                             cpu: snapshot?.running
-                                ? String(snapshot?.stats?.CPUPerc ?? '0%')
-                                : 'Offline',
+                                ? String(snapshot?.stats?.CPUPerc ?? "0%")
+                                : "Offline",
                             memory: snapshot?.running
-                                ? String(snapshot?.stats?.MemUsage ?? '—')
-                                : 'Offline',
+                                ? String(snapshot?.stats?.MemUsage ?? "—")
+                                : "Offline",
                             running: Boolean(snapshot?.running),
-                            state: String(snapshot?.state ?? 'offline'),
+                            state: String(snapshot?.state ?? "offline"),
                         },
                     }));
                 });
 
-                socket.addEventListener('close', () => {
+                socket.addEventListener("close", () => {
                     sockets.current.delete(serverId);
 
                     if (!active || !visibleServerIds.includes(serverId)) {
@@ -279,8 +279,8 @@ export default function Home({ auth, filters, servers }: Props) {
 
     const columns: Column<DashboardServer>[] = [
         {
-            label: 'Name',
-            width: 'min-w-0 w-[52%] shrink-0',
+            label: "Name",
+            width: "min-w-0 w-[52%] shrink-0",
             render: (server) => {
                 const serverStats = stats[server.id] ?? defaultStats;
 
@@ -306,8 +306,8 @@ export default function Home({ auth, filters, servers }: Props) {
             },
         },
         {
-            label: 'Memory',
-            width: 'w-64 shrink-0',
+            label: "Memory",
+            width: "w-64 shrink-0",
             render: (server) => {
                 const serverStats = stats[server.id] ?? defaultStats;
 
@@ -327,8 +327,8 @@ export default function Home({ auth, filters, servers }: Props) {
             },
         },
         {
-            label: 'CPU',
-            width: 'w-56 shrink-0',
+            label: "CPU",
+            width: "w-56 shrink-0",
             render: (server) => {
                 const serverStats = stats[server.id] ?? defaultStats;
 
@@ -367,15 +367,15 @@ export default function Home({ auth, filters, servers }: Props) {
                     {auth.user.is_admin ? (
                         <label className="flex items-center gap-3">
                             <span className="text-sm text-muted-foreground">
-                                {filters.scope === 'all'
-                                    ? 'Showing all servers'
-                                    : 'Showing your servers'}
+                                {filters.scope === "all"
+                                    ? "Showing all servers"
+                                    : "Showing your servers"}
                             </span>
                             <Switch
-                                checked={filters.scope === 'all'}
+                                checked={filters.scope === "all"}
                                 onCheckedChange={(checked) =>
                                     navigate({
-                                        scope: checked ? 'all' : 'mine',
+                                        scope: checked ? "all" : "mine",
                                         search: search || undefined,
                                     })
                                 }
@@ -394,7 +394,7 @@ export default function Home({ auth, filters, servers }: Props) {
                     onSearch={(value) => {
                         setSearch(value);
                         navigate({
-                            scope: filters.scope === 'all' ? 'all' : undefined,
+                            scope: filters.scope === "all" ? "all" : undefined,
                             search: value || undefined,
                         });
                     }}
