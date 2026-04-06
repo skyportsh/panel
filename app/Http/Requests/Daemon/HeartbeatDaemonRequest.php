@@ -20,9 +20,6 @@ class HeartbeatDaemonRequest extends FormRequest
         return [
             'uuid' => ['required', 'uuid'],
             'version' => ['required', 'string', 'max:50'],
-            'servers' => ['nullable', 'array'],
-            'servers.*.id' => ['required', 'integer', 'exists:servers,id'],
-            'servers.*.status' => ['required', 'string', 'in:installing,install_failed,offline,starting,running'],
         ];
     }
 }

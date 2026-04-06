@@ -9,13 +9,13 @@ use App\Models\User;
 
 use function Pest\Laravel\postJson;
 
-it('updates server statuses from daemon heartbeat', function () {
+it('ignores server statuses in daemon heartbeat payloads', function () {
     $location = Location::factory()->create();
     $node = Node::factory()->create([
         'daemon_uuid' => '550e8400-e29b-41d4-a716-446655440000',
         'location_id' => $location->id,
     ]);
-    $credential = NodeCredential::factory()->create([
+    NodeCredential::factory()->create([
         'daemon_secret_hash' => hash('sha256', 'daemon-secret'),
         'node_id' => $node->id,
     ]);
@@ -45,6 +45,5 @@ it('updates server statuses from daemon heartbeat', function () {
 
     $response->assertSuccessful();
 
-    expect($credential)->not->toBeNull();
-    expect($server->fresh()->status)->toBe('running');
+    expect($server->fresh()->status)->toBe('installing');
 });

@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Node;
 use App\Models\NodeCredential;
-use App\Models\Server;
 use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 
@@ -54,26 +53,6 @@ class NodeHeartbeatService
             'daemon_version' => $payload['version'],
             'last_seen_at' => Carbon::now(),
         ])->save();
-
-        if (! empty($payload['servers']) && is_array($payload['servers'])) {
-            $statuses = collect($payload['servers'])
-                ->filter(fn (mixed $server): bool => is_array($server) && isset($server['id'], $server['status']))
-                ->mapWithKeys(fn (array $server): array => [(int) $server['id'] => (string) $server['status']]);
-
-            if ($statuses->isNotEmpty()) {
-                Server::query()
-                    ->where('node_id', $node->id)
-                    ->whereIn('id', $statuses->keys()->all())
-                    ->get()
-                    ->each(function (Server $server) use ($statuses): void {
-                        $status = $statuses->get($server->id);
-
-                        if ($status !== null && $server->status !== $status) {
-                            $server->forceFill(['status' => $status])->save();
-                        }
-                    });
-            }
-        }
 
         $node = $node->fresh(['location']) ?? $node;
 
