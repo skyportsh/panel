@@ -15,6 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ServersController extends Controller
 {
@@ -178,6 +179,21 @@ class ServersController extends Controller
         return back()
             ->with('success', 'Server deleted.')
             ->with('warning', 'skyportd could not be updated automatically. This server may still exist on the node until it is reconciled.');
+    }
+
+    public function downloadInstallLog(Server $server): StreamedResponse|RedirectResponse
+    {
+        $payload = $this->serverRemoteUpdateService->downloadInstallLog($server);
+
+        if (! $payload) {
+            return back()->with('warning', 'skyportd could not provide the install log for this server.');
+        }
+
+        return response()->streamDownload(function () use ($payload): void {
+            echo $payload['contents'];
+        }, $payload['filename'], [
+            'Content-Type' => $payload['content_type'],
+        ]);
     }
 
     public function bulkDestroy(Request $request): RedirectResponse
