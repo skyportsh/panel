@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\CargoController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\LocationsController;
@@ -53,6 +54,8 @@ Route::middleware(['auth', EnsureUserIsAdmin::class])
         Route::patch('servers/{server}', [ServersController::class, 'update'])->name('servers.update');
         Route::delete('servers/bulk-destroy', [ServersController::class, 'bulkDestroy'])->name('servers.bulk-destroy');
         Route::delete('servers/{server}', [ServersController::class, 'destroy'])->name('servers.destroy');
+
+        Route::get('audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
 
         Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::patch('settings', [SettingsController::class, 'update'])->name('settings.update');

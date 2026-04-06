@@ -25,8 +25,10 @@ type NodeInfo = {
 type Props = {
     recentUsers: ChartPoint[];
     recentUsersTotal: number;
+    usersTrendText: string;
     recentServers: ChartPoint[];
     recentServersTotal: number;
+    serversTrendText: string;
     nodes: NodeInfo[];
     totalServers: number;
     totalNodes: number;
@@ -262,8 +264,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function AdminDashboard({
     recentUsers,
     recentUsersTotal,
+    usersTrendText,
     recentServers,
     recentServersTotal,
+    serversTrendText,
     nodes,
     totalServers,
     totalNodes,
@@ -353,7 +357,7 @@ export default function AdminDashboard({
                             }
                             color="#0ea5e9"
                             gradientId="adminUserGradient"
-                            footerText="Signups are steady"
+                            footerText={usersTrendText}
                             footerLink={adminUsers.url()}
                             footerLinkLabel="Manage users"
                         />
@@ -372,7 +376,7 @@ export default function AdminDashboard({
                             }
                             color="#a855f7"
                             gradientId="adminServerGradient"
-                            footerText="Provisioning on track"
+                            footerText={serversTrendText}
                             footerLink={adminServers.url()}
                             footerLinkLabel="Manage servers"
                         />

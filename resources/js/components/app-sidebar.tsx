@@ -1,4 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
+import { index as adminAuditLog } from '@/actions/App/Http/Controllers/Admin/AuditLogController';
 import { index as adminCargo } from '@/actions/App/Http/Controllers/Admin/CargoController';
 import { index as adminDashboard } from '@/actions/App/Http/Controllers/Admin/DashboardController';
 import { index as adminLocations } from '@/actions/App/Http/Controllers/Admin/LocationsController';
@@ -9,6 +10,7 @@ import { index as adminUsers } from '@/actions/App/Http/Controllers/Admin/UsersC
 import { show as serverConsole } from '@/actions/App/Http/Controllers/Client/ServerConsoleController';
 import { show as serverFilesystem } from '@/actions/App/Http/Controllers/Client/ServerFilesystemController';
 import { show as serverSettings } from '@/actions/App/Http/Controllers/Client/ServerSettingsController';
+import AuditLogIcon from '@/components/audit-log-icon';
 import CargoIcon from '@/components/cargo-icon';
 import DashboardIcon from '@/components/dashboard-icon';
 import LocationsIcon from '@/components/locations-icon';
@@ -71,6 +73,11 @@ export function AppSidebar() {
                   title: 'Servers',
                   href: adminServers.url(),
                   icon: ServerIcon,
+              },
+              {
+                  title: 'Audit Log',
+                  href: adminAuditLog.url(),
+                  icon: AuditLogIcon,
               },
               {
                   title: 'Settings',
