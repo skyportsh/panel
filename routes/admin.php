@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\CargoController;
 use App\Http\Controllers\Admin\LocationsController;
 use App\Http\Controllers\Admin\NodesController;
+use App\Http\Controllers\Admin\ServersController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UsersController;
 use App\Http\Middleware\EnsureUserIsAdmin;
@@ -40,6 +41,12 @@ Route::middleware(['auth', EnsureUserIsAdmin::class])
         Route::patch('nodes/{node}', [NodesController::class, 'update'])->name('nodes.update');
         Route::delete('nodes/bulk-destroy', [NodesController::class, 'bulkDestroy'])->name('nodes.bulk-destroy');
         Route::delete('nodes/{node}', [NodesController::class, 'destroy'])->name('nodes.destroy');
+
+        Route::get('servers', [ServersController::class, 'index'])->name('servers.index');
+        Route::post('servers', [ServersController::class, 'store'])->name('servers.store');
+        Route::patch('servers/{server}', [ServersController::class, 'update'])->name('servers.update');
+        Route::delete('servers/bulk-destroy', [ServersController::class, 'bulkDestroy'])->name('servers.bulk-destroy');
+        Route::delete('servers/{server}', [ServersController::class, 'destroy'])->name('servers.destroy');
 
         Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::patch('settings', [SettingsController::class, 'update'])->name('settings.update');

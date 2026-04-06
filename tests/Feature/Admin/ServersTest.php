@@ -1,0 +1,177 @@
+<?php
+
+use App\Models\Cargo;
+use App\Models\Location;
+use App\Models\Node;
+use App\Models\Server;
+use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
+
+use function Pest\Laravel\actingAs;
+use function Pest\Laravel\delete;
+use function Pest\Laravel\get;
+use function Pest\Laravel\patch;
+use function Pest\Laravel\post;
+
+function serverDependencies(): array
+{
+    $location = Location::factory()->create();
+
+    return [
+        'cargo' => Cargo::factory()->create(),
+        'node' => Node::factory()->create(['location_id' => $location->id]),
+        'user' => User::factory()->create(),
+    ];
+}
+
+test('non-admin cannot access admin servers page', function () {
+    $user = User::factory()->create(['is_admin' => false]);
+
+    actingAs($user);
+
+    get('/admin/servers')->assertForbidden();
+});
+
+test('admin can access servers page', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $dependencies = serverDependencies();
+    $server = Server::factory()->create([
+        'cargo_id' => $dependencies['cargo']->id,
+        'node_id' => $dependencies['node']->id,
+        'user_id' => $dependencies['user']->id,
+    ]);
+
+    actingAs($admin);
+
+    get('/admin/servers')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/servers')
+            ->has('servers.data', 1)
+            ->where('servers.data.0.name', $server->name)
+            ->where('servers.data.0.user.name', $dependencies['user']->name)
+            ->where('servers.data.0.node.name', $dependencies['node']->name)
+            ->where('servers.data.0.cargo.name', $dependencies['cargo']->name)
+            ->has('users', 2)
+            ->has('nodes', 1)
+            ->has('cargo', 1)
+            ->has('filters'));
+});
+
+test('admin can search servers', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $dependencies = serverDependencies();
+
+    Server::factory()->create([
+        'cargo_id' => $dependencies['cargo']->id,
+        'name' => 'Paper Survival',
+        'node_id' => $dependencies['node']->id,
+        'user_id' => $dependencies['user']->id,
+    ]);
+    Server::factory()->create([
+        'cargo_id' => $dependencies['cargo']->id,
+        'name' => 'Velocity Proxy',
+        'node_id' => $dependencies['node']->id,
+        'user_id' => $dependencies['user']->id,
+    ]);
+
+    actingAs($admin);
+
+    get('/admin/servers?search=Paper')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('servers.data', 1)
+            ->where('servers.data.0.name', 'Paper Survival'));
+});
+
+test('admin can create a server', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $dependencies = serverDependencies();
+
+    actingAs($admin);
+
+    post('/admin/servers', [
+        'name' => 'Paper Survival',
+        'user_id' => $dependencies['user']->id,
+        'node_id' => $dependencies['node']->id,
+        'cargo_id' => $dependencies['cargo']->id,
+        'memory_mib' => 4096,
+        'cpu_limit' => 200,
+        'disk_mib' => 20480,
+    ])->assertRedirect();
+
+    $server = Server::query()->where('name', 'Paper Survival')->first();
+
+    expect($server)->not->toBeNull();
+    expect($server?->user_id)->toBe($dependencies['user']->id);
+    expect($server?->node_id)->toBe($dependencies['node']->id);
+    expect($server?->cargo_id)->toBe($dependencies['cargo']->id);
+    expect($server?->status)->toBe('pending');
+});
+
+test('admin can update a server', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $dependencies = serverDependencies();
+    $newDependencies = serverDependencies();
+    $server = Server::factory()->create([
+        'cargo_id' => $dependencies['cargo']->id,
+        'node_id' => $dependencies['node']->id,
+        'user_id' => $dependencies['user']->id,
+    ]);
+
+    actingAs($admin);
+
+    patch("/admin/servers/{$server->id}", [
+        'name' => 'Updated Survival',
+        'user_id' => $newDependencies['user']->id,
+        'node_id' => $newDependencies['node']->id,
+        'cargo_id' => $newDependencies['cargo']->id,
+        'memory_mib' => 8192,
+        'cpu_limit' => 0,
+        'disk_mib' => 40960,
+    ])->assertRedirect();
+
+    $server->refresh();
+
+    expect($server->name)->toBe('Updated Survival');
+    expect($server->user_id)->toBe($newDependencies['user']->id);
+    expect($server->node_id)->toBe($newDependencies['node']->id);
+    expect($server->cargo_id)->toBe($newDependencies['cargo']->id);
+    expect($server->memory_mib)->toBe(8192);
+    expect($server->cpu_limit)->toBe(0);
+    expect($server->disk_mib)->toBe(40960);
+});
+
+test('admin can delete a server', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $dependencies = serverDependencies();
+    $server = Server::factory()->create([
+        'cargo_id' => $dependencies['cargo']->id,
+        'node_id' => $dependencies['node']->id,
+        'user_id' => $dependencies['user']->id,
+    ]);
+
+    actingAs($admin);
+
+    delete("/admin/servers/{$server->id}")->assertRedirect();
+
+    expect(Server::find($server->id))->toBeNull();
+});
+
+test('admin can bulk delete servers', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $dependencies = serverDependencies();
+    $servers = Server::factory()->count(2)->create([
+        'cargo_id' => $dependencies['cargo']->id,
+        'node_id' => $dependencies['node']->id,
+        'user_id' => $dependencies['user']->id,
+    ]);
+
+    actingAs($admin);
+
+    delete('/admin/servers/bulk-destroy', [
+        'ids' => $servers->pluck('id')->all(),
+    ])->assertRedirect();
+
+    expect(Server::query()->count())->toBe(0);
+});

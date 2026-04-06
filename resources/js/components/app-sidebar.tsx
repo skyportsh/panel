@@ -2,6 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { index as adminCargo } from '@/actions/App/Http/Controllers/Admin/CargoController';
 import { index as adminLocations } from '@/actions/App/Http/Controllers/Admin/LocationsController';
 import { index as adminNodes } from '@/actions/App/Http/Controllers/Admin/NodesController';
+import { index as adminServers } from '@/actions/App/Http/Controllers/Admin/ServersController';
 import { index as adminSettings } from '@/actions/App/Http/Controllers/Admin/SettingsController';
 import { index as adminUsers } from '@/actions/App/Http/Controllers/Admin/UsersController';
 import CargoIcon from '@/components/cargo-icon';
@@ -9,6 +10,7 @@ import DashboardIcon from '@/components/dashboard-icon';
 import LocationsIcon from '@/components/locations-icon';
 import { NavMain } from '@/components/nav-main';
 import NodesIcon from '@/components/nodes-icon';
+import ServerIcon from '@/components/server-icon';
 import SettingsIcon from '@/components/settings-icon';
 import { NavUser } from '@/components/nav-user';
 import UsersIcon from '@/components/users-icon';
@@ -49,6 +51,11 @@ export function AppSidebar() {
                   title: 'Nodes',
                   href: adminNodes.url(),
                   icon: NodesIcon,
+              },
+              {
+                  title: 'Servers',
+                  href: adminServers.url(),
+                  icon: ServerIcon,
               },
               {
                   title: 'Settings',

@@ -48,4 +48,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Passkey::class);
     }
+
+    public function servers(): HasMany
+    {
+        return $this->hasMany(Server::class);
+    }
 }
