@@ -1,13 +1,12 @@
 import { Head, router } from '@inertiajs/react';
-import { Activity, Cpu, MemoryStick } from 'lucide-react';
+import { Cpu, MemoryStick } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { show as websocketCredentials } from '@/actions/App/Http/Controllers/Client/ServerWebsocketController';
 import { DataTable } from '@/components/admin/data-table';
 import type { Column, PaginatedData } from '@/components/admin/data-table';
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import { Switch } from '@/components/ui/switch';
 import AppLayout from '@/layouts/app-layout';
 import { home } from '@/routes';
-import { show as websocketCredentials } from '@/actions/App/Http/Controllers/Client/ServerWebsocketController';
 import type { Auth, BreadcrumbItem } from '@/types';
 
 type DashboardServer = {
@@ -69,6 +68,29 @@ function formatServerAddress(server: DashboardServer): string {
     return `${server.allocation.ip_alias ?? server.allocation.bind_ip}:${server.allocation.port}`;
 }
 
+function formatGiBLimit(memoryMib: number): string {
+    const gibibytes = memoryMib / 1024;
+    const formatted = Number.isInteger(gibibytes)
+        ? gibibytes.toLocaleString()
+        : gibibytes.toFixed(1).replace(/\.0$/, '');
+
+    return `${formatted} GiB`;
+}
+
+function formatMemoryUsage(memory: string, limitMib: number): string {
+    const current = memory === '—' || memory === 'Offline'
+        ? '0 MiB'
+        : (memory.split('/')[0]?.trim() ?? '0 MiB');
+
+    return `${current} / ${formatGiBLimit(limitMib)}`;
+}
+
+function formatCpuUsage(cpu: string, limit: number): string {
+    const current = cpu === '—' || cpu === 'Offline' ? '0%' : cpu.trim();
+
+    return `${current} / ${limit === 0 ? 'Unlimited' : `${limit}%`}`;
+}
+
 function statusTone(status: string): string {
     switch (status) {
         case 'running':
@@ -98,7 +120,9 @@ function statusLabel(status: string): string {
     }
 }
 
-async function fetchWebsocketCredentials(serverId: number): Promise<WebsocketCredentials['data']> {
+async function fetchWebsocketCredentials(
+    serverId: number,
+): Promise<WebsocketCredentials['data']> {
     const response = await fetch(websocketCredentials.url(serverId), {
         headers: {
             Accept: 'application/json',
@@ -107,7 +131,9 @@ async function fetchWebsocketCredentials(serverId: number): Promise<WebsocketCre
     });
 
     if (!response.ok) {
-        throw new Error(`Failed to fetch websocket credentials for server ${serverId}.`);
+        throw new Error(
+            `Failed to fetch websocket credentials for server ${serverId}.`,
+        );
     }
 
     const payload = (await response.json()) as WebsocketCredentials;
@@ -176,7 +202,9 @@ export default function Home({ auth, filters, servers }: Props) {
                     };
 
                     if (payload.event === 'auth success') {
-                        socket.send(JSON.stringify({ event: 'send stats', args: [] }));
+                        socket.send(
+                            JSON.stringify({ event: 'send stats', args: [] }),
+                        );
 
                         return;
                     }
@@ -276,7 +304,7 @@ export default function Home({ auth, filters, servers }: Props) {
     const columns: Column<DashboardServer>[] = [
         {
             label: 'Name',
-            width: 'min-w-0 flex-[1.7]',
+            width: 'min-w-0 flex-1',
             render: (server) => {
                 const serverStats = stats[server.id] ?? defaultStats;
 
@@ -294,9 +322,6 @@ export default function Home({ auth, filters, servers }: Props) {
                         </div>
                         <p className="mt-1 truncate text-xs text-muted-foreground">
                             {formatServerAddress(server)}
-                            {auth.user.is_admin && filters.scope === 'all'
-                                ? ` · ${server.user.name}`
-                                : ''}
                         </p>
                     </div>
                 );
@@ -304,7 +329,7 @@ export default function Home({ auth, filters, servers }: Props) {
         },
         {
             label: 'Memory',
-            width: 'w-56 shrink-0',
+            width: 'w-52 shrink-0',
             render: (server) => {
                 const serverStats = stats[server.id] ?? defaultStats;
 
@@ -312,18 +337,20 @@ export default function Home({ auth, filters, servers }: Props) {
                     <div className="pr-4">
                         <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                             <MemoryStick className="h-4 w-4 text-muted-foreground" />
-                            <span>{serverStats.memory}</span>
+                            <span>
+                                {formatMemoryUsage(
+                                    serverStats.memory,
+                                    server.memory_mib,
+                                )}
+                            </span>
                         </div>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                            Limit {server.memory_mib.toLocaleString()} MiB
-                        </p>
                     </div>
                 );
             },
         },
         {
             label: 'CPU',
-            width: 'w-44 shrink-0',
+            width: 'w-40 shrink-0',
             render: (server) => {
                 const serverStats = stats[server.id] ?? defaultStats;
 
@@ -331,11 +358,10 @@ export default function Home({ auth, filters, servers }: Props) {
                     <div>
                         <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                             <Cpu className="h-4 w-4 text-muted-foreground" />
-                            <span>{serverStats.cpu}</span>
+                            <span>
+                                {formatCpuUsage(serverStats.cpu, server.cpu_limit)}
+                            </span>
                         </div>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                            Limit {server.cpu_limit === 0 ? 'Unlimited' : `${server.cpu_limit}%`}
-                        </p>
                     </div>
                 );
             },
@@ -345,48 +371,35 @@ export default function Home({ auth, filters, servers }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Home" />
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="overflow-hidden rounded-lg bg-muted/40">
-                    <div className="relative rounded-lg border border-border/70 bg-background p-4">
-                        <PlaceholderPattern
-                            patternSize={8}
-                            className="pointer-events-none absolute inset-0 size-full stroke-current opacity-[0.05]"
-                        />
-                        <div className="relative flex items-center justify-between gap-4">
-                            <div>
-                                <h1 className="text-lg font-semibold text-foreground">
-                                    Servers
-                                </h1>
-                                <p className="mt-1 text-sm text-muted-foreground">
-                                    View live resource usage from your servers.
-                                </p>
-                            </div>
-
-                            {auth.user.is_admin ? (
-                                <label className="flex items-center gap-3 rounded-md border border-border/70 bg-muted/30 px-3 py-2">
-                                    <div className="text-right">
-                                        <p className="text-xs font-medium text-foreground">
-                                            {filters.scope === 'all'
-                                                ? 'Showing all servers'
-                                                : 'Showing your servers'}
-                                        </p>
-                                        <p className="text-[11px] text-muted-foreground">
-                                            Toggle admin scope
-                                        </p>
-                                    </div>
-                                    <Switch
-                                        checked={filters.scope === 'all'}
-                                        onCheckedChange={(checked) =>
-                                            navigate({
-                                                scope: checked ? 'all' : 'mine',
-                                                search: search || undefined,
-                                            })
-                                        }
-                                    />
-                                </label>
-                            ) : null}
-                        </div>
+            <div className="flex h-full flex-1 flex-col gap-6 p-4">
+                <div className="flex items-start justify-between gap-4 px-4 py-2">
+                    <div className="space-y-0.5">
+                        <h2 className="text-xl font-semibold tracking-tight">
+                            Servers
+                        </h2>
+                        <p className="text-sm text-muted-foreground">
+                            View live resource usage from your servers.
+                        </p>
                     </div>
+
+                    {auth.user.is_admin ? (
+                        <label className="flex items-center gap-3">
+                            <span className="text-sm text-muted-foreground">
+                                {filters.scope === 'all'
+                                    ? 'Showing all servers'
+                                    : 'Showing your servers'}
+                            </span>
+                            <Switch
+                                checked={filters.scope === 'all'}
+                                onCheckedChange={(checked) =>
+                                    navigate({
+                                        scope: checked ? 'all' : 'mine',
+                                        search: search || undefined,
+                                    })
+                                }
+                            />
+                        </label>
+                    ) : null}
                 </div>
 
                 <DataTable
@@ -404,12 +417,6 @@ export default function Home({ auth, filters, servers }: Props) {
                     emptySearchMessage="Try a different server name."
                     entityName="server"
                     selectable={false}
-                    actions={
-                        <div className="flex items-center gap-2 rounded-md border border-border/70 bg-muted/30 px-2 py-1 text-[11px] text-muted-foreground">
-                            <Activity className="h-3.5 w-3.5" />
-                            Live stats via skyportd
-                        </div>
-                    }
                 />
             </div>
         </AppLayout>
