@@ -61,6 +61,37 @@ test('daemon can report an install failure for a server', function () {
     expect($server->fresh()->last_error)->toBe('Installation failed with exit code 2.');
 });
 
+test('daemon can update server runtime state and clear a previous error', function () {
+    $server = daemonRuntimeServer();
+    $server->forceFill([
+        'last_error' => 'Server exited before startup completed.',
+        'status' => 'offline',
+    ])->save();
+
+    postJson(
+        "/api/daemon/servers/{$server->id}/runtime",
+        [
+            'uuid' => '550e8400-e29b-41d4-a716-446655440000',
+            'version' => '0.1.0',
+            'status' => 'running',
+            'last_error' => null,
+        ],
+        ['Authorization' => 'Bearer daemon-secret'],
+    )
+        ->assertSuccessful()
+        ->assertJson([
+            'ok' => true,
+            'server' => [
+                'id' => $server->id,
+                'last_error' => null,
+                'status' => 'running',
+            ],
+        ]);
+
+    expect($server->fresh()->status)->toBe('running');
+    expect($server->fresh()->last_error)->toBeNull();
+});
+
 test('daemon cannot report runtime updates for a server on another node', function () {
     $server = daemonRuntimeServer();
     $otherNode = Node::factory()->create([
