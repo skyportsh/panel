@@ -57,6 +57,7 @@ type DataTableProps<T extends { id: number }> = {
     emptyMessage?: string;
     emptySearchMessage?: string;
     entityName?: string;
+    selectable?: boolean;
 };
 
 // ─── Pagination ──────────────────────────────────────────────────────────────
@@ -270,6 +271,7 @@ function DataTableRow<T extends { id: number }>({
     onToggle,
     onClick,
     menu,
+    selectable,
 }: {
     item: T;
     columns: Column<T>[];
@@ -277,6 +279,7 @@ function DataTableRow<T extends { id: number }>({
     onToggle: () => void;
     onClick?: () => void;
     menu?: ReactNode;
+    selectable: boolean;
 }) {
     return (
         <div
@@ -304,16 +307,18 @@ function DataTableRow<T extends { id: number }>({
                 )}
                 onClick={onClick}
             >
-                <div
-                    className="mr-3 flex items-center"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={onToggle}
-                        aria-label="Select row"
-                    />
-                </div>
+                {selectable ? (
+                    <div
+                        className="mr-3 flex items-center"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={onToggle}
+                            aria-label="Select row"
+                        />
+                    </div>
+                ) : null}
 
                 {columns.map((col, i) => (
                     <div key={i} className={col.width}>
@@ -349,6 +354,7 @@ export function DataTable<T extends { id: number }>({
     emptyMessage = 'No items found',
     emptySearchMessage = 'Try a different search term.',
     entityName = 'item',
+    selectable = true,
 }: DataTableProps<T>) {
     const [selected, setSelected] = useState<Set<number>>(new Set());
     const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
@@ -415,19 +421,21 @@ export function DataTable<T extends { id: number }>({
                 <div className="overflow-hidden rounded-lg bg-muted/40">
                     {/* Header */}
                     <div className="relative flex items-center px-4 py-2.5">
-                        <div className="mr-3 flex items-center">
-                            <Checkbox
-                                checked={
-                                    allSelected
-                                        ? true
-                                        : someSelected
-                                          ? 'indeterminate'
-                                          : false
-                                }
-                                onCheckedChange={toggleAll}
-                                aria-label="Select all"
-                            />
-                        </div>
+                        {selectable ? (
+                            <div className="mr-3 flex items-center">
+                                <Checkbox
+                                    checked={
+                                        allSelected
+                                            ? true
+                                            : someSelected
+                                              ? 'indeterminate'
+                                              : false
+                                    }
+                                    onCheckedChange={toggleAll}
+                                    aria-label="Select all"
+                                />
+                            </div>
+                        ) : null}
                         {columns.map((col, i) => (
                             <span
                                 key={i}
@@ -476,6 +484,7 @@ export function DataTable<T extends { id: number }>({
                                                 : undefined
                                         }
                                         menu={rowMenu?.(item)}
+                                        selectable={selectable}
                                     />
                                 ))
                             ) : (

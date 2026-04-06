@@ -2,12 +2,13 @@
 
 use App\Http\Controllers\Auth\PasskeyAuthenticationController;
 use App\Http\Controllers\Client\ServerWebsocketController;
+use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     if (Auth::check()) {
-        return inertia('dashboard');
+        return to_route('home');
     }
 
     return to_route('login');
@@ -22,7 +23,7 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::inertia('home', 'dashboard')->name('home');
+    Route::get('home', [HomeController::class, 'index'])->name('home');
     Route::get('api/client/servers/{server}/websocket', [ServerWebsocketController::class, 'show'])
         ->name('client.servers.websocket');
 });
