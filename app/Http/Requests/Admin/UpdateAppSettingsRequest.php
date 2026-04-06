@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Services\AppSettingsService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateAppSettingsRequest extends FormRequest
 {
@@ -23,6 +25,11 @@ class UpdateAppSettingsRequest extends FormRequest
             'announcement_enabled' => ['boolean'],
             'announcement_type' => ['nullable', 'string', 'in:success,warning,alert,update,information'],
             'announcement_dismissable' => ['boolean'],
+            'announcement_icon' => [
+                'nullable',
+                'string',
+                Rule::in(AppSettingsService::announcementIcons()),
+            ],
         ];
     }
 

@@ -1,27 +1,26 @@
 import { Head, useForm } from '@inertiajs/react';
 import {
     AlertTriangle,
+    Bell,
     CheckCircle,
     Info,
     Megaphone,
     ShieldAlert,
+    Sparkles,
+    TriangleAlert,
     X,
 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import {
-    index as adminSettings,
-    update,
-} from '@/actions/App/Http/Controllers/Admin/SettingsController';
-import {
-    typeConfig,
     type AnnouncementType,
+    typeConfig,
 } from '@/components/announcement-banner';
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import {
     Select,
     SelectContent,
@@ -37,15 +36,52 @@ import { toast } from '@/components/ui/sonner';
 import { cn } from '@/lib/utils';
 import AdminLayout from '@/layouts/admin/layout';
 import AppLayout from '@/layouts/app-layout';
+import { index as adminSettings, update } from '@/routes/admin/settings';
 import type { BreadcrumbItem } from '@/types';
+
+const announcementIconOptions = [
+    {
+        description: 'General updates and broad notices.',
+        icon: Megaphone,
+        label: 'Megaphone',
+        value: 'megaphone',
+    },
+    {
+        description: 'Routine notifications and softer callouts.',
+        icon: Bell,
+        label: 'Bell',
+        value: 'bell',
+    },
+    {
+        description: 'Neutral informational messages.',
+        icon: Info,
+        label: 'Info',
+        value: 'info',
+    },
+    {
+        description: 'Warnings and important interruptions.',
+        icon: TriangleAlert,
+        label: 'Alert',
+        value: 'triangle-alert',
+    },
+    {
+        description: 'Launches, highlights, and upbeat announcements.',
+        icon: Sparkles,
+        label: 'Sparkles',
+        value: 'sparkles',
+    },
+] as const;
+
+type AnnouncementIcon = (typeof announcementIconOptions)[number]['value'];
 
 type Props = {
     settings: {
         app_name: string;
         announcement: string;
         announcement_enabled: boolean;
-        announcement_type: string;
+        announcement_type: AnnouncementType;
         announcement_dismissable: boolean;
+        announcement_icon: AnnouncementIcon;
     };
 };
 
@@ -53,13 +89,14 @@ type SettingsFormData = {
     app_name: string;
     announcement: string;
     announcement_enabled: boolean;
-    announcement_type: string;
+    announcement_type: AnnouncementType;
     announcement_dismissable: boolean;
+    announcement_icon: AnnouncementIcon;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: "Admin", href: adminSettings.url() },
-    { title: "Settings", href: adminSettings.url() },
+    { title: 'Admin', href: adminSettings.url() },
+    { title: 'Settings', href: adminSettings.url() },
 ];
 
 const pageTabs: Tab[] = [
@@ -67,7 +104,7 @@ const pageTabs: Tab[] = [
     { id: 'announcement', label: 'Announcement' },
 ];
 
-const typeIcons: Record<string, typeof Info> = {
+const typeIcons: Record<AnnouncementType, typeof Info> = {
     success: CheckCircle,
     warning: AlertTriangle,
     alert: ShieldAlert,
@@ -77,15 +114,19 @@ const typeIcons: Record<string, typeof Info> = {
 
 function AnnouncementPreview({
     type,
+    icon,
     message,
     dismissable,
 }: {
     type: AnnouncementType;
+    icon: AnnouncementIcon;
     message: string;
     dismissable: boolean;
 }) {
     const config = typeConfig[type];
-    const Icon = config.icon;
+    const Icon =
+        announcementIconOptions.find((option) => option.value === icon)?.icon ??
+        config.icon;
 
     if (!message) {
         return (
@@ -136,6 +177,7 @@ export default function Settings({ settings }: Props) {
         announcement_enabled: settings.announcement_enabled,
         announcement_type: settings.announcement_type,
         announcement_dismissable: settings.announcement_dismissable,
+        announcement_icon: settings.announcement_icon,
     });
     const minimumMs = 500;
     const submitStart = useRef(0);
@@ -204,10 +246,11 @@ export default function Settings({ settings }: Props) {
                                                         value={
                                                             form.data.app_name
                                                         }
-                                                        onChange={(e) =>
+                                                        onChange={(event) =>
                                                             form.setData(
                                                                 'app_name',
-                                                                e.target.value,
+                                                                event.target
+                                                                    .value,
                                                             )
                                                         }
                                                         placeholder="Skyport"
@@ -249,112 +292,262 @@ export default function Settings({ settings }: Props) {
                                     <div className="p-2">
                                         <div className="rounded-md bg-sidebar p-1">
                                             <div className="rounded-md border border-sidebar-accent bg-background p-6">
-                                    <div className="flex items-center justify-between">
-                                        <Heading
-                                            variant="small"
-                                            title="Announcement"
-                                            description="Show a banner to all users across the panel."
-                                        />
-                                        <Switch
-                                            checked={
-                                                form.data.announcement_enabled
-                                            }
-                                            onCheckedChange={(checked) =>
-                                                form.setData(
-                                                    'announcement_enabled',
-                                                    checked,
-                                                )
-                                            }
-                                        />
-                                    </div>
+                                                <div className="flex items-center justify-between">
+                                                    <Heading
+                                                        variant="small"
+                                                        title="Announcement"
+                                                        description="Show a banner to all users across the panel."
+                                                    />
+                                                    <Switch
+                                                        checked={
+                                                            form.data
+                                                                .announcement_enabled
+                                                        }
+                                                        onCheckedChange={(
+                                                            checked,
+                                                        ) =>
+                                                            form.setData(
+                                                                'announcement_enabled',
+                                                                checked,
+                                                            )
+                                                        }
+                                                    />
+                                                </div>
 
-                                    <div className="mt-6 space-y-4">
-                                        <div className="grid gap-2">
-                                            <Label>Type</Label>
-                                            <Select
-                                                value={
-                                                    form.data.announcement_type
-                                                }
-                                                onValueChange={(value) =>
-                                                    form.setData(
-                                                        'announcement_type',
-                                                        value,
-                                                    )
-                                                }
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {Object.entries(
-                                                        typeIcons,
-                                                    ).map(([key, Icon]) => (
-                                                        <SelectItem
-                                                            key={key}
-                                                            value={key}
+                                                <div className="mt-6 space-y-4">
+                                                    <div className="grid gap-2">
+                                                        <Label>
+                                                            Banner style
+                                                        </Label>
+                                                        <Select
+                                                            value={
+                                                                form.data
+                                                                    .announcement_type
+                                                            }
+                                                            onValueChange={(
+                                                                value,
+                                                            ) =>
+                                                                form.setData(
+                                                                    'announcement_type',
+                                                                    value as AnnouncementType,
+                                                                )
+                                                            }
                                                         >
-                                                            <span className="flex items-center gap-2">
-                                                                <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-                                                                {key
-                                                                    .charAt(0)
-                                                                    .toUpperCase() +
-                                                                    key.slice(
-                                                                        1,
-                                                                    )}
-                                                            </span>
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
+                                                            <SelectTrigger>
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {Object.entries(
+                                                                    typeIcons,
+                                                                ).map(
+                                                                    ([
+                                                                        key,
+                                                                        Icon,
+                                                                    ]) => (
+                                                                        <SelectItem
+                                                                            key={
+                                                                                key
+                                                                            }
+                                                                            value={
+                                                                                key
+                                                                            }
+                                                                        >
+                                                                            <span className="flex items-center gap-2">
+                                                                                <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                                                                                {key
+                                                                                    .charAt(
+                                                                                        0,
+                                                                                    )
+                                                                                    .toUpperCase() +
+                                                                                    key.slice(
+                                                                                        1,
+                                                                                    )}
+                                                                            </span>
+                                                                        </SelectItem>
+                                                                    ),
+                                                                )}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
 
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="announcement">
-                                                Message
-                                            </Label>
-                                            <textarea
-                                                id="announcement"
-                                                value={form.data.announcement}
-                                                onChange={(e) =>
-                                                    form.setData(
-                                                        'announcement',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                placeholder="Scheduled maintenance on Friday at 10pm UTC..."
-                                                rows={3}
-                                                className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                                                maxLength={1000}
-                                            />
-                                            <InputError
-                                                message={
-                                                    form.errors.announcement
-                                                }
-                                            />
-                                        </div>
+                                                    <div className="grid gap-2">
+                                                        <Label>
+                                                            Banner icon
+                                                        </Label>
+                                                        <Select
+                                                            value={
+                                                                form.data
+                                                                    .announcement_icon
+                                                            }
+                                                            onValueChange={(
+                                                                value,
+                                                            ) =>
+                                                                form.setData(
+                                                                    'announcement_icon',
+                                                                    value as AnnouncementIcon,
+                                                                )
+                                                            }
+                                                        >
+                                                            <SelectTrigger className="w-full">
+                                                                {
+                                                                    announcementIconOptions.find(
+                                                                        (
+                                                                            option,
+                                                                        ) =>
+                                                                            option.value ===
+                                                                            form
+                                                                                .data
+                                                                                .announcement_icon,
+                                                                    )?.label
+                                                                }
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {announcementIconOptions.map(
+                                                                    (
+                                                                        option,
+                                                                    ) => {
+                                                                        const Icon =
+                                                                            option.icon;
 
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <Label>Dismissable</Label>
-                                                <p className="text-xs text-muted-foreground">
-                                                    Allow users to hide the
-                                                    announcement.
-                                                </p>
-                                            </div>
-                                            <Switch
-                                                checked={
-                                                    form.data
-                                                        .announcement_dismissable
-                                                }
-                                                onCheckedChange={(checked) =>
-                                                    form.setData(
-                                                        'announcement_dismissable',
-                                                        checked,
-                                                    )
-                                                }
-                                            />
-                                        </div>
-                                    </div>
+                                                                        return (
+                                                                            <SelectItem
+                                                                                key={
+                                                                                    option.value
+                                                                                }
+                                                                                value={
+                                                                                    option.value
+                                                                                }
+                                                                            >
+                                                                                <span className="flex items-center gap-2">
+                                                                                    <Icon className="h-4 w-4 text-muted-foreground" />
+                                                                                    <span>
+                                                                                        {
+                                                                                            option.label
+                                                                                        }
+                                                                                    </span>
+                                                                                </span>
+                                                                            </SelectItem>
+                                                                        );
+                                                                    },
+                                                                )}
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <InputError
+                                                            message={
+                                                                form.errors
+                                                                    .announcement_icon
+                                                            }
+                                                        />
+                                                        <div className="overflow-hidden rounded-lg border border-border/70 bg-background">
+                                                            <div className="flex items-center gap-3 px-3 py-2.5">
+                                                                {announcementIconOptions.map(
+                                                                    (
+                                                                        option,
+                                                                    ) => {
+                                                                        const Icon =
+                                                                            option.icon;
+
+                                                                        if (
+                                                                            option.value !==
+                                                                            form
+                                                                                .data
+                                                                                .announcement_icon
+                                                                        ) {
+                                                                            return null;
+                                                                        }
+
+                                                                        return (
+                                                                            <Icon
+                                                                                key={
+                                                                                    option.value
+                                                                                }
+                                                                                className="h-4 w-4 shrink-0 text-muted-foreground"
+                                                                            />
+                                                                        );
+                                                                    },
+                                                                )}
+                                                                <div className="min-w-0">
+                                                                    <p className="text-sm text-foreground">
+                                                                        {form.data
+                                                                            .announcement ||
+                                                                            'Announcement preview'}
+                                                                    </p>
+                                                                    <p className="text-xs text-muted-foreground">
+                                                                        {
+                                                                            announcementIconOptions.find(
+                                                                                (
+                                                                                    option,
+                                                                                ) =>
+                                                                                    option.value ===
+                                                                                    form
+                                                                                        .data
+                                                                                        .announcement_icon,
+                                                                            )
+                                                                                ?.description
+                                                                        }
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid gap-2">
+                                                        <Label htmlFor="announcement">
+                                                            Message
+                                                        </Label>
+                                                        <textarea
+                                                            id="announcement"
+                                                            value={
+                                                                form.data
+                                                                    .announcement
+                                                            }
+                                                            onChange={(event) =>
+                                                                form.setData(
+                                                                    'announcement',
+                                                                    event.target
+                                                                        .value,
+                                                                )
+                                                            }
+                                                            placeholder="Scheduled maintenance on Friday at 10pm UTC..."
+                                                            rows={3}
+                                                            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                                            maxLength={1000}
+                                                        />
+                                                        <InputError
+                                                            message={
+                                                                form.errors
+                                                                    .announcement
+                                                            }
+                                                        />
+                                                    </div>
+
+                                                    <div className="flex items-center justify-between">
+                                                        <div>
+                                                            <Label>
+                                                                Dismissable
+                                                            </Label>
+                                                            <p className="text-xs text-muted-foreground">
+                                                                Allow users to
+                                                                hide the
+                                                                announcement.
+                                                            </p>
+                                                        </div>
+                                                        <Switch
+                                                            checked={
+                                                                form.data
+                                                                    .announcement_dismissable
+                                                            }
+                                                            onCheckedChange={(
+                                                                checked,
+                                                            ) =>
+                                                                form.setData(
+                                                                    'announcement_dismissable',
+                                                                    checked,
+                                                                )
+                                                            }
+                                                        />
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -364,22 +557,29 @@ export default function Settings({ settings }: Props) {
                                     <div className="p-2">
                                         <div className="rounded-md bg-sidebar p-1">
                                             <div className="rounded-md border border-sidebar-accent bg-background p-6">
-                                    <span className="text-xs font-medium text-muted-foreground">
-                                        Preview
-                                    </span>
-                                    <div className="mt-3">
-                                        <AnnouncementPreview
-                                            type={
-                                                form.data
-                                                    .announcement_type as AnnouncementType
-                                            }
-                                            message={form.data.announcement}
-                                            dismissable={
-                                                form.data
-                                                    .announcement_dismissable
-                                            }
-                                        />
-                                    </div>
+                                                <span className="text-xs font-medium text-muted-foreground">
+                                                    Preview
+                                                </span>
+                                                <div className="mt-3">
+                                                    <AnnouncementPreview
+                                                        type={
+                                                            form.data
+                                                                .announcement_type
+                                                        }
+                                                        icon={
+                                                            form.data
+                                                                .announcement_icon
+                                                        }
+                                                        message={
+                                                            form.data
+                                                                .announcement
+                                                        }
+                                                        dismissable={
+                                                            form.data
+                                                                .announcement_dismissable
+                                                        }
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
