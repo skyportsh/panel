@@ -14,6 +14,7 @@ import type { Column, PaginatedData } from '@/components/admin/data-table';
 import InputError from '@/components/input-error';
 import ServerIcon from '@/components/server-icon';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import {
     Dialog,
     DialogContent,
@@ -562,7 +563,11 @@ function ServerModal({
                     {tab === 'overview' ? (
                         <div className="space-y-4">
                             {server.status === 'install_failed' ? (
-                                <div className="rounded-lg border border-[#d92400]/30 bg-[#d92400]/8 px-4 py-3">
+                                <div className="relative overflow-hidden rounded-lg border border-[#d92400]/30 bg-[#d92400]/8 px-4 py-3">
+                                    <PlaceholderPattern
+                                        patternSize={8}
+                                        className="pointer-events-none absolute inset-0 size-full stroke-[#d92400] opacity-[0.12]"
+                                    />
                                     <div className="flex items-start justify-between gap-4">
                                         <div>
                                             <p className="text-sm font-semibold text-[#d92400] dark:text-[#ff8a6b]">
@@ -678,8 +683,14 @@ function ServerModal({
                             </div>
 
                             <form onSubmit={submit} className="space-y-4">
-                                <div className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
-                                    Node and cargo cannot be changed after a server is created. Resource updates are applied immediately if the server is offline, or queued until the next restart or start.
+                                <div className="relative overflow-hidden rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
+                                    <PlaceholderPattern
+                                        patternSize={8}
+                                        className="pointer-events-none absolute inset-0 size-full stroke-current opacity-[0.08]"
+                                    />
+                                    <div className="relative">
+                                        Node and cargo cannot be changed after a server is created. Resource updates are applied immediately if the server is offline, or queued until the next restart or start.
+                                    </div>
                                 </div>
                                 <ServerFormFields
                                     data={form.data}
