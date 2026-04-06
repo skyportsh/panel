@@ -13,7 +13,7 @@ import { ConfirmDeleteDialog, DataTable } from '@/components/admin/data-table';
 import type { Column, PaginatedData } from '@/components/admin/data-table';
 import InputError from '@/components/input-error';
 import ServerIcon from '@/components/server-icon';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -565,12 +565,17 @@ function ServerModal({
                                                 The daemon reported an unrecoverable install failure. This server should be deleted and recreated.
                                             </p>
                                         </div>
-                                        <Button asChild size="table" variant="outline">
-                                            <a href={downloadInstallLog.url(server.id)}>
-                                                <Download className="h-3.5 w-3.5" />
-                                                Download install log
-                                            </a>
-                                        </Button>
+                                        <a
+                                            href={downloadInstallLog.url(server.id)}
+                                            className={buttonVariants({
+                                                size: 'table',
+                                                variant: 'outline',
+                                                className: 'shrink-0',
+                                            })}
+                                        >
+                                            <Download className="h-3.5 w-3.5" />
+                                            Download install log
+                                        </a>
                                     </div>
                                     {server.last_error ? (
                                         <p className="mt-3 rounded-md bg-background/80 px-3 py-2 font-mono text-xs text-foreground">
