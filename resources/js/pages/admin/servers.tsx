@@ -1,9 +1,10 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { Ellipsis, Plus, Trash2 } from 'lucide-react';
+import { Download, Ellipsis, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import {
     bulkDestroy,
     destroy,
+    downloadInstallLog,
     index as adminServers,
     store,
     update,
@@ -555,12 +556,22 @@ function ServerModal({
                         <div className="space-y-4">
                             {server.status === 'install_failed' ? (
                                 <div className="rounded-lg border border-[#d92400]/30 bg-[#d92400]/8 px-4 py-3">
-                                    <p className="text-sm font-semibold text-[#d92400] dark:text-[#ff8a6b]">
-                                        This server cannot be recovered automatically.
-                                    </p>
-                                    <p className="mt-1 text-sm text-muted-foreground">
-                                        The daemon reported an unrecoverable install failure. This server should be deleted and recreated.
-                                    </p>
+                                    <div className="flex items-start justify-between gap-4">
+                                        <div>
+                                            <p className="text-sm font-semibold text-[#d92400] dark:text-[#ff8a6b]">
+                                                This server cannot be recovered automatically.
+                                            </p>
+                                            <p className="mt-1 text-sm text-muted-foreground">
+                                                The daemon reported an unrecoverable install failure. This server should be deleted and recreated.
+                                            </p>
+                                        </div>
+                                        <Button asChild size="table" variant="outline">
+                                            <a href={downloadInstallLog.url(server.id)}>
+                                                <Download className="h-3.5 w-3.5" />
+                                                Download install log
+                                            </a>
+                                        </Button>
+                                    </div>
                                     {server.last_error ? (
                                         <p className="mt-3 rounded-md bg-background/80 px-3 py-2 font-mono text-xs text-foreground">
                                             {server.last_error}

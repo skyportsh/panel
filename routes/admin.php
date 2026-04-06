@@ -44,6 +44,7 @@ Route::middleware(['auth', EnsureUserIsAdmin::class])
         Route::delete('nodes/{node}', [NodesController::class, 'destroy'])->name('nodes.destroy');
 
         Route::get('servers', [ServersController::class, 'index'])->name('servers.index');
+        Route::get('servers/{server}/install-log', [ServersController::class, 'downloadInstallLog'])->name('servers.install-log');
         Route::post('servers', [ServersController::class, 'store'])->name('servers.store');
         Route::patch('servers/{server}', [ServersController::class, 'update'])->name('servers.update');
         Route::delete('servers/bulk-destroy', [ServersController::class, 'bulkDestroy'])->name('servers.bulk-destroy');

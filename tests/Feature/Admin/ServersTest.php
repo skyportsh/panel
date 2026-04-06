@@ -148,6 +148,53 @@ test('admin can create a server and push it to skyportd', function () {
     });
 });
 
+test('admin can download an install log from skyportd', function () {
+    Http::fake([
+        'http://node.example.com:2800/api/daemon/servers/1/install-log*' => Http::response(
+            "[system] Preparing volume directory...\n[install] Downloading files...\n",
+            200,
+            ['Content-Type' => 'text/plain; charset=utf-8'],
+        ),
+    ]);
+
+    $admin = User::factory()->create(['is_admin' => true]);
+    $dependencies = serverDependencies();
+    $dependencies['node']->forceFill([
+        'daemon_uuid' => '550e8400-e29b-41d4-a716-446655440001',
+        'daemon_port' => 2800,
+        'fqdn' => 'node.example.com',
+        'use_ssl' => false,
+    ])->save();
+    NodeCredential::factory()->create([
+        'daemon_callback_token' => 'callback-token',
+        'node_id' => $dependencies['node']->id,
+    ]);
+    $server = Server::factory()->create([
+        'cargo_id' => $dependencies['cargo']->id,
+        'allocation_id' => $dependencies['allocation']->id,
+        'last_error' => 'Installation failed with exit code 2.',
+        'node_id' => $dependencies['node']->id,
+        'status' => 'install_failed',
+        'user_id' => $dependencies['user']->id,
+    ]);
+
+    actingAs($admin);
+
+    $response = get("/admin/servers/{$server->id}/install-log");
+
+    $response->assertSuccessful();
+    expect($response->streamedContent())->toContain('[install] Downloading files...');
+    $response->assertHeader('content-type', 'text/plain; charset=utf-8');
+
+    Http::assertSent(function ($request) use ($server) {
+        return $request->method() === 'GET'
+            && str_contains($request->url(), "http://node.example.com:2800/api/daemon/servers/{$server->id}/install-log")
+            && $request->hasHeader('Authorization', 'Bearer callback-token')
+            && $request['uuid'] === '550e8400-e29b-41d4-a716-446655440001'
+            && $request['panel_version'] === config('app.version');
+    });
+});
+
 test('admin can update a server and move it between nodes', function () {
     Http::fake([
         'http://old-node.example.com:2800/api/daemon/servers/*' => Http::response([
