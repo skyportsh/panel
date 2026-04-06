@@ -6,6 +6,7 @@ use App\Models\Location;
 use App\Models\Node;
 use App\Models\Server;
 use App\Models\User;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
@@ -120,4 +121,19 @@ test('non admins cannot use all scope on the home page', function () {
             ->where('filters.scope', 'mine')
             ->has('servers.data', 1)
             ->where('servers.data.0.id', $userServer->id));
+});
+
+test('home page renders an empty server list when the servers table is unavailable', function () {
+    $user = User::factory()->create();
+
+    Schema::drop('servers');
+
+    actingAs($user);
+
+    get('/home')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('dashboard')
+            ->where('filters.scope', 'mine')
+            ->has('servers.data', 0));
 });
