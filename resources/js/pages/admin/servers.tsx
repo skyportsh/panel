@@ -662,7 +662,7 @@ export default function Servers({ servers, users, nodes, cargo, filters }: Props
     const columns: Column<AdminServer>[] = [
         {
             label: 'Server',
-            width: 'w-[28%]',
+            width: 'w-[34%]',
             render: (server) => (
                 <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/60">
@@ -681,7 +681,7 @@ export default function Servers({ servers, users, nodes, cargo, filters }: Props
         },
         {
             label: 'User',
-            width: 'w-[20%]',
+            width: 'w-[24%]',
             render: (server) => (
                 <div className="min-w-0">
                     <p className="truncate text-sm text-foreground">
@@ -695,37 +695,12 @@ export default function Servers({ servers, users, nodes, cargo, filters }: Props
         },
         {
             label: 'Node / Cargo',
-            width: 'w-[22%]',
+            width: 'flex-1 min-w-0',
             render: (server) => (
                 <div className="text-xs text-muted-foreground">
                     <p>{server.node.name}</p>
                     <p>{server.cargo.name}</p>
                 </div>
-            ),
-        },
-        {
-            label: 'Limits',
-            width: 'w-[18%]',
-            render: (server) => (
-                <div className="text-xs text-muted-foreground">
-                    <p>{formatLimit(server.memory_mib, 'MiB')}</p>
-                    <p>{formatCpuLimit(server.cpu_limit)} CPU</p>
-                    <p>{formatLimit(server.disk_mib, 'MiB')}</p>
-                </div>
-            ),
-        },
-        {
-            label: 'Status',
-            width: 'flex-1',
-            render: (server) => (
-                <span
-                    className={cn(
-                        'inline-flex rounded-full px-2 py-1 text-xs font-medium',
-                        statusClasses(server.status),
-                    )}
-                >
-                    {statusLabel(server.status)}
-                </span>
             ),
         },
     ];
