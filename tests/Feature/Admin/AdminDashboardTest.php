@@ -40,7 +40,15 @@ it('shows the admin overview with recent user creation data', function () {
             ->where('recentUsersTotal', 2)
             ->has('recentUsers', 30)
             ->where('recentUsers.28.amount', 1)
-            ->where('recentUsers.29.amount', 1),
+            ->where('recentUsers.29.amount', 1)
+            ->has('recentServers', 30)
+            ->has('recentServersTotal')
+            ->has('nodes')
+            ->has('totalServers')
+            ->has('totalNodes')
+            ->has('totalUsers')
+            ->has('totalMemoryMib')
+            ->has('totalDiskMib'),
         );
 
     Carbon::setTestNow();
