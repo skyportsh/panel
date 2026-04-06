@@ -164,8 +164,12 @@ test('server owner can request a reinstall', function () {
     });
 });
 
-test('disallowed power actions are rejected before contacting the daemon', function () {
-    Http::fake();
+test('server owner can send stop and restart actions while running', function () {
+    Http::fake([
+        'https://node.example.com:2800/api/daemon/servers/*/power' => Http::response([
+            'ok' => true,
+        ]),
+    ]);
 
     $dependencies = serverConsoleDependencies();
     $dependencies['server']->forceFill(['status' => 'running'])->save();
@@ -173,12 +177,30 @@ test('disallowed power actions are rejected before contacting the daemon', funct
     actingAs($dependencies['user']);
 
     postJson("/api/client/servers/{$dependencies['server']->id}/power", [
-        'signal' => 'start',
+        'signal' => 'stop',
+    ])->assertSuccessful();
+
+    postJson("/api/client/servers/{$dependencies['server']->id}/power", [
+        'signal' => 'restart',
+    ])->assertSuccessful();
+
+    Http::assertSentCount(2);
+    Http::assertSent(fn ($request) => $request['signal'] === 'stop');
+    Http::assertSent(fn ($request) => $request['signal'] === 'restart');
+});
+
+test('unsupported power actions are rejected by validation', function () {
+    Http::fake();
+
+    $dependencies = serverConsoleDependencies();
+
+    actingAs($dependencies['user']);
+
+    postJson("/api/client/servers/{$dependencies['server']->id}/power", [
+        'signal' => 'explode',
     ])
         ->assertUnprocessable()
-        ->assertJson([
-            'message' => 'The start action is not available while the server is running.',
-        ]);
+        ->assertJsonValidationErrors(['signal']);
 
     Http::assertNothingSent();
 });

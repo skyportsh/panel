@@ -92,6 +92,40 @@ test('daemon can update server runtime state and clear a previous error', functi
     expect($server->fresh()->last_error)->toBeNull();
 });
 
+test('daemon can record stopping and restarting runtime states', function () {
+    $server = daemonRuntimeServer();
+
+    postJson(
+        "/api/daemon/servers/{$server->id}/runtime",
+        [
+            'uuid' => '550e8400-e29b-41d4-a716-446655440000',
+            'version' => '0.1.0',
+            'status' => 'stopping',
+            'last_error' => null,
+        ],
+        ['Authorization' => 'Bearer daemon-secret'],
+    )
+        ->assertSuccessful()
+        ->assertJsonPath('server.status', 'stopping');
+
+    expect($server->fresh()->status)->toBe('stopping');
+
+    postJson(
+        "/api/daemon/servers/{$server->id}/runtime",
+        [
+            'uuid' => '550e8400-e29b-41d4-a716-446655440000',
+            'version' => '0.1.0',
+            'status' => 'restarting',
+            'last_error' => null,
+        ],
+        ['Authorization' => 'Bearer daemon-secret'],
+    )
+        ->assertSuccessful()
+        ->assertJsonPath('server.status', 'restarting');
+
+    expect($server->fresh()->status)->toBe('restarting');
+});
+
 test('daemon cannot report runtime updates for a server on another node', function () {
     $server = daemonRuntimeServer();
     $otherNode = Node::factory()->create([

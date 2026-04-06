@@ -4,7 +4,18 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { show as serverConsole } from '@/actions/App/Http/Controllers/Client/ServerConsoleController';
 import { store as powerServer } from '@/actions/App/Http/Controllers/Client/ServerPowerController';
 import { show as websocketCredentials } from '@/actions/App/Http/Controllers/Client/ServerWebsocketController';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/ui/sonner';
 import AppLayout from '@/layouts/app-layout';
 import {
@@ -17,6 +28,7 @@ import { home } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
 
 type ServerPowerSignal = 'kill' | 'restart' | 'start' | 'stop';
+type ConfirmedSignal = 'restart' | 'stop';
 
 type Props = {
     server: {
@@ -76,6 +88,9 @@ export default function ServerConsole({ server }: Props) {
     const [submittingAction, setSubmittingAction] =
         useState<ServerPowerSignal | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
+    const [confirmingSignal, setConfirmingSignal] =
+        useState<ConfirmedSignal | null>(null);
+    const submittingActionRef = useRef<ServerPowerSignal | null>(null);
     const socketRef = useRef<WebSocket | null>(null);
     const reconnectTimeout = useRef<number | null>(null);
 
@@ -87,8 +102,20 @@ export default function ServerConsole({ server }: Props) {
             return 'starting';
         }
 
+        if (submittingAction === 'stop') {
+            return 'stopping';
+        }
+
+        if (submittingAction === 'restart') {
+            return 'restarting';
+        }
+
         return runtimeState;
     }, [runtimeState, submittingAction]);
+
+    useEffect(() => {
+        submittingActionRef.current = submittingAction;
+    }, [submittingAction]);
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -168,7 +195,19 @@ export default function ServerConsole({ server }: Props) {
                     }
 
                     if (payload.event === 'status') {
-                        setRuntimeState(String(payload.args?.[0] ?? 'offline'));
+                        const nextState = String(
+                            payload.args?.[0] ?? 'offline',
+                        );
+
+                        if (
+                            (submittingActionRef.current === 'stop' ||
+                                submittingActionRef.current === 'restart') &&
+                            nextState === 'running'
+                        ) {
+                            return;
+                        }
+
+                        setRuntimeState(nextState);
                         setSubmittingAction(null);
                         setActionError(null);
 
@@ -185,7 +224,17 @@ export default function ServerConsole({ server }: Props) {
                           }
                         | undefined;
 
-                    setRuntimeState(String(snapshot?.state ?? 'offline'));
+                    const nextState = String(snapshot?.state ?? 'offline');
+
+                    if (
+                        (submittingActionRef.current === 'stop' ||
+                            submittingActionRef.current === 'restart') &&
+                        nextState === 'running'
+                    ) {
+                        return;
+                    }
+
+                    setRuntimeState(nextState);
                     setSubmittingAction(null);
                     setActionError(null);
                 });
@@ -237,6 +286,10 @@ export default function ServerConsole({ server }: Props) {
             }
 
             if (signal === 'start') {
+                setRuntimeState('starting');
+            } else if (signal === 'stop') {
+                setRuntimeState('offline');
+            } else if (signal === 'restart') {
                 setRuntimeState('starting');
             }
 
@@ -295,9 +348,7 @@ export default function ServerConsole({ server }: Props) {
                                         !availability.stop ||
                                         submittingAction !== null
                                     }
-                                    onClick={() =>
-                                        void sendPowerSignal('stop')
-                                    }
+                                    onClick={() => setConfirmingSignal('stop')}
                                 >
                                     <Square />
                                     Stop
@@ -321,7 +372,7 @@ export default function ServerConsole({ server }: Props) {
                                         submittingAction !== null
                                     }
                                     onClick={() =>
-                                        void sendPowerSignal('restart')
+                                        setConfirmingSignal('restart')
                                     }
                                 >
                                     <RotateCw />
@@ -360,6 +411,58 @@ export default function ServerConsole({ server }: Props) {
                     </div>
                 ) : null}
             </div>
+
+            <AlertDialog
+                open={confirmingSignal !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setConfirmingSignal(null);
+                    }
+                }}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            {confirmingSignal === 'restart'
+                                ? `Restart ${server.name}?`
+                                : `Stop ${server.name}?`}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {confirmingSignal === 'restart'
+                                ? 'This will send the configured stop command, wait for the server to shut down, and then start it again.'
+                                : 'This will send the configured stop command and shut the server down.'}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel
+                            disabled={submittingAction !== null}
+                        >
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            disabled={
+                                confirmingSignal === null ||
+                                submittingAction !== null
+                            }
+                            onClick={(event) => {
+                                event.preventDefault();
+                                if (!confirmingSignal) {
+                                    return;
+                                }
+
+                                const signal = confirmingSignal;
+                                setConfirmingSignal(null);
+                                void sendPowerSignal(signal);
+                            }}
+                        >
+                            {submittingAction !== null && <Spinner />}
+                            {confirmingSignal === 'restart'
+                                ? 'Restart server'
+                                : 'Stop server'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </AppLayout>
     );
 }

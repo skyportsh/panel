@@ -23,7 +23,7 @@ class UpdateServerRuntimeRequest extends FormRequest
             'status' => [
                 'required',
                 'string',
-                'in:installing,install_failed,offline,starting,running',
+                'in:installing,install_failed,offline,restarting,running,starting,stopping',
             ],
             'last_error' => ['nullable', 'string', 'max:65535'],
         ];
