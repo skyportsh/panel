@@ -32,6 +32,7 @@ class CargoDefinitionService
                 'Default' => 'ghcr.io/skyportsh/yolks:latest',
             ],
             'file_denylist' => [],
+            'file_hidden_list' => [],
             'startup' => $attributes['startup'] ?? './start.sh',
             'config' => [
                 'files' => '{}',
@@ -51,7 +52,7 @@ class CargoDefinitionService
     }
 
     /**
-     * @return array{name: string, slug: string, author: string, cargofile: string, definition: array<string, mixed>, description: string, source_type: string}
+     * @return array{name: string, slug: string, author: string, cargofile: string, definition: array<string, mixed>, description: string, features: array<int, string>, docker_images: array<string, string>, file_denylist: array<int, string>, file_hidden_list: array<int, string>, startup_command: string, config_files: string, config_startup: string, config_logs: string, config_stop: string, install_script: string, install_container: string, install_entrypoint: string, variables: array<int, array<string, mixed>>, source_type: string}
      */
     public function parseImport(string $content): array
     {
@@ -75,7 +76,7 @@ class CargoDefinitionService
     }
 
     /**
-     * @return array{name: string, slug: string, author: string, cargofile: string, definition: array<string, mixed>, description: string, source_type: string}
+     * @return array{name: string, slug: string, author: string, cargofile: string, definition: array<string, mixed>, description: string, features: array<int, string>, docker_images: array<string, string>, file_denylist: array<int, string>, file_hidden_list: array<int, string>, startup_command: string, config_files: string, config_startup: string, config_logs: string, config_stop: string, install_script: string, install_container: string, install_entrypoint: string, variables: array<int, array<string, mixed>>, source_type: string}
      */
     public function parseCargofile(string $content): array
     {
@@ -92,7 +93,7 @@ class CargoDefinitionService
 
     /**
      * @param  array<string, mixed>  $definition
-     * @return array{name: string, slug: string, author: string, cargofile: string, definition: array<string, mixed>, description: string, source_type: string}
+     * @return array{name: string, slug: string, author: string, cargofile: string, definition: array<string, mixed>, description: string, features: array<int, string>, docker_images: array<string, string>, file_denylist: array<int, string>, file_hidden_list: array<int, string>, startup_command: string, config_files: string, config_startup: string, config_logs: string, config_stop: string, install_script: string, install_container: string, install_entrypoint: string, variables: array<int, array<string, mixed>>, source_type: string}
      */
     public function compile(array $definition): array
     {
@@ -105,9 +106,22 @@ class CargoDefinitionService
             'name' => $normalized['name'],
             'slug' => Str::slug($normalized['name']),
             'author' => $normalized['author'],
+            'description' => $normalized['description'],
+            'features' => $normalized['features'],
+            'docker_images' => $normalized['docker_images'],
+            'file_denylist' => $normalized['file_denylist'],
+            'file_hidden_list' => $normalized['file_hidden_list'],
+            'startup_command' => $normalized['startup'],
+            'config_files' => (string) Arr::get($normalized, 'config.files', '{}'),
+            'config_startup' => (string) Arr::get($normalized, 'config.startup', '{}'),
+            'config_logs' => (string) Arr::get($normalized, 'config.logs', '{}'),
+            'config_stop' => (string) Arr::get($normalized, 'config.stop', 'stop'),
+            'install_script' => (string) Arr::get($normalized, 'scripts.installation.script', ''),
+            'install_container' => (string) Arr::get($normalized, 'scripts.installation.container', ''),
+            'install_entrypoint' => (string) Arr::get($normalized, 'scripts.installation.entrypoint', ''),
+            'variables' => $normalized['variables'],
             'cargofile' => $this->serialize($normalized),
             'definition' => $normalized,
-            'description' => $normalized['description'],
             'source_type' => $normalized['meta']['source_format'] === 'pterodactyl' ? 'pterodactyl' : 'native',
         ];
     }
@@ -146,10 +160,11 @@ class CargoDefinitionService
         $dockerImages = Arr::get($definition, 'docker_images', []);
         $features = Arr::get($definition, 'features', []);
         $fileDenylist = Arr::get($definition, 'file_denylist', []);
+        $fileHiddenList = Arr::get($definition, 'file_hidden_list', []);
         $variables = Arr::get($definition, 'variables', []);
 
-        if (! is_array($dockerImages) || ! is_array($features) || ! is_array($fileDenylist) || ! is_array($variables)) {
-            throw new InvalidArgumentException('Cargo docker images, features, file denylist, and variables must be arrays.');
+        if (! is_array($dockerImages) || ! is_array($features) || ! is_array($fileDenylist) || ! is_array($fileHiddenList) || ! is_array($variables)) {
+            throw new InvalidArgumentException('Cargo docker images, features, file denylist, file hidden list, and variables must be arrays.');
         }
 
         return [
@@ -169,6 +184,7 @@ class CargoDefinitionService
                 ->mapWithKeys(fn ($image, $label) => [(string) $label => (string) $image])
                 ->all(),
             'file_denylist' => array_values(array_map('strval', $fileDenylist)),
+            'file_hidden_list' => array_values(array_map('strval', $fileHiddenList)),
             'startup' => $startup,
             'config' => [
                 'files' => (string) Arr::get($definition, 'config.files', '{}'),

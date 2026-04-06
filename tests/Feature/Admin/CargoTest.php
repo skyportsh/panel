@@ -27,7 +27,8 @@ function pterodactylEggPayload(): string
         'docker_images' => [
             'Java 21' => 'ghcr.io/ptero-eggs/yolks:java_21',
         ],
-        'file_denylist' => [],
+        'file_denylist' => ['server.properties'],
+        'file_hidden_list' => ['.env'],
         'startup' => 'java -jar {{SERVER_JARFILE}}',
         'config' => [
             'files' => '{}',
@@ -109,6 +110,9 @@ test('admin can create cargo', function () {
     expect($cargo)->not->toBeNull();
     expect($cargo?->slug)->toBe('paper');
     expect($cargo?->definition['meta']['version'])->toBe('SPDL_v1');
+    expect($cargo?->startup_command)->toBe('java -jar server.jar');
+    expect($cargo?->config_stop)->toBe('stop');
+    expect($cargo?->file_hidden_list)->toBe([]);
 });
 
 test('admin can import pterodactyl egg as cargo', function () {
@@ -126,6 +130,11 @@ test('admin can import pterodactyl egg as cargo', function () {
     expect($cargo?->source_type)->toBe('pterodactyl');
     expect($cargo?->definition['meta']['source_format'])->toBe('pterodactyl');
     expect($cargo?->definition['variables'])->toHaveCount(1);
+    expect($cargo?->config_startup)->toBe('{"done":")! For help, type "}');
+    expect($cargo?->config_stop)->toBe('stop');
+    expect($cargo?->config_files)->toBe('{}');
+    expect($cargo?->file_denylist)->toBe(['server.properties']);
+    expect($cargo?->file_hidden_list)->toBe(['.env']);
 });
 
 test('admin can update cargo from cargofile content', function () {
@@ -138,6 +147,28 @@ test('admin can update cargo from cargofile content', function () {
         'description' => 'Updated description',
         'startup' => './boot.sh',
     ]);
+    $payload['file_denylist'] = ['server.properties'];
+    $payload['file_hidden_list'] = ['.env'];
+    $payload['config'] = [
+        'files' => <<<'JSON'
+{
+    "server.properties": {
+        "parser": "properties",
+        "find": {
+            "server-ip": "0.0.0.0",
+            "server-port": "{{server.build.default.port}}"
+        }
+    }
+}
+JSON,
+        'startup' => <<<'JSON'
+{
+    "done": ")! For help, type "
+}
+JSON,
+        'logs' => '{}',
+        'stop' => 'stop',
+    ];
     $payload['variables'][] = [
         'name' => 'Build Number',
         'description' => 'Build to install',
@@ -160,6 +191,11 @@ test('admin can update cargo from cargofile content', function () {
     expect($cargo->name)->toBe('Updated Cargo');
     expect($cargo->slug)->toBe('updated-cargo');
     expect($cargo->definition['variables'])->toHaveCount(1);
+    expect($cargo->file_denylist)->toBe(['server.properties']);
+    expect($cargo->file_hidden_list)->toBe(['.env']);
+    expect($cargo->config_stop)->toBe('stop');
+    expect($cargo->config_startup)->toContain('For help, type');
+    expect($cargo->config_files)->toContain('server.properties');
 });
 
 test('admin can delete cargo', function () {
