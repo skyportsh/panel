@@ -28,7 +28,7 @@ class AuditLogController extends Controller
         ];
 
         if (! Schema::hasTable('user_activities')) {
-            return Inertia::render('admin/audit-log', [
+            return Inertia::render('admin/activity', [
                 'activities' => $emptyResponse,
                 'filters' => ['search' => $search, 'type' => $type],
             ]);
@@ -84,7 +84,7 @@ class AuditLogController extends Controller
             ])
             ->withQueryString();
 
-        return Inertia::render('admin/audit-log', [
+        return Inertia::render('admin/activity', [
             'activities' => $activities,
             'filters' => ['search' => $search, 'type' => $type],
         ]);

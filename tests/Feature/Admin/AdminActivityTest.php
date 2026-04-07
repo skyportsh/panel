@@ -4,10 +4,10 @@ use App\Models\User;
 use App\Models\UserActivity;
 use Inertia\Testing\AssertableInertia as Assert;
 
-it('forbids non-admins from viewing the activity log', function () {
+it('forbids non-admins from viewing the activity page', function () {
     $user = User::factory()->create(['is_admin' => false]);
 
-    $this->actingAs($user)->get('/admin/audit-log')->assertForbidden();
+    $this->actingAs($user)->get('/admin/activity')->assertForbidden();
 });
 
 it('shows the activity page for admins', function () {
@@ -17,11 +17,11 @@ it('shows the activity page for admins', function () {
     ]);
 
     $this->actingAs($admin)
-        ->get('/admin/audit-log')
+        ->get('/admin/activity')
         ->assertOk()
         ->assertInertia(
             fn (Assert $page) => $page
-                ->component('admin/audit-log')
+                ->component('admin/activity')
                 ->has('activities')
                 ->has('activities.data')
                 ->has('activities.links')
@@ -47,7 +47,7 @@ it('paginates the activity page for admins', function () {
     }
 
     $this->actingAs($admin)
-        ->get('/admin/audit-log?page=2')
+        ->get('/admin/activity?page=2')
         ->assertOk()
         ->assertInertia(
             fn (Assert $page) => $page

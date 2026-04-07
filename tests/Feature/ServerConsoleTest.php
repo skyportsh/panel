@@ -64,23 +64,20 @@ test('server owner can view the console page', function () {
             ->where('server.id', $dependencies['server']->id)
             ->where('server.name', 'Alpha')
             ->where('server.cargo.name', 'Paper')
+            ->where('server.node.name', $dependencies['server']->node->name)
             ->where('server.allocation.port', 25565)
             ->where('server.allowed_actions.start', true)
             ->where('server.allowed_actions.reinstall', true)
             ->where('server.allowed_actions.kill', false));
 });
 
-test('server owner can view the settings page', function () {
+test('removed server filesystem and settings pages are not found', function () {
     $dependencies = serverConsoleDependencies();
 
     actingAs($dependencies['user']);
 
-    get("/server/{$dependencies['server']->id}/settings")
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('server/settings')
-            ->where('server.id', $dependencies['server']->id)
-            ->where('server.allowed_actions.reinstall', true));
+    get("/server/{$dependencies['server']->id}/filesystem")->assertNotFound();
+    get("/server/{$dependencies['server']->id}/settings")->assertNotFound();
 });
 
 test('admin can view the console page for any server', function () {

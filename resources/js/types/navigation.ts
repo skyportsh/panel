@@ -12,5 +12,6 @@ export type NavItem = {
     href?: NonNullable<InertiaLinkProps["href"]>;
     icon?: LucideIcon | ComponentType<SVGProps<SVGSVGElement>> | null;
     isActive?: boolean;
+    pinnable?: boolean;
     items?: NavItem[];
 };

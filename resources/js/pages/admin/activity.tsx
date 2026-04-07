@@ -1,6 +1,6 @@
 import { Head, router } from "@inertiajs/react";
 import { useState } from "react";
-import { index as adminAuditLog } from "@/actions/App/Http/Controllers/Admin/AuditLogController";
+import { index as adminActivity } from "@/actions/App/Http/Controllers/Admin/AuditLogController";
 import { DataTable } from "@/components/admin/data-table";
 import type { Column, PaginatedData } from "@/components/admin/data-table";
 import {
@@ -52,7 +52,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: "Activity",
-        href: adminAuditLog.url(),
+        href: adminActivity.url(),
     },
 ];
 
@@ -191,7 +191,7 @@ const columns: Column<ActivityItem>[] = [
     },
 ];
 
-export default function AuditLog({ activities, filters }: Props) {
+export default function Activity({ activities, filters }: Props) {
     const [search, setSearch] = useState(filters.search);
     const [selectedActivity, setSelectedActivity] =
         useState<ActivityItem | null>(null);
@@ -199,7 +199,7 @@ export default function AuditLog({ activities, filters }: Props) {
     const handleSearch = (value: string) => {
         setSearch(value);
         router.get(
-            adminAuditLog.url(),
+            adminActivity.url(),
             { search: value || undefined },
             { preserveState: true, replace: true },
         );

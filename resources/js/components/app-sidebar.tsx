@@ -1,12 +1,13 @@
 import { Link, usePage } from "@inertiajs/react";
 import { show as serverConsole } from "@/actions/App/Http/Controllers/Client/ServerConsoleController";
-import { show as serverFilesystem } from "@/actions/App/Http/Controllers/Client/ServerFilesystemController";
-import { show as serverSettings } from "@/actions/App/Http/Controllers/Client/ServerSettingsController";
 import AuditLogIcon from "@/components/audit-log-icon";
 import CargoIcon from "@/components/cargo-icon";
+import ConsoleIcon from "@/components/console-icon";
 import DashboardIcon from "@/components/dashboard-icon";
+import FilesIcon from "@/components/files-icon";
 import LocationsIcon from "@/components/locations-icon";
 import { NavMain } from "@/components/nav-main";
+import NetworkingIcon from "@/components/networking-icon";
 import NodesIcon from "@/components/nodes-icon";
 import ServerIcon from "@/components/server-icon";
 import SettingsIcon from "@/components/settings-icon";
@@ -41,7 +42,7 @@ export function AppSidebar() {
     const isAdminSidebar = auth.user.is_admin && page.url.startsWith("/admin");
     const isServerSidebar = page.url.startsWith("/server/");
     const adminDashboardHref = "/admin";
-    const adminAuditLogHref = "/admin/audit-log";
+    const adminActivityHref = "/admin/activity";
     const mainNavItems: NavItem[] = isAdminSidebar
         ? [
               {
@@ -76,7 +77,7 @@ export function AppSidebar() {
               },
               {
                   title: "Activity",
-                  href: adminAuditLogHref,
+                  href: adminActivityHref,
                   icon: AuditLogIcon,
               },
               {
@@ -88,22 +89,38 @@ export function AppSidebar() {
         : isServerSidebar && server
           ? [
                 {
-                    title: server.name,
-                    icon: ServerIcon,
+                    title: "Console",
+                    href: serverConsole.url(server.id),
+                    icon: ConsoleIcon,
+                },
+                {
+                    title: "Files",
+                    href: `/server/${server.id}/files`,
+                    icon: FilesIcon,
+                },
+                {
+                    title: "Networking",
+                    icon: NetworkingIcon,
+                    pinnable: false,
                     items: [
                         {
-                            title: "Console",
-                            href: serverConsole.url(server.id),
+                            title: "Allocations",
+                            href: `/server/${server.id}/networking/allocations`,
                         },
                         {
-                            title: "Filesystem",
-                            href: serverFilesystem.url(server.id),
+                            title: "Firewall",
+                            href: `/server/${server.id}/networking/firewall`,
                         },
                         {
-                            title: "Settings",
-                            href: serverSettings.url(server.id),
+                            title: "Interconnect",
+                            href: `/server/${server.id}/networking/interconnect`,
                         },
                     ],
+                },
+                {
+                    title: "Settings",
+                    href: `/server/${server.id}/settings`,
+                    icon: SettingsIcon,
                 },
             ]
           : [

@@ -49,6 +49,7 @@ function NavMainItem({ item, index }: { item: NavItem; index: number }) {
     const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
     const { isMobile, state } = useSidebar();
     const hasChildren = Boolean(item.items && item.items.length > 0);
+    const isPinnable = item.pinnable !== false;
     const hasActiveChild =
         item.items?.some(
             (subItem) => subItem.href && isCurrentOrParentUrl(subItem.href),
@@ -460,31 +461,33 @@ function NavMainItem({ item, index }: { item: NavItem; index: number }) {
                         >
                             {item.icon && <item.icon />}
                             <span>{item.title}</span>
-                            <ChevronRight className="transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-data-[collapsible=icon]:hidden group-data-[state=open]/collapsible:rotate-90" />
+                            <ChevronRight className="ml-auto transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-data-[collapsible=icon]:hidden group-data-[state=open]/collapsible:rotate-90" />
                         </SidebarMenuButton>
                     </CollapsibleTrigger>
-                    <SidebarMenuAction
-                        showOnHover
-                        onClick={(e) => {
-                            e.stopPropagation();
+                    {isPinnable ? (
+                        <SidebarMenuAction
+                            showOnHover
+                            onClick={(e) => {
+                                e.stopPropagation();
 
-                            if (isPinned) {
-                                unpin();
-                            } else {
-                                setPinModalOpen(true);
+                                if (isPinned) {
+                                    unpin();
+                                } else {
+                                    setPinModalOpen(true);
+                                }
+                            }}
+                            aria-label={
+                                isPinned
+                                    ? `Unpin ${item.title}`
+                                    : `Pin ${item.title}`
                             }
-                        }}
-                        aria-label={
-                            isPinned
-                                ? `Unpin ${item.title}`
-                                : `Pin ${item.title}`
-                        }
-                    >
-                        <Pin
-                            className="h-3 w-3"
-                            fill={isPinned ? 'currentColor' : 'none'}
-                        />
-                    </SidebarMenuAction>
+                        >
+                            <Pin
+                                className="h-3 w-3"
+                                fill={isPinned ? 'currentColor' : 'none'}
+                            />
+                        </SidebarMenuAction>
+                    ) : null}
 
                     <CollapsibleContent className="overflow-hidden transition-[max-height,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] data-[state=closed]:max-h-0 data-[state=closed]:opacity-0 data-[state=open]:max-h-48 data-[state=open]:opacity-100">
                         <div ref={subMenuRef} className="relative">
@@ -530,36 +533,38 @@ function NavMainItem({ item, index }: { item: NavItem; index: number }) {
                 </SidebarMenuItem>
             </Collapsible>
 
-            <Dialog open={pinModalOpen} onOpenChange={setPinModalOpen}>
-                <DialogContent className="sm:max-w-sm">
-                    <DialogHeader>
-                        <DialogTitle>
-                            Pin &ldquo;{item.title}&rdquo;?
-                        </DialogTitle>
-                        <DialogDescription>
-                            If you frequently use this service from Skyport, you
-                            can also change the default page you&apos;ll be
-                            redirected to upon login.{' '}
-                            <Link
-                                href={settingsPreferencesHref}
+            {isPinnable ? (
+                <Dialog open={pinModalOpen} onOpenChange={setPinModalOpen}>
+                    <DialogContent className="sm:max-w-sm">
+                        <DialogHeader>
+                            <DialogTitle>
+                                Pin &ldquo;{item.title}&rdquo;?
+                            </DialogTitle>
+                            <DialogDescription>
+                                If you frequently use this service from Skyport, you
+                                can also change the default page you&apos;ll be
+                                redirected to upon login.{' '}
+                                <Link
+                                    href={settingsPreferencesHref}
+                                    onClick={() => setPinModalOpen(false)}
+                                    className="underline underline-offset-4"
+                                >
+                                    Manage in Preferences
+                                </Link>
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="flex justify-end gap-2 pt-2">
+                            <Button
+                                variant="ghost"
                                 onClick={() => setPinModalOpen(false)}
-                                className="underline underline-offset-4"
                             >
-                                Manage in Preferences
-                            </Link>
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="flex justify-end gap-2 pt-2">
-                        <Button
-                            variant="ghost"
-                            onClick={() => setPinModalOpen(false)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button onClick={pin}>Pin</Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
+                                Cancel
+                            </Button>
+                            <Button onClick={pin}>Pin</Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            ) : null}
         </>
     );
 }

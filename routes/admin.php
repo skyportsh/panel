@@ -55,7 +55,7 @@ Route::middleware(['auth', EnsureUserIsAdmin::class])
         Route::delete('servers/bulk-destroy', [ServersController::class, 'bulkDestroy'])->name('servers.bulk-destroy');
         Route::delete('servers/{server}', [ServersController::class, 'destroy'])->name('servers.destroy');
 
-        Route::get('audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
+        Route::get('activity', [AuditLogController::class, 'index'])->name('activity.index');
 
         Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::patch('settings', [SettingsController::class, 'update'])->name('settings.update');

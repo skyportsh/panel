@@ -18,7 +18,7 @@ class ServerConsoleController extends Controller
     {
         $this->authorizeServerAccess($request, $server);
 
-        $server->loadMissing(['allocation', 'cargo']);
+        $server->loadMissing(['allocation', 'cargo', 'node']);
 
         return Inertia::render('server/console', [
             'server' => [
@@ -35,6 +35,10 @@ class ServerConsoleController extends Controller
                 'id' => $server->id,
                 'last_error' => $server->last_error,
                 'name' => $server->name,
+                'node' => [
+                    'id' => $server->node->id,
+                    'name' => $server->node->name,
+                ],
                 'status' => $server->status,
             ],
         ]);

@@ -7,11 +7,86 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@font-face {
+    font-family: 'Ioskeley Mono';
+    src: url('/fonts/ioskeley-mono/IoskeleyMono-Regular.woff2')
+        format('woff2');
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Ioskeley Mono';
+    src: url('/fonts/ioskeley-mono/IoskeleyMono-Italic.woff2')
+        format('woff2');
+    font-style: italic;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Ioskeley Mono';
+    src: url('/fonts/ioskeley-mono/IoskeleyMono-Medium.woff2')
+        format('woff2');
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Ioskeley Mono';
+    src: url('/fonts/ioskeley-mono/IoskeleyMono-MediumItalic.woff2')
+        format('woff2');
+    font-style: italic;
+    font-weight: 500;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Ioskeley Mono';
+    src: url('/fonts/ioskeley-mono/IoskeleyMono-SemiBold.woff2')
+        format('woff2');
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Ioskeley Mono';
+    src: url('/fonts/ioskeley-mono/IoskeleyMono-SemiBoldItalic.woff2')
+        format('woff2');
+    font-style: italic;
+    font-weight: 600;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Ioskeley Mono';
+    src: url('/fonts/ioskeley-mono/IoskeleyMono-Bold.woff2')
+        format('woff2');
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Ioskeley Mono';
+    src: url('/fonts/ioskeley-mono/IoskeleyMono-BoldItalic.woff2')
+        format('woff2');
+    font-style: italic;
+    font-weight: 700;
+    font-display: swap;
+}
+
 @theme {
     --font-sans:
         'Inter', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
+    --font-mono:
+        'Ioskeley Mono', ui-monospace, 'SFMono-Regular', 'SF Mono',
+        Consolas, 'Liberation Mono', Menlo, monospace;
 
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
@@ -179,6 +254,13 @@
     body {
         @apply bg-background text-foreground;
         letter-spacing: -0.15px;
+    }
+
+    code,
+    kbd,
+    pre,
+    samp {
+        font-family: var(--font-mono);
     }
 }
 
