@@ -330,7 +330,7 @@ function LocationModal({
 
                 <div className="border-t border-border/60" />
 
-                <div className="flex-1 overflow-y-auto px-6 py-6">
+                <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-6 py-6">
                     {tab === "overview" ? (
                         <div className="flex gap-6">
                             <div className="min-w-0 flex-1 space-y-1">

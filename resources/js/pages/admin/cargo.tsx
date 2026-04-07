@@ -549,7 +549,7 @@ function CargoModal({
 
                 <div className="border-t border-border/60" />
 
-                <div className="flex-1 overflow-y-auto px-6 py-6">
+                <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-6 py-6">
                     {tab === "overview" ? (
                         <div className="flex gap-6">
                             <div className="min-w-0 flex-1 space-y-1">
@@ -709,51 +709,67 @@ function CargoModal({
 
                             {cargo.definition.variables.length > 0 ? (
                                 <div className="overflow-hidden rounded-lg bg-muted/40">
-                                    <div className="rounded-lg border border-border/70 bg-background p-1">
-                                        <div className="grid grid-cols-[1.1fr_0.9fr_0.9fr_120px] gap-4 border-b border-border/60 px-4 py-2 text-xs font-medium text-muted-foreground">
-                                            <span>Variable</span>
-                                            <span>Environment</span>
-                                            <span>Default</span>
-                                            <span>Flags</span>
-                                        </div>
-                                        <div className="divide-y divide-border/60">
+                                    <div className="relative flex items-center gap-4 px-4 py-2.5">
+                                        <span className="block min-w-0 flex-[1.1] text-xs font-medium text-muted-foreground">
+                                            Variable
+                                        </span>
+                                        <span className="block min-w-0 flex-[0.9] text-xs font-medium text-muted-foreground">
+                                            Environment
+                                        </span>
+                                        <span className="block min-w-0 flex-[0.9] text-xs font-medium text-muted-foreground">
+                                            Default
+                                        </span>
+                                        <span className="block w-30 shrink-0 text-xs font-medium text-muted-foreground">
+                                            Flags
+                                        </span>
+                                    </div>
+                                    <div className="overflow-hidden rounded-lg border border-border/70 bg-background">
+                                        <div className="flex flex-col gap-1 p-1">
                                             {cargo.definition.variables.map(
                                                 (variable) => (
                                                     <div
                                                         key={
                                                             variable.env_variable
                                                         }
-                                                        className="grid grid-cols-[1.1fr_0.9fr_0.9fr_120px] gap-4 px-4 py-3"
+                                                        className="group relative overflow-hidden rounded-md transition-colors duration-150 ease-out hover:bg-muted/40"
                                                     >
-                                                        <div className="min-w-0">
-                                                            <p className="truncate text-sm font-medium text-foreground">
-                                                                {variable.name}
-                                                            </p>
-                                                            <p className="mt-1 text-xs text-muted-foreground">
-                                                                {variable.description ||
-                                                                    "No description provided."}
-                                                            </p>
-                                                        </div>
-                                                        <p className="truncate font-mono text-xs text-foreground">
-                                                            {
-                                                                variable.env_variable
-                                                            }
-                                                        </p>
-                                                        <p className="truncate text-xs text-muted-foreground">
-                                                            {variable.default_value ||
-                                                                "—"}
-                                                        </p>
-                                                        <div className="space-y-1 text-xs text-muted-foreground">
-                                                            <p>
-                                                                {variable.user_viewable
-                                                                    ? "Visible"
-                                                                    : "Hidden"}
-                                                            </p>
-                                                            <p>
-                                                                {variable.user_editable
-                                                                    ? "Editable"
-                                                                    : "Locked"}
-                                                            </p>
+                                                        <div className="relative flex items-start gap-4 px-4 py-2.5">
+                                                            <div className="min-w-0 flex-[1.1]">
+                                                                <p className="truncate text-sm font-medium text-foreground">
+                                                                    {
+                                                                        variable.name
+                                                                    }
+                                                                </p>
+                                                                <p className="mt-1 text-xs text-muted-foreground">
+                                                                    {variable.description ||
+                                                                        "No description provided."}
+                                                                </p>
+                                                            </div>
+                                                            <div className="min-w-0 flex-[0.9]">
+                                                                <p className="truncate font-mono text-xs text-foreground">
+                                                                    {
+                                                                        variable.env_variable
+                                                                    }
+                                                                </p>
+                                                            </div>
+                                                            <div className="min-w-0 flex-[0.9]">
+                                                                <p className="truncate text-xs text-muted-foreground">
+                                                                    {variable.default_value ||
+                                                                        "—"}
+                                                                </p>
+                                                            </div>
+                                                            <div className="w-30 shrink-0 space-y-1 text-xs text-muted-foreground">
+                                                                <p>
+                                                                    {variable.user_viewable
+                                                                        ? "Visible"
+                                                                        : "Hidden"}
+                                                                </p>
+                                                                <p>
+                                                                    {variable.user_editable
+                                                                        ? "Editable"
+                                                                        : "Locked"}
+                                                                </p>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 ),

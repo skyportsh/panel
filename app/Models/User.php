@@ -11,7 +11,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
-#[Fillable(['name', 'email', 'password', 'is_admin', 'suspended_at', 'admin_notes'])]
+#[Fillable(['name', 'email', 'password', 'is_admin', 'suspended_at'])]
 #[
     Hidden([
         'password',

@@ -203,7 +203,7 @@ function DialogContentFull({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "bg-background fixed inset-[5%] z-50 flex flex-col overflow-hidden rounded-xl border shadow-2xl",
+          "bg-background fixed inset-4 z-50 flex min-h-0 flex-col overflow-hidden rounded-xl border shadow-2xl sm:inset-6 lg:inset-8",
           fullscreenDialogMotionClass,
           className
         )}

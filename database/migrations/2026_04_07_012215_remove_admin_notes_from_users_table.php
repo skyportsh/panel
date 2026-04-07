@@ -11,15 +11,26 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (! Schema::hasColumn('users', 'admin_notes')) {
+            return;
+        }
+
         Schema::table('users', function (Blueprint $table) {
-            $table->text('admin_notes')->nullable()->after('suspended_at');
+            $table->dropColumn('admin_notes');
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
+        if (Schema::hasColumn('users', 'admin_notes')) {
+            return;
+        }
+
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('admin_notes');
+            $table->text('admin_notes')->nullable()->after('suspended_at');
         });
     }
 };
