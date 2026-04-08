@@ -479,11 +479,11 @@ function InlinePathSummary({
     const segments = pathSegments(currentPath);
 
     return (
-        <div className="-ml-4 flex flex-wrap items-center gap-1 text-sm font-medium text-foreground">
+        <div className="-ml-2 flex flex-wrap items-center gap-1 text-sm font-medium text-foreground">
             <button
                 type="button"
                 onClick={() => onNavigate('')}
-                className="rounded px-1.5 py-0.5 transition-colors hover:bg-muted"
+                className="rounded px-1.5 py-0.5 pl-2 transition-colors hover:bg-muted"
             >
                 /home/container
             </button>
@@ -1361,15 +1361,12 @@ export default function ServerFiles({
                     description="Browse, upload, edit, archive, and organize files inside your server container."
                 />
 
-                <div className="-mt-5 mb-6 flex flex-wrap items-start justify-between gap-4 px-1">
-                    <div>
+                <div className="-mt-5 mb-6 flex flex-wrap items-center justify-between gap-4 px-1">
+                    <div className="flex items-center">
                         <InlinePathSummary
                             currentPath={currentPath}
                             onNavigate={navigateTo}
                         />
-                        <p className="mt-1 text-xs text-muted-foreground">
-                            {directory?.entries.length ?? 0} item{(directory?.entries.length ?? 0) === 1 ? '' : 's'} in this directory.
-                        </p>
                     </div>
 
                     <div className="flex flex-wrap items-center justify-end gap-3">
