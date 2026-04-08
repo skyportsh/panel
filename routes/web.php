@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\PasskeyAuthenticationController;
 use App\Http\Controllers\Client\ServerConsoleController;
+use App\Http\Controllers\Client\ServerFilesController;
 use App\Http\Controllers\Client\ServerPowerController;
 use App\Http\Controllers\Client\ServerSettingsController;
 use App\Http\Controllers\Client\ServerWebsocketController;
@@ -36,6 +37,10 @@ Route::middleware(['auth'])->group(function () {
         ServerConsoleController::class,
         'show',
     ])->name('client.servers.console');
+    Route::get('server/{server}/files', [
+        ServerFilesController::class,
+        'show',
+    ])->name('client.servers.files');
     Route::get('server/{server}/settings', [
         ServerSettingsController::class,
         'show',
@@ -48,6 +53,26 @@ Route::middleware(['auth'])->group(function () {
         ServerSettingsController::class,
         'updateStartup',
     ])->name('client.servers.settings.startup.update');
+    Route::get('api/client/servers/{server}/files/contents', [
+        ServerFilesController::class,
+        'contents',
+    ])->name('client.servers.files.contents');
+    Route::put('api/client/servers/{server}/files/contents', [
+        ServerFilesController::class,
+        'updateContents',
+    ])->name('client.servers.files.contents.update');
+    Route::post('api/client/servers/{server}/files', [
+        ServerFilesController::class,
+        'storeFile',
+    ])->name('client.servers.files.store');
+    Route::post('api/client/servers/{server}/files/directories', [
+        ServerFilesController::class,
+        'storeDirectory',
+    ])->name('client.servers.files.directories.store');
+    Route::delete('api/client/servers/{server}/files', [
+        ServerFilesController::class,
+        'destroy',
+    ])->name('client.servers.files.destroy');
     Route::post('api/client/servers/{server}/power', [
         ServerPowerController::class,
         'store',
