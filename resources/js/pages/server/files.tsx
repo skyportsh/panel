@@ -1617,11 +1617,10 @@ export default function ServerFiles({
                     <DialogHeader>
                         <DialogTitle>Create File</DialogTitle>
                         <DialogDescription>
-                            Add a new text file in{' '}
-                            <span className="font-mono text-xs text-foreground">
-                                {pathLabel(currentPath)}
+                            This file will be created as{' '}
+                            <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">
+                                {`${pathLabel(currentPath)}/${createFileState.name || 'new-file.txt'}`}
                             </span>
-                            .
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
@@ -1639,12 +1638,6 @@ export default function ServerFiles({
                                 placeholder="server.properties"
                             />
                             <InputError message={createFileState.errors.name} />
-                        </div>
-                        <div className="rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-                            Created at{' '}
-                            <span className="font-mono text-foreground">
-                                {`${pathLabel(currentPath)}/${createFileState.name || 'new-file.txt'}`}
-                            </span>
                         </div>
                         <div className="flex justify-end gap-2">
                             <Button
@@ -1678,11 +1671,10 @@ export default function ServerFiles({
                     <DialogHeader>
                         <DialogTitle>Create Folder</DialogTitle>
                         <DialogDescription>
-                            Add a new folder in{' '}
-                            <span className="font-mono text-xs text-foreground">
-                                {pathLabel(currentPath)}
+                            This directory will be created as{' '}
+                            <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">
+                                {`${pathLabel(currentPath)}/${createDirectoryState.name || 'new-folder'}`}
                             </span>
-                            .
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
@@ -1702,12 +1694,6 @@ export default function ServerFiles({
                             <InputError
                                 message={createDirectoryState.errors.name}
                             />
-                        </div>
-                        <div className="rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-                            Created at{' '}
-                            <span className="font-mono text-foreground">
-                                {`${pathLabel(currentPath)}/${createDirectoryState.name || 'new-folder'}`}
-                            </span>
                         </div>
                         <div className="flex justify-end gap-2">
                             <Button
@@ -1826,12 +1812,6 @@ export default function ServerFiles({
                             />
                             <InputError message={transferError ?? undefined} />
                         </div>
-                        <div className="rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-                            {transferState?.paths.length ?? 0} selected item
-                            {(transferState?.paths.length ?? 0) === 1 ? '' : 's'}
-                            {' '}will be{' '}
-                            {transferState?.mode === 'copy' ? 'copied' : 'moved'}.
-                        </div>
                         <div className="flex justify-end gap-2">
                             <Button
                                 variant="secondary"
@@ -1918,7 +1898,10 @@ export default function ServerFiles({
                     <DialogHeader>
                         <DialogTitle>Create Archive</DialogTitle>
                         <DialogDescription>
-                            Pack the selected files and folders into a zip archive.
+                            The archive will be created in{' '}
+                            <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">
+                                {pathLabel(archiveState?.destination ?? '')}
+                            </span>
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
@@ -1964,13 +1947,6 @@ export default function ServerFiles({
                             />
                             <InputError message={archiveError ?? undefined} />
                         </div>
-                        <div className="rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-                            The archive will be created in{' '}
-                            <span className="font-mono text-foreground">
-                                {pathLabel(archiveState?.destination ?? '')}
-                            </span>
-                            .
-                        </div>
                         <div className="flex justify-end gap-2">
                             <Button
                                 variant="secondary"
@@ -1998,11 +1974,10 @@ export default function ServerFiles({
                     <DialogHeader>
                         <DialogTitle>Extract Archive</DialogTitle>
                         <DialogDescription>
-                            Extract this archive into a destination directory relative to{' '}
-                            <span className="font-mono text-xs text-foreground">
-                                /home/container
+                            Archive:{' '}
+                            <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">
+                                {pathLabel(extractState?.path ?? '')}
                             </span>
-                            .
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
@@ -2028,12 +2003,6 @@ export default function ServerFiles({
                                 placeholder="plugins"
                             />
                             <InputError message={extractError ?? undefined} />
-                        </div>
-                        <div className="rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-                            Archive:{' '}
-                            <span className="font-mono text-foreground">
-                                {pathLabel(extractState?.path ?? '')}
-                            </span>
                         </div>
                         <div className="flex justify-end gap-2">
                             <Button
