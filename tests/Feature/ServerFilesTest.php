@@ -7,6 +7,7 @@ use App\Models\Node;
 use App\Models\NodeCredential;
 use App\Models\Server;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -14,6 +15,8 @@ use function Pest\Laravel\actingAs;
 use function Pest\Laravel\deleteJson;
 use function Pest\Laravel\get;
 use function Pest\Laravel\getJson;
+use function Pest\Laravel\patchJson;
+use function Pest\Laravel\post;
 use function Pest\Laravel\postJson;
 use function Pest\Laravel\putJson;
 
@@ -197,6 +200,96 @@ test('server owner can delete files', function () {
     ])
         ->assertOk()
         ->assertJsonPath('message', 'Deleted 1 item.');
+});
+
+test('server owner can rename move copy chmod archive extract and upload files', function () {
+    Http::fake([
+        'https://node.example.com:2800/api/daemon/servers/*/files/rename' => Http::response([
+            'message' => 'Item renamed successfully.',
+            'ok' => true,
+        ]),
+        'https://node.example.com:2800/api/daemon/servers/*/files/move' => Http::response([
+            'message' => 'Moved 1 item.',
+            'ok' => true,
+        ]),
+        'https://node.example.com:2800/api/daemon/servers/*/files/copy' => Http::response([
+            'message' => 'Copied 1 item.',
+            'ok' => true,
+        ]),
+        'https://node.example.com:2800/api/daemon/servers/*/files/permissions' => Http::response([
+            'message' => 'Permissions updated successfully.',
+            'ok' => true,
+        ]),
+        'https://node.example.com:2800/api/daemon/servers/*/files/archive' => Http::response([
+            'message' => 'Archive created successfully.',
+            'ok' => true,
+        ]),
+        'https://node.example.com:2800/api/daemon/servers/*/files/extract' => Http::response([
+            'message' => 'Archive extracted successfully.',
+            'ok' => true,
+        ]),
+        'https://node.example.com:2800/api/daemon/servers/*/files/upload*' => Http::response([
+            'message' => 'File uploaded successfully.',
+            'ok' => true,
+        ], 201),
+    ]);
+
+    $dependencies = serverFilesDependencies();
+
+    actingAs($dependencies['user']);
+
+    patchJson("/api/client/servers/{$dependencies['server']->id}/files/rename", [
+        'name' => 'paper.jar',
+        'path' => 'server.jar',
+    ])
+        ->assertOk()
+        ->assertJsonPath('message', 'Item renamed successfully.');
+
+    postJson("/api/client/servers/{$dependencies['server']->id}/files/move", [
+        'destination' => 'plugins',
+        'paths' => ['paper.jar'],
+    ])
+        ->assertOk()
+        ->assertJsonPath('message', 'Moved 1 item.');
+
+    postJson("/api/client/servers/{$dependencies['server']->id}/files/copy", [
+        'destination' => 'plugins/backups',
+        'paths' => ['paper.jar'],
+    ])
+        ->assertOk()
+        ->assertJsonPath('message', 'Copied 1 item.');
+
+    patchJson("/api/client/servers/{$dependencies['server']->id}/files/permissions", [
+        'paths' => ['paper.jar'],
+        'permissions' => '755',
+    ])
+        ->assertOk()
+        ->assertJsonPath('message', 'Permissions updated successfully.');
+
+    postJson("/api/client/servers/{$dependencies['server']->id}/files/archive", [
+        'name' => 'plugins.zip',
+        'path' => '',
+        'paths' => ['plugins'],
+    ])
+        ->assertOk()
+        ->assertJsonPath('message', 'Archive created successfully.');
+
+    postJson("/api/client/servers/{$dependencies['server']->id}/files/extract", [
+        'destination' => 'plugins',
+        'path' => 'plugins.zip',
+    ])
+        ->assertOk()
+        ->assertJsonPath('message', 'Archive extracted successfully.');
+
+    post("/api/client/servers/{$dependencies['server']->id}/files/upload", [
+        'path' => 'plugins',
+        'file' => UploadedFile::fake()->create('plugin.jar', 64),
+    ])
+        ->assertCreated()
+        ->assertJsonPath('message', 'File uploaded successfully.');
+
+    Http::assertSentCount(7);
+    Http::assertSent(fn ($request) => $request->url() === "https://node.example.com:2800/api/daemon/servers/{$dependencies['server']->id}/files/upload?name=plugin.jar&panel_version=".rawurlencode((string) config('app.version')).'&path=plugins&uuid=550e8400-e29b-41d4-a716-446655440000');
 });
 
 test('other users cannot access the files page', function () {

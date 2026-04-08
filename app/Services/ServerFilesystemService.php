@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Server;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use InvalidArgumentException;
 use Throwable;
@@ -102,6 +103,117 @@ class ServerFilesystemService
                 ],
             ],
         ));
+    }
+
+    public function renameFile(Server $server, string $path, string $name): array
+    {
+        return $this->send(fn () => $this->request($server)->patch(
+            $this->url($server, '/files/rename'),
+            [
+                'name' => $name,
+                'panel_version' => config('app.version'),
+                'path' => $path,
+                'uuid' => $server->node->daemon_uuid,
+            ],
+        ));
+    }
+
+    public function moveFiles(Server $server, array $paths, string $destination): array
+    {
+        return $this->send(fn () => $this->request($server)->post(
+            $this->url($server, '/files/move'),
+            [
+                'destination' => $destination,
+                'panel_version' => config('app.version'),
+                'paths' => $paths,
+                'uuid' => $server->node->daemon_uuid,
+            ],
+        ));
+    }
+
+    public function copyFiles(Server $server, array $paths, string $destination): array
+    {
+        return $this->send(fn () => $this->request($server)->post(
+            $this->url($server, '/files/copy'),
+            [
+                'destination' => $destination,
+                'panel_version' => config('app.version'),
+                'paths' => $paths,
+                'uuid' => $server->node->daemon_uuid,
+            ],
+        ));
+    }
+
+    public function updatePermissions(
+        Server $server,
+        array $paths,
+        string $permissions,
+    ): array {
+        return $this->send(fn () => $this->request($server)->patch(
+            $this->url($server, '/files/permissions'),
+            [
+                'panel_version' => config('app.version'),
+                'paths' => $paths,
+                'permissions' => $permissions,
+                'uuid' => $server->node->daemon_uuid,
+            ],
+        ));
+    }
+
+    public function createArchive(
+        Server $server,
+        array $paths,
+        string $path,
+        string $name,
+    ): array {
+        return $this->send(fn () => $this->request($server)->post(
+            $this->url($server, '/files/archive'),
+            [
+                'name' => $name,
+                'panel_version' => config('app.version'),
+                'path' => $path,
+                'paths' => $paths,
+                'uuid' => $server->node->daemon_uuid,
+            ],
+        ));
+    }
+
+    public function extractArchive(
+        Server $server,
+        string $path,
+        string $destination,
+    ): array {
+        return $this->send(fn () => $this->request($server)->post(
+            $this->url($server, '/files/extract'),
+            [
+                'destination' => $destination,
+                'panel_version' => config('app.version'),
+                'path' => $path,
+                'uuid' => $server->node->daemon_uuid,
+            ],
+        ));
+    }
+
+    public function uploadFile(
+        Server $server,
+        string $path,
+        UploadedFile $file,
+    ): array {
+        $filename = $file->getClientOriginalName() ?: $file->getFilename();
+        $contents = $file->get();
+
+        if ($contents === false) {
+            throw new InvalidArgumentException('The uploaded file could not be read.');
+        }
+
+        return $this->send(fn () => $this->request($server)
+            ->withBody($contents, $file->getMimeType() ?: 'application/octet-stream')
+            ->post($this->url($server, '/files/upload').'?'.http_build_query([
+                'name' => $filename,
+                'panel_version' => config('app.version'),
+                'path' => $path,
+                'uuid' => $server->node->daemon_uuid,
+            ])));
     }
 
     protected function request(Server $server): PendingRequest

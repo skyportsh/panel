@@ -4,15 +4,23 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Client\Concerns\AuthorizesServerAccess;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Client\ArchiveServerFilesRequest;
+use App\Http\Requests\Client\CopyServerFilesRequest;
 use App\Http\Requests\Client\DestroyServerFilesRequest;
+use App\Http\Requests\Client\ExtractServerArchiveRequest;
+use App\Http\Requests\Client\MoveServerFilesRequest;
+use App\Http\Requests\Client\RenameServerFileRequest;
 use App\Http\Requests\Client\ShowServerFileContentsRequest;
 use App\Http\Requests\Client\StoreServerDirectoryRequest;
 use App\Http\Requests\Client\StoreServerFileRequest;
 use App\Http\Requests\Client\UpdateServerFileContentsRequest;
+use App\Http\Requests\Client\UpdateServerFilePermissionsRequest;
+use App\Http\Requests\Client\UploadServerFileRequest;
 use App\Models\Server;
 use App\Services\ServerFilesystemService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Inertia\Inertia;
 use Inertia\Response;
 use InvalidArgumentException;
@@ -164,6 +172,171 @@ class ServerFilesController extends Controller
                     $server,
                     $request->validated('paths'),
                 ),
+            );
+        } catch (InvalidArgumentException $exception) {
+            return response()->json(
+                ['message' => $exception->getMessage()],
+                HttpResponse::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        }
+    }
+
+    public function rename(
+        RenameServerFileRequest $request,
+        Server $server,
+    ): JsonResponse {
+        $this->authorizeServerAccess($request, $server);
+
+        try {
+            return response()->json(
+                $this->serverFilesystemService->renameFile(
+                    $server,
+                    $request->validated('path'),
+                    $request->validated('name'),
+                ),
+            );
+        } catch (InvalidArgumentException $exception) {
+            return response()->json(
+                ['message' => $exception->getMessage()],
+                HttpResponse::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        }
+    }
+
+    public function move(
+        MoveServerFilesRequest $request,
+        Server $server,
+    ): JsonResponse {
+        $this->authorizeServerAccess($request, $server);
+
+        try {
+            return response()->json(
+                $this->serverFilesystemService->moveFiles(
+                    $server,
+                    $request->validated('paths'),
+                    $request->validated('destination'),
+                ),
+            );
+        } catch (InvalidArgumentException $exception) {
+            return response()->json(
+                ['message' => $exception->getMessage()],
+                HttpResponse::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        }
+    }
+
+    public function copy(
+        CopyServerFilesRequest $request,
+        Server $server,
+    ): JsonResponse {
+        $this->authorizeServerAccess($request, $server);
+
+        try {
+            return response()->json(
+                $this->serverFilesystemService->copyFiles(
+                    $server,
+                    $request->validated('paths'),
+                    $request->validated('destination'),
+                ),
+            );
+        } catch (InvalidArgumentException $exception) {
+            return response()->json(
+                ['message' => $exception->getMessage()],
+                HttpResponse::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        }
+    }
+
+    public function updatePermissions(
+        UpdateServerFilePermissionsRequest $request,
+        Server $server,
+    ): JsonResponse {
+        $this->authorizeServerAccess($request, $server);
+
+        try {
+            return response()->json(
+                $this->serverFilesystemService->updatePermissions(
+                    $server,
+                    $request->validated('paths'),
+                    $request->validated('permissions'),
+                ),
+            );
+        } catch (InvalidArgumentException $exception) {
+            return response()->json(
+                ['message' => $exception->getMessage()],
+                HttpResponse::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        }
+    }
+
+    public function archive(
+        ArchiveServerFilesRequest $request,
+        Server $server,
+    ): JsonResponse {
+        $this->authorizeServerAccess($request, $server);
+
+        try {
+            return response()->json(
+                $this->serverFilesystemService->createArchive(
+                    $server,
+                    $request->validated('paths'),
+                    (string) $request->validated('path', ''),
+                    $request->validated('name'),
+                ),
+            );
+        } catch (InvalidArgumentException $exception) {
+            return response()->json(
+                ['message' => $exception->getMessage()],
+                HttpResponse::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        }
+    }
+
+    public function extract(
+        ExtractServerArchiveRequest $request,
+        Server $server,
+    ): JsonResponse {
+        $this->authorizeServerAccess($request, $server);
+
+        try {
+            return response()->json(
+                $this->serverFilesystemService->extractArchive(
+                    $server,
+                    $request->validated('path'),
+                    (string) $request->validated('destination', ''),
+                ),
+            );
+        } catch (InvalidArgumentException $exception) {
+            return response()->json(
+                ['message' => $exception->getMessage()],
+                HttpResponse::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        }
+    }
+
+    public function upload(
+        UploadServerFileRequest $request,
+        Server $server,
+    ): JsonResponse {
+        $this->authorizeServerAccess($request, $server);
+
+        $file = $request->file('file');
+
+        if (! $file instanceof UploadedFile) {
+            return response()->json(
+                ['message' => 'Please choose a file to upload.'],
+                HttpResponse::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        }
+
+        try {
+            return response()->json(
+                $this->serverFilesystemService->uploadFile(
+                    $server,
+                    (string) $request->validated('path', ''),
+                    $file,
+                ),
+                HttpResponse::HTTP_CREATED,
             );
         } catch (InvalidArgumentException $exception) {
             return response()->json(

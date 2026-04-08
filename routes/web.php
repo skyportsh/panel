@@ -73,6 +73,34 @@ Route::middleware(['auth'])->group(function () {
         ServerFilesController::class,
         'destroy',
     ])->name('client.servers.files.destroy');
+    Route::patch('api/client/servers/{server}/files/rename', [
+        ServerFilesController::class,
+        'rename',
+    ])->name('client.servers.files.rename');
+    Route::post('api/client/servers/{server}/files/move', [
+        ServerFilesController::class,
+        'move',
+    ])->name('client.servers.files.move');
+    Route::post('api/client/servers/{server}/files/copy', [
+        ServerFilesController::class,
+        'copy',
+    ])->name('client.servers.files.copy');
+    Route::patch('api/client/servers/{server}/files/permissions', [
+        ServerFilesController::class,
+        'updatePermissions',
+    ])->name('client.servers.files.permissions.update');
+    Route::post('api/client/servers/{server}/files/archive', [
+        ServerFilesController::class,
+        'archive',
+    ])->name('client.servers.files.archive');
+    Route::post('api/client/servers/{server}/files/extract', [
+        ServerFilesController::class,
+        'extract',
+    ])->name('client.servers.files.extract');
+    Route::post('api/client/servers/{server}/files/upload', [
+        ServerFilesController::class,
+        'upload',
+    ])->name('client.servers.files.upload');
     Route::post('api/client/servers/{server}/power', [
         ServerPowerController::class,
         'store',
