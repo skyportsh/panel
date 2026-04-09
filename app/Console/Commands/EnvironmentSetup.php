@@ -50,12 +50,13 @@ class EnvironmentSetup extends Command
         $contents = file_get_contents($envPath);
 
         foreach ($replacements as $key => $value) {
-            $pattern = "/^{$key}=.*/m";
+            // Match both commented and uncommented lines
+            $pattern = "/^#?\s*{$key}=.*/m";
 
             if (preg_match($pattern, $contents)) {
-                $contents = preg_replace($pattern, "{$key}={$value}", $contents);
+                $contents = preg_replace($pattern, "{$key}={$value}", $contents, 1);
             } else {
-                $contents .= "\n{$key}={$value}";
+                $contents = rtrim($contents)."\n{$key}={$value}\n";
             }
         }
 
