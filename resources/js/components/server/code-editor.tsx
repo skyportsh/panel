@@ -1,7 +1,4 @@
-import type {
-    BeforeMount,
-    OnMount,
-} from '@monaco-editor/react';
+import type { BeforeMount, OnMount } from '@monaco-editor/react';
 type EditorComponentType = (typeof import('@monaco-editor/react'))['default'];
 type MonacoInstance = Parameters<BeforeMount>[0];
 type MonacoEditorInstance = Parameters<OnMount>[0];

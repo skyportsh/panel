@@ -127,7 +127,9 @@ function ServerSidebarCard({
     server: SidebarServer;
     servers: SidebarServer[];
 }) {
-    const [runtimeState, setRuntimeState] = useState(server.status ?? 'offline');
+    const [runtimeState, setRuntimeState] = useState(
+        server.status ?? 'offline',
+    );
     const [submittingAction, setSubmittingAction] =
         useState<ServerPowerSignal | null>(null);
     const [switcherOpen, setSwitcherOpen] = useState(false);
@@ -238,7 +240,10 @@ function ServerSidebarCard({
                                 <Ellipsis className="h-4 w-4" />
                             </div>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44 rounded-xl">
+                        <DropdownMenuContent
+                            align="end"
+                            className="w-44 rounded-xl"
+                        >
                             <DropdownMenuItem
                                 className="cursor-pointer rounded-lg"
                                 disabled={
@@ -292,9 +297,7 @@ function ServerSidebarCard({
             <div
                 className={cn(
                     'overflow-hidden transition-[max-height,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
-                    switcherOpen
-                        ? 'max-h-64 opacity-100'
-                        : 'max-h-0 opacity-0',
+                    switcherOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0',
                 )}
             >
                 <div className="space-y-0.5 pt-1.5">
@@ -331,10 +334,11 @@ function ServerSidebarCard({
 
 export function AppSidebar() {
     const page = usePage();
-    const { auth, name, server, serverSwitcher } = page.props as typeof page.props & {
-        server?: SidebarServer;
-        serverSwitcher?: SidebarServer[];
-    };
+    const { auth, name, server, serverSwitcher } =
+        page.props as typeof page.props & {
+            server?: SidebarServer;
+            serverSwitcher?: SidebarServer[];
+        };
     const isAdminSidebar = auth.user.is_admin && page.url.startsWith('/admin');
     const isServerSidebar = page.url.startsWith('/server/');
     const adminDashboardHref = '/admin';

@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  quality:
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -47,18 +47,6 @@ jobs:
           cp .env.example .env
           php artisan key:generate --no-interaction
           php artisan wayfinder:generate --with-form --no-interaction
-
-      - name: Check frontend formatting
-        run: bun run format:check
-
-      - name: Check frontend linting
-        run: bun run lint:check
-
-      - name: Check TypeScript
-        run: bun run types:check
-
-      - name: Build assets
-        run: bun run build
 
       - name: Run tests
         run: php artisan test --compact

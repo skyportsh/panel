@@ -594,7 +594,11 @@ function FilesBulkActionBar({
                         <Archive className="h-3.5 w-3.5" />
                         Archive
                     </Button>
-                    <Button size="table" variant="destructive" onClick={onDelete}>
+                    <Button
+                        size="table"
+                        variant="destructive"
+                        onClick={onDelete}
+                    >
                         <Trash2 className="h-3.5 w-3.5" />
                         Delete
                     </Button>
@@ -640,7 +644,8 @@ function UploadProgressCard({ items }: { items: UploadItemState[] }) {
                                   : 'Uploading files...'}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                            {completedCount} of {items.length} complete · {progress}% overall
+                            {completedCount} of {items.length} complete ·{' '}
+                            {progress}% overall
                         </p>
                     </div>
                     <div className="w-full max-w-xs">
@@ -669,7 +674,9 @@ function UploadProgressCard({ items }: { items: UploadItemState[] }) {
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    {item.status === 'uploading' ? <Spinner /> : null}
+                                    {item.status === 'uploading' ? (
+                                        <Spinner />
+                                    ) : null}
                                     {item.status === 'complete' ? (
                                         <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                                     ) : null}
@@ -717,7 +724,9 @@ async function uploadWithProgress(
 
         request.upload.onprogress = (event) => {
             if (event.lengthComputable) {
-                onProgress(Math.max(1, Math.round((event.loaded / event.total) * 100)));
+                onProgress(
+                    Math.max(1, Math.round((event.loaded / event.total) * 100)),
+                );
             }
         };
 
@@ -726,7 +735,8 @@ async function uploadWithProgress(
         };
 
         request.onload = () => {
-            const payload = (request.response ?? null) as MutationErrorPayload | null;
+            const payload = (request.response ??
+                null) as MutationErrorPayload | null;
 
             if (request.status >= 200 && request.status < 300) {
                 onProgress(100);
@@ -738,10 +748,11 @@ async function uploadWithProgress(
             reject(
                 new Error(
                     payload?.errors
-                        ? Object.values(payload.errors)[0]?.[0] ??
-                              payload.message ??
-                              'The file could not be uploaded.'
-                        : payload?.message ?? 'The file could not be uploaded.',
+                        ? (Object.values(payload.errors)[0]?.[0] ??
+                          payload.message ??
+                          'The file could not be uploaded.')
+                        : (payload?.message ??
+                          'The file could not be uploaded.'),
                 ),
             );
         };
@@ -759,13 +770,15 @@ export default function ServerFiles({
     const [search, setSearch] = useState('');
     const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set());
     const [openingPath, setOpeningPath] = useState<string | null>(null);
-    const [editorState, setEditorState] = useState<FileEditorState | null>(null);
+    const [editorState, setEditorState] = useState<FileEditorState | null>(
+        null,
+    );
     const [editorValue, setEditorValue] = useState('');
     const [savingFile, setSavingFile] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
-    const [pendingDeletePaths, setPendingDeletePaths] = useState<string[] | null>(
-        null,
-    );
+    const [pendingDeletePaths, setPendingDeletePaths] = useState<
+        string[] | null
+    >(null);
     const [deleteProcessing, setDeleteProcessing] = useState(false);
     const [createFileOpen, setCreateFileOpen] = useState(false);
     const [createDirectoryOpen, setCreateDirectoryOpen] = useState(false);
@@ -784,7 +797,9 @@ export default function ServerFiles({
     const [transferError, setTransferError] = useState<string | null>(null);
     const [permissionsState, setPermissionsState] =
         useState<PermissionsState>(null);
-    const [permissionsError, setPermissionsError] = useState<string | null>(null);
+    const [permissionsError, setPermissionsError] = useState<string | null>(
+        null,
+    );
     const [archiveState, setArchiveState] = useState<ArchiveState>(null);
     const [archiveError, setArchiveError] = useState<string | null>(null);
     const [extractState, setExtractState] = useState<ExtractState>(null);
@@ -840,15 +855,11 @@ export default function ServerFiles({
     }, [directory?.entries, directory?.path]);
 
     const navigateTo = (path: string): void => {
-        router.get(
-            show.url(server.id),
-            path ? { path } : {},
-            {
-                preserveScroll: true,
-                preserveState: true,
-                replace: true,
-            },
-        );
+        router.get(show.url(server.id), path ? { path } : {}, {
+            preserveScroll: true,
+            preserveState: true,
+            replace: true,
+        });
     };
 
     const reloadDirectory = (): void => {
@@ -899,9 +910,9 @@ export default function ServerFiles({
         if (!response.ok) {
             throw new Error(
                 json?.errors
-                    ? Object.values(json.errors)[0]?.[0] ??
-                          json.message ??
-                          'The request could not be completed.'
+                    ? (Object.values(json.errors)[0]?.[0] ??
+                      json.message ??
+                      'The request could not be completed.')
                     : json?.message || 'The request could not be completed.',
             );
         }
@@ -1129,7 +1140,9 @@ export default function ServerFiles({
                 }),
             );
 
-            toast.success(payload.message || 'Permissions updated successfully.');
+            toast.success(
+                payload.message || 'Permissions updated successfully.',
+            );
             setPermissionsState(null);
             clearSelection();
             reloadDirectory();
@@ -1295,7 +1308,6 @@ export default function ServerFiles({
     };
 
     const columns: Column<FileRow>[] = [
-        
         {
             label: 'Name',
             width: 'w-[42%]',
@@ -1308,7 +1320,9 @@ export default function ServerFiles({
                         <div
                             className={`flex size-9 shrink-0 items-center justify-center rounded-md border border-black/5 dark:border-white/5 ${visual.wrapperClassName}`}
                         >
-                            <Icon className={`size-4 ${visual.iconClassName}`} />
+                            <Icon
+                                className={`size-4 ${visual.iconClassName}`}
+                            />
                         </div>
                         <div className="min-w-0">
                             <p className="truncate text-sm font-medium text-foreground">
@@ -1327,7 +1341,9 @@ export default function ServerFiles({
             width: 'w-[14%]',
             render: (entry) => (
                 <span className="text-sm text-foreground">
-                    {entry.kind === 'directory' ? '—' : formatBytes(entry.size_bytes)}
+                    {entry.kind === 'directory'
+                        ? '—'
+                        : formatBytes(entry.size_bytes)}
                 </span>
             ),
         },
@@ -1455,7 +1471,9 @@ export default function ServerFiles({
                                     onSelect={() => void openEntry(entry)}
                                 >
                                     <Pencil className="mr-2 h-4 w-4" />
-                                    {entry.kind === 'directory' ? 'Open' : 'Edit'}
+                                    {entry.kind === 'directory'
+                                        ? 'Open'
+                                        : 'Edit'}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     className="cursor-pointer"
@@ -1500,7 +1518,8 @@ export default function ServerFiles({
                                     onSelect={() =>
                                         setPermissionsState({
                                             paths: [entry.path],
-                                            permissions: entry.permissions ?? '644',
+                                            permissions:
+                                                entry.permissions ?? '644',
                                         })
                                     }
                                 >
@@ -1512,7 +1531,9 @@ export default function ServerFiles({
                                     onSelect={() =>
                                         setArchiveState({
                                             destination: currentPath,
-                                            name: defaultArchiveName([entry.path]),
+                                            name: defaultArchiveName([
+                                                entry.path,
+                                            ]),
                                             paths: [entry.path],
                                         })
                                     }
@@ -1665,7 +1686,9 @@ export default function ServerFiles({
                     </DialogHeader>
                     <div className="space-y-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="new-directory-name">Folder name</Label>
+                            <Label htmlFor="new-directory-name">
+                                Folder name
+                            </Label>
                             <Input
                                 id="new-directory-name"
                                 value={createDirectoryState.name}
@@ -1745,7 +1768,9 @@ export default function ServerFiles({
                             </Button>
                             <Button
                                 onClick={() => void submitRename()}
-                                disabled={mutationProcessing || renameState === null}
+                                disabled={
+                                    mutationProcessing || renameState === null
+                                }
                             >
                                 {mutationProcessing && <Spinner />}
                                 Rename item
@@ -1807,7 +1832,9 @@ export default function ServerFiles({
                             </Button>
                             <Button
                                 onClick={() => void submitTransfer()}
-                                disabled={mutationProcessing || transferState === null}
+                                disabled={
+                                    mutationProcessing || transferState === null
+                                }
                             >
                                 {mutationProcessing && <Spinner />}
                                 {transferState?.mode === 'copy'
@@ -1827,7 +1854,8 @@ export default function ServerFiles({
                     <DialogHeader>
                         <DialogTitle>Change Permissions</DialogTitle>
                         <DialogDescription>
-                            Enter an octal mode such as 644 for files or 755 for executable folders.
+                            Enter an octal mode such as 644 for files or 755 for
+                            executable folders.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
@@ -1942,7 +1970,9 @@ export default function ServerFiles({
                             </Button>
                             <Button
                                 onClick={() => void submitArchive()}
-                                disabled={mutationProcessing || archiveState === null}
+                                disabled={
+                                    mutationProcessing || archiveState === null
+                                }
                             >
                                 {mutationProcessing && <Spinner />}
                                 Create archive
@@ -1999,7 +2029,9 @@ export default function ServerFiles({
                             </Button>
                             <Button
                                 onClick={() => void submitExtract()}
-                                disabled={mutationProcessing || extractState === null}
+                                disabled={
+                                    mutationProcessing || extractState === null
+                                }
                             >
                                 {mutationProcessing && <Spinner />}
                                 Extract archive
@@ -2021,9 +2053,13 @@ export default function ServerFiles({
                 <DialogContentFull>
                     <div className="flex items-center justify-between border-b border-border/70 px-8 py-5">
                         <div>
-                            <DialogTitle className="text-lg">Edit File</DialogTitle>
+                            <DialogTitle className="text-lg">
+                                Edit File
+                            </DialogTitle>
                             <DialogDescription>
-                                {editorState ? pathLabel(editorState.path) : 'Loading...'}
+                                {editorState
+                                    ? pathLabel(editorState.path)
+                                    : 'Loading...'}
                             </DialogDescription>
                         </div>
                         <div className="flex items-center gap-3 text-xs text-muted-foreground"></div>

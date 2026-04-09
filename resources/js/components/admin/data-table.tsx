@@ -434,9 +434,9 @@ export function DataTable<T extends { id: number }>({
     selectedIds,
     onSelectedIdsChange,
 }: DataTableProps<T>) {
-    const [uncontrolledSelected, setUncontrolledSelected] = useState<Set<number>>(
-        new Set(),
-    );
+    const [uncontrolledSelected, setUncontrolledSelected] = useState<
+        Set<number>
+    >(new Set());
     const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
     const [bulkDeleting, setBulkDeleting] = useState(false);
 

@@ -1085,7 +1085,9 @@ export default function ServerConsole({ server }: Props) {
                                 <h1 className="truncate text-xl font-semibold tracking-tight text-foreground sm:text-xl">
                                     {server.name}
                                 </h1>
-                                <ServerStatusIndicator status={effectiveState} />
+                                <ServerStatusIndicator
+                                    status={effectiveState}
+                                />
                             </div>
                         </div>
 

@@ -48,7 +48,7 @@ export function detectEditorLanguage(path: string): string {
 
     const matchedExtension = [...extensionLanguageMap.keys()]
         .filter((extension) => fileName.endsWith(extension))
-        .sort((left, right) => right.length - left.length)[0];
+        .toSorted((left, right) => right.length - left.length)[0];
 
     if (!matchedExtension) {
         return 'plaintext';

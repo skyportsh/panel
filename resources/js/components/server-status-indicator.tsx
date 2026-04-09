@@ -55,9 +55,7 @@ export default function ServerStatusIndicator({
                     />
                 </button>
             </TooltipTrigger>
-            <TooltipContent>
-                {tooltipContent ?? <p>{label}</p>}
-            </TooltipContent>
+            <TooltipContent>{tooltipContent ?? <p>{label}</p>}</TooltipContent>
         </Tooltip>
     );
 }

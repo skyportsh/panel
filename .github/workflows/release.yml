@@ -1,0 +1,54 @@
+name: release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Read version
+        id: version
+        run: |
+          version=$(jq -r '.version' composer.json)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Check if release needed
+        id: check
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          tag="${{ steps.version.outputs.tag }}"
+
+          if [[ "$version" == *-dev* ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Skipping: version $version ends in -dev"
+            exit 0
+          fi
+
+          if gh release view "$tag" > /dev/null 2>&1; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Skipping: release $tag already exists"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "Will create release $tag"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create release
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" \
+            --title "Skyport Panel ${{ steps.version.outputs.tag }}" \
+            --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

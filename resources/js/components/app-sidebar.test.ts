@@ -10,8 +10,14 @@ test('server sidebar includes the compact server card, switcher, and power actio
 
     assert.match(sidebarContents, /function ServerSidebarCard/);
     assert.match(sidebarContents, /<PlaceholderPattern/);
-    assert.match(sidebarContents, /border-sidebar-border\/70 bg-transparent px-2\.5 py-1\.5/);
-    assert.match(sidebarContents, /truncate text-sm font-semibold text-sidebar-foreground/);
+    assert.match(
+        sidebarContents,
+        /border-sidebar-border\/70 bg-transparent px-2\.5 py-1\.5/,
+    );
+    assert.match(
+        sidebarContents,
+        /truncate text-sm font-semibold text-sidebar-foreground/,
+    );
     assert.match(sidebarContents, /Toggle server switcher/);
     assert.match(sidebarContents, /serverHrefForPage/);
     assert.match(sidebarContents, /active:scale-95/);
