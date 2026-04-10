@@ -486,6 +486,16 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
+                {isServerSidebar && server && auth.user.is_admin && (
+                    <div className="px-2 group-data-[collapsible=icon]:hidden">
+                        <Link
+                            href={adminServers.url()}
+                            className="flex items-center justify-center rounded-md border border-sidebar-accent bg-sidebar-accent/50 px-3 py-1.5 text-xs font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                        >
+                            Open in admin panel
+                        </Link>
+                    </div>
+                )}
                 <NavUser />
             </SidebarFooter>
         </Sidebar>
