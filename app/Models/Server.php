@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
         'allocation_id',
         'name',
         'docker_image',
+        'startup_command_override',
+        'docker_image_override',
         'memory_mib',
         'cpu_limit',
         'disk_mib',

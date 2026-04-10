@@ -148,6 +148,10 @@ class ServersController extends Controller
                         'id' => $server->node->id,
                         'name' => $server->node->name,
                     ],
+                    'startup_command' => $server->cargo->startup_command,
+                    'startup_command_override' => $server->startup_command_override,
+                    'docker_image_override' => $server->docker_image_override,
+                    'docker_image' => $server->docker_image,
                     'status' => $server->status,
                     'updated_at' => $server->updated_at?->toIso8601String(),
                     'user' => [
@@ -257,6 +261,36 @@ class ServersController extends Controller
                 'warning',
                 'skyportd could not be updated automatically. This server will need to be synced later.',
             );
+    }
+
+    public function updateStartup(
+        Request $request,
+        Server $server,
+    ): RedirectResponse {
+        $validated = $request->validate([
+            'startup_command_override' => ['nullable', 'string', 'max:1000'],
+            'docker_image_override' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $server->loadMissing(['allocation', 'cargo', 'node.credential', 'user']);
+        $targetServer = clone $server;
+
+        $server->update([
+            'startup_command_override' => $validated['startup_command_override'] ?: null,
+            'docker_image_override' => $validated['docker_image_override'] ?: null,
+        ]);
+
+        $server->refresh()->loadMissing(['allocation', 'cargo', 'node.credential', 'user']);
+
+        $synced = $this->serverRemoteUpdateService->push($targetServer, $server);
+
+        if ($synced) {
+            return Redirect::back()->with('success', 'Startup overrides updated. skyportd saved the new server state.');
+        }
+
+        return Redirect::back()
+            ->with('success', 'Startup overrides updated.')
+            ->with('warning', 'skyportd could not be updated automatically.');
     }
 
     public function destroy(Server $server): RedirectResponse

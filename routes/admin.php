@@ -134,6 +134,10 @@ Route::middleware(['auth', EnsureUserIsAdmin::class])
             ServersController::class,
             'update',
         ])->name('servers.update');
+        Route::patch('servers/{server}/startup', [
+            ServersController::class,
+            'updateStartup',
+        ])->name('servers.update-startup');
         Route::delete('servers/bulk-destroy', [
             ServersController::class,
             'bulkDestroy',

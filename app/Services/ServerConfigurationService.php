@@ -81,12 +81,12 @@ class ServerConfigurationService
                 'name' => $server->cargo->name,
                 'slug' => $server->cargo->slug,
                 'source_type' => $server->cargo->source_type,
-                'startup_command' => $server->cargo->startup_command,
+                'startup_command' => $server->startup_command_override ?? $server->cargo->startup_command,
                 'variables' => $server->cargo->variables ?? [],
             ],
             'created_at' => $server->created_at?->toIso8601String() ??
                 now()->toIso8601String(),
-            'docker_image' => $server->docker_image,
+            'docker_image' => $server->docker_image_override ?? $server->docker_image,
             'id' => $server->id,
             'limits' => [
                 'cpu_limit' => $server->cpu_limit,

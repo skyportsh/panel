@@ -39,6 +39,9 @@ type Props = {
             name: string;
         };
         docker_image: string | null;
+        startup_command: string;
+        startup_command_override: string | null;
+        docker_image_override: string | null;
         effective_docker_image: string | null;
         effective_docker_image_label: string | null;
         id: number;
@@ -251,10 +254,29 @@ export default function ServerSettings({ server }: Props) {
 
                                 <div className="mt-6 max-w-2xl space-y-4">
                                     <div className="grid gap-2">
+                                        <Label>Startup command</Label>
+                                        <code className="rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                                            {server.startup_command}
+                                        </code>
+                                        {server.startup_command_override && (
+                                            <p className="text-xs text-amber-500">
+                                                This command was manually set by an administrator.
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div className="grid gap-2">
                                         <Label htmlFor="docker-image">
                                             Docker image
                                         </Label>
+                                        {server.docker_image_override && (
+                                            <p className="text-xs text-amber-500">
+                                                The Docker image has been locked by an administrator to:{' '}
+                                                <code className="font-medium">{server.docker_image_override}</code>
+                                            </p>
+                                        )}
                                         <Select
+                                            disabled={!!server.docker_image_override}
                                             value={
                                                 startupForm.data.docker_image
                                             }

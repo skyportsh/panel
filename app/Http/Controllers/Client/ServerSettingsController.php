@@ -49,6 +49,9 @@ class ServerSettingsController extends Controller
                     'name' => $server->cargo->name,
                 ],
                 'docker_image' => $server->docker_image,
+                'startup_command' => $server->startup_command_override ?? $server->cargo->startup_command,
+                'startup_command_override' => $server->startup_command_override,
+                'docker_image_override' => $server->docker_image_override,
                 'effective_docker_image' => $effectiveDockerImage,
                 'effective_docker_image_label' => CargoRuntimeImage::labelFor(
                     $server->cargo->docker_images,

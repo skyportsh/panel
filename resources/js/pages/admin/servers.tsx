@@ -9,6 +9,7 @@ import {
     reinstall,
     store,
     update,
+    updateStartup as updateStartupRoute,
 } from '@/routes/admin/servers';
 import { ConfirmDeleteDialog, DataTable } from '@/components/admin/data-table';
 import type { Column, PaginatedData } from '@/components/admin/data-table';
@@ -78,6 +79,10 @@ type AdminServer = {
     memory_mib: number;
     cpu_limit: number;
     disk_mib: number;
+    startup_command: string;
+    startup_command_override: string | null;
+    docker_image_override: string | null;
+    docker_image: string | null;
     status: string;
     last_error: string | null;
     created_at: string;
@@ -116,6 +121,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 const tabs: Tab[] = [
     { id: 'overview', label: 'Overview' },
     { id: 'edit', label: 'Edit' },
+    { id: 'startup', label: 'Startup' },
     { id: 'danger', label: 'Danger' },
 ];
 
@@ -463,6 +469,125 @@ function CreateServerModal({
     );
 }
 
+function StartupTab({ server }: { server: AdminServer }) {
+    const startupForm = useForm({
+        startup_command_override: server.startup_command_override ?? '',
+        docker_image_override: server.docker_image_override ?? '',
+    });
+    const minimumMs = 500;
+    const startupSubmitStart = useRef(0);
+    const [savingStartup, setSavingStartup] = useState(false);
+
+    const submitStartup = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        startupForm.patch(updateStartupRoute.url(server.id), {
+            preserveScroll: true,
+            onStart: () => {
+                startupSubmitStart.current = Date.now();
+                setSavingStartup(true);
+            },
+            onFinish: () => {
+                const remaining =
+                    minimumMs - (Date.now() - startupSubmitStart.current);
+                setTimeout(
+                    () => setSavingStartup(false),
+                    Math.max(0, remaining),
+                );
+            },
+            onSuccess: () => {
+                startupForm.setDefaults();
+                toast.success('Startup overrides updated');
+            },
+            onError: (errors) => {
+                Object.values(errors).forEach((message) => {
+                    toast.error(message);
+                });
+            },
+        });
+    };
+
+    return (
+        <form onSubmit={submitStartup} className="max-w-2xl space-y-6">
+            <div className="space-y-4">
+                <div className="grid gap-2">
+                    <Label>Default startup command</Label>
+                    <code className="rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                        {server.startup_command}
+                    </code>
+                    <p className="text-xs text-muted-foreground">
+                        This is the cargo's default. Override it below if
+                        needed.
+                    </p>
+                </div>
+
+                <div className="grid gap-2">
+                    <Label htmlFor="startup-override">
+                        Startup command override
+                    </Label>
+                    <Input
+                        id="startup-override"
+                        value={startupForm.data.startup_command_override}
+                        onChange={(event) =>
+                            startupForm.setData(
+                                'startup_command_override',
+                                event.target.value,
+                            )
+                        }
+                        placeholder="Leave empty to use cargo default"
+                    />
+                    <InputError
+                        message={startupForm.errors.startup_command_override}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Leave empty to use the cargo's default startup
+                        command. This will be shown to the user as read-only.
+                    </p>
+                </div>
+
+                <div className="grid gap-2">
+                    <Label htmlFor="docker-image-override">
+                        Docker image override
+                    </Label>
+                    <Input
+                        id="docker-image-override"
+                        value={startupForm.data.docker_image_override}
+                        onChange={(event) =>
+                            startupForm.setData(
+                                'docker_image_override',
+                                event.target.value,
+                            )
+                        }
+                        placeholder="Leave empty to use user's selection"
+                    />
+                    <InputError
+                        message={startupForm.errors.docker_image_override}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Leave empty to let the user choose from the cargo's
+                        images. When set, this takes priority over the user's
+                        choice.
+                    </p>
+                </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+                <Button
+                    type="submit"
+                    disabled={
+                        savingStartup ||
+                        startupForm.processing ||
+                        !startupForm.isDirty
+                    }
+                >
+                    {(savingStartup || startupForm.processing) && <Spinner />}
+                    Save startup overrides
+                </Button>
+            </div>
+        </form>
+    );
+}
+
 function ServerModal({
     server,
     users,
@@ -749,6 +874,10 @@ function ServerModal({
                                 </div>
                             </form>
                         </div>
+                    ) : null}
+
+                    {tab === 'startup' ? (
+                        <StartupTab server={server} />
                     ) : null}
 
                     {tab === 'danger' ? (

@@ -359,22 +359,20 @@ function InterconnectCard({
 
     return (
         <div className="rounded-md bg-sidebar p-1">
-                                <div className="flex items-center gap-3 p-3 pb-4">
-                        <div>
-                            <p className="text-sm font-medium text-foreground">
-                                {interconnect.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                                {interconnect.servers.length} server
-                                {interconnect.servers.length !== 1
-                                    ? 's'
-                                    : ''}{' '}
-                                connected
-                            </p>
-                        </div>
-                    </div>
-            <div className="rounded-md border border-sidebar-accent bg-background p-1">
+            <div className="rounded-md border border-sidebar-accent bg-background p-5">
                 <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-sm font-medium text-foreground">
+                            {interconnect.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                            {interconnect.servers.length} server
+                            {interconnect.servers.length !== 1
+                                ? 's'
+                                : ''}{' '}
+                            connected
+                        </p>
+                    </div>
                     <div className="flex items-center gap-1">
                         {canManage && (
                             <>
@@ -468,7 +466,7 @@ function InterconnectCard({
                 </div>
 
                 {interconnect.servers.length > 0 && (
-                    <div className="space-y-1.5">
+                    <div className="mt-4 space-y-1.5">
                         {interconnect.servers.map((member) => (
                             <MemberRow
                                 key={member.id}
