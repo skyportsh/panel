@@ -16,7 +16,7 @@ export default function ConfirmPassword() {
             <Head title="Confirm password" />
 
             <Form
-                {...store.form()}
+                {...store()}
                 resetOnSuccess={['password']}
                 onError={(errors) => {
                     Object.values(errors).forEach((message) =>

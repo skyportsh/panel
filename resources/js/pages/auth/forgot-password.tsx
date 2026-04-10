@@ -27,7 +27,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
 
             <div className="space-y-6">
                 <Form
-                    {...request.form()}
+                    {...request()}
                     onError={(errors) => {
                         Object.values(errors).forEach((message) =>
                             toast.error(message),

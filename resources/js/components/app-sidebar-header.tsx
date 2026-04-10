@@ -26,7 +26,7 @@ export function AppSidebarHeader({
                             </span>
                         </span>
                     </div>
-                    <Form {...stopImpersonating.form()}>
+                    <Form {...stopImpersonating()}>
                         {() => (
                             <Button
                                 type="submit"

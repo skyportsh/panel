@@ -549,7 +549,7 @@ function CreateUserModal({
                 </DialogHeader>
 
                 <Form
-                    {...store.form()}
+                    {...store()}
                     options={{ preserveScroll: true }}
                     onStart={() => {
                         submitStart.current = Date.now();
