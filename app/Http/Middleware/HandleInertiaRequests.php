@@ -70,7 +70,7 @@ class HandleInertiaRequests extends Middleware
                 AppSettingsService::class,
             )->announcementIcon(),
             'serverSwitcher' => fn (): array => $this->sharedServerSwitcher(
-                $request->user(),
+                $request,
             ),
         ];
     }
@@ -78,10 +78,34 @@ class HandleInertiaRequests extends Middleware
     /**
      * @return array<int, array{id: int, name: string, status: string}>
      */
-    protected function sharedServerSwitcher(?User $user): array
+    protected function sharedServerSwitcher(Request $request): array
     {
+        $user = $request->user();
+
         if (! $user || ! Schema::hasTable('servers')) {
             return [];
+        }
+
+        // When an admin views a server they don't own, scope the switcher
+        // to the server owner's servers instead of showing every server.
+        if ($user->is_admin && preg_match('#^/server/(\d+)#', $request->getPathInfo(), $matches)) {
+            $server = Server::query()->find((int) $matches[1]);
+
+            if ($server && $server->user_id !== $user->id) {
+                return Server::query()
+                    ->where('user_id', $server->user_id)
+                    ->select(['id', 'name', 'status'])
+                    ->orderBy('name')
+                    ->get()
+                    ->map(
+                        fn (Server $s): array => [
+                            'id' => $s->id,
+                            'name' => $s->name,
+                            'status' => $s->status,
+                        ],
+                    )
+                    ->all();
+            }
         }
 
         return ($user->is_admin ? Server::query() : $user->servers())

@@ -107,11 +107,9 @@ test('admin can view the console page for any server', function () {
     get("/server/{$dependencies['server']->id}/console")
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->has('serverSwitcher', 2)
-            ->where('serverSwitcher.0.name', 'Admin Server')
-            ->where('serverSwitcher.0.id', $adminServer->id)
-            ->where('serverSwitcher.1.name', 'Alpha')
-            ->where('serverSwitcher.1.id', $dependencies['server']->id));
+            ->has('serverSwitcher', 1)
+            ->where('serverSwitcher.0.name', 'Alpha')
+            ->where('serverSwitcher.0.id', $dependencies['server']->id));
 });
 
 test('console page still renders when the primary allocation has been removed', function () {
