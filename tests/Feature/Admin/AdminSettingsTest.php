@@ -131,6 +131,57 @@ it(
     },
 );
 
+it('includes nightowl theme in available themes', function () {
+    $service = app(AppSettingsService::class);
+    $themes = $service->availableThemes();
+    $ids = array_column($themes, 'id');
+
+    expect($ids)->toContain('nightowl');
+
+    $nightowl = collect($themes)->firstWhere('id', 'nightowl');
+    expect($nightowl['name'])->toBe('Night Owl');
+    expect($nightowl['swatches'])->toHaveCount(4);
+
+    $variables = $service->themeVariables('nightowl');
+    expect($variables)->not->toBeNull();
+    expect($variables['brand'])->toBe('#7fdbca');
+    expect($variables['background'])->toBe('#011627');
+});
+
+it('includes 1994 theme in available themes', function () {
+    $service = app(AppSettingsService::class);
+    $themes = $service->availableThemes();
+    $ids = array_column($themes, 'id');
+
+    expect($ids)->toContain('1994');
+
+    $theme = collect($themes)->firstWhere('id', '1994');
+    expect($theme['name'])->toBe('1994');
+    expect($theme['swatches'])->toHaveCount(4);
+
+    $variables = $service->themeVariables('1994');
+    expect($variables)->not->toBeNull();
+    expect($variables['brand'])->toBe('#c89b3c');
+    expect($variables['background'])->toBe('#0d0f08');
+});
+
+it('includes moonlight theme in available themes', function () {
+    $service = app(AppSettingsService::class);
+    $themes = $service->availableThemes();
+    $ids = array_column($themes, 'id');
+
+    expect($ids)->toContain('moonlight');
+
+    $moonlight = collect($themes)->firstWhere('id', 'moonlight');
+    expect($moonlight['name'])->toBe('Moonlight');
+    expect($moonlight['swatches'])->toHaveCount(4);
+
+    $variables = $service->themeVariables('moonlight');
+    expect($variables)->not->toBeNull();
+    expect($variables['brand'])->toBe('#82aaff');
+    expect($variables['background'])->toBe('#1e2030');
+});
+
 it('allows admins to update allocation feature settings', function () {
     $admin = User::factory()->create(['is_admin' => true]);
 

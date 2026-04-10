@@ -1,0 +1,38 @@
+{
+    "name": "Moonlight",
+    "description": "A dark theme with soft moonlit tones and vivid accents.",
+    "variables": {
+        "background": "#1e2030",
+        "foreground": "#c8d3f5",
+        "card": "#1e2030",
+        "card-foreground": "#c8d3f5",
+        "popover": "#191a2a",
+        "popover-foreground": "#c8d3f5",
+        "primary": "#c8d3f5",
+        "primary-foreground": "#1e2030",
+        "secondary": "#2f334d",
+        "secondary-foreground": "#c8d3f5",
+        "muted": "#2f334d",
+        "muted-foreground": "#636da6",
+        "accent": "#2f334d",
+        "accent-foreground": "#c8d3f5",
+        "destructive": "#ff757f",
+        "border": "#383e5c",
+        "input": "#383e5c",
+        "ring": "#444a73",
+        "sidebar": "#191a2a",
+        "sidebar-foreground": "#c8d3f5",
+        "sidebar-accent": "#2f334d",
+        "sidebar-accent-foreground": "#c8d3f5",
+        "sidebar-border": "#383e5c",
+        "brand": "#82aaff",
+        "brand-foreground": "#1e2030",
+        "brand-muted": "rgba(130, 170, 255, 0.12)"
+    },
+    "light_variables": {
+        "brand": "#3e68d7",
+        "brand-foreground": "#ffffff",
+        "brand-muted": "rgba(62, 104, 215, 0.1)"
+    },
+    "swatches": ["#82aaff", "#1e2030", "#383e5c", "#636da6"]
+}

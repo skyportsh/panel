@@ -27,9 +27,17 @@
             }
 
             html.dark {
-                background-color: oklch(0.145 0 0);
+                background-color: {{ $themeBackground ?? 'oklch(0.145 0 0)' }};
             }
         </style>
+
+        @if($themeCSS ?? null)
+            <style id="skyport-theme">{!! $themeCSS !!}</style>
+        @endif
+
+        @foreach($themeFontLinks ?? [] as $fontLink)
+            <link rel="stylesheet" href="{{ $fontLink }}">
+        @endforeach
 
         <title inertia>{{ config('app.name', 'Skyport') }}</title>
 

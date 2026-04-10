@@ -128,64 +128,7 @@ class HandleInertiaRequests extends Middleware
      */
     protected function buildThemeCSS(): ?string
     {
-        $service = app(AppSettingsService::class);
-        $themeId = $service->theme();
-        $file = storage_path("themes/{$themeId}.json");
-
-        if (! file_exists($file)) {
-            return null;
-        }
-
-        $data = json_decode((string) file_get_contents($file), true);
-        $variables = $data['variables'] ?? [];
-        $lightVariables = $data['light_variables'] ?? [];
-        $fonts = $data['fonts'] ?? [];
-        $radius = $data['radius'] ?? null;
-
-        if (empty($variables) && empty($fonts) && ! $radius) {
-            return null;
-        }
-
-        $lines = [];
-
-        foreach ($variables as $key => $value) {
-            $lines[] = "--{$key}: {$value};";
-        }
-
-        if ($radius) {
-            $lines[] = '--radius: '.$radius.';';
-        }
-
-        $varBlock = implode(' ', $lines);
-        $css = '.dark { '.$varBlock.' }';
-
-        if (! empty($lightVariables)) {
-            $lightLines = [];
-
-            foreach ($lightVariables as $key => $value) {
-                $lightLines[] = "--{$key}: {$value};";
-            }
-
-            if ($radius) {
-                $lightLines[] = '--radius: '.$radius.';';
-            }
-
-            $css .= ' :root { '.implode(' ', $lightLines).' }';
-        }
-
-        if (! empty($fonts['sans'])) {
-            $css .= ' body, button, input, select, textarea { font-family: '.$fonts['sans'].'; }';
-        }
-
-        if (! empty($fonts['heading'])) {
-            $css .= ' h1,h2,h3,h4,h5,h6 { font-family: '.$fonts['heading'].'; }';
-        }
-
-        if (! empty($fonts['mono'])) {
-            $css .= ' code,pre,kbd,.font-mono { font-family: '.$fonts['mono'].' !important; }';
-        }
-
-        return $css;
+        return app(AppSettingsService::class)->buildThemeCSS();
     }
 
     protected function sharedUser(?User $user): ?array

@@ -309,6 +309,108 @@ class AppSettingsService
         return $data['variables'] ?? null;
     }
 
+    /**
+     * @return list<string>
+     */
+    public function themeFontLinks(?string $themeId = null): array
+    {
+        $themeId ??= $this->theme();
+        $file = storage_path("themes/{$themeId}.json");
+
+        if (! file_exists($file)) {
+            return [];
+        }
+
+        $data = json_decode((string) file_get_contents($file), true);
+        $fonts = $data['fonts'] ?? [];
+
+        if (empty($fonts)) {
+            return [];
+        }
+
+        $fontMap = [
+            'IBM Plex Sans' => 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap',
+            'IBM Plex Mono' => 'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap',
+            'JetBrains Mono' => 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap',
+            'Lora' => 'https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap',
+            'Playfair Display' => 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap',
+            'Ubuntu' => 'https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap',
+            'Ubuntu Mono' => 'https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap',
+        ];
+
+        $links = [];
+        $fontString = implode(' ', $fonts);
+
+        foreach ($fontMap as $fontName => $url) {
+            if (str_contains($fontString, $fontName)) {
+                $links[] = $url;
+            }
+        }
+
+        return $links;
+    }
+
+    public function buildThemeCSS(?string $themeId = null): ?string
+    {
+        $themeId ??= $this->theme();
+        $file = storage_path("themes/{$themeId}.json");
+
+        if (! file_exists($file)) {
+            return null;
+        }
+
+        $data = json_decode((string) file_get_contents($file), true);
+        $variables = $data['variables'] ?? [];
+        $lightVariables = $data['light_variables'] ?? [];
+        $fonts = $data['fonts'] ?? [];
+        $radius = $data['radius'] ?? null;
+
+        if (empty($variables) && empty($fonts) && ! $radius) {
+            return null;
+        }
+
+        $lines = [];
+
+        foreach ($variables as $key => $value) {
+            $lines[] = "--{$key}: {$value};";
+        }
+
+        if ($radius) {
+            $lines[] = '--radius: '.$radius.';';
+        }
+
+        $varBlock = implode(' ', $lines);
+        $css = '.dark { '.$varBlock.' }';
+
+        if (! empty($lightVariables)) {
+            $lightLines = [];
+
+            foreach ($lightVariables as $key => $value) {
+                $lightLines[] = "--{$key}: {$value};";
+            }
+
+            if ($radius) {
+                $lightLines[] = '--radius: '.$radius.';';
+            }
+
+            $css .= ' :root { '.implode(' ', $lightLines).' }';
+        }
+
+        if (! empty($fonts['sans'])) {
+            $css .= ' body, button, input, select, textarea { font-family: '.$fonts['sans'].'; }';
+        }
+
+        if (! empty($fonts['heading'])) {
+            $css .= ' h1,h2,h3,h4,h5,h6 { font-family: '.$fonts['heading'].'; }';
+        }
+
+        if (! empty($fonts['mono'])) {
+            $css .= ' code,pre,kbd,.font-mono { font-family: '.$fonts['mono'].' !important; }';
+        }
+
+        return $css;
+    }
+
     protected function normalizeAnnouncementIcon(?string $icon): string
     {
         return in_array($icon, self::announcementIcons(), true)

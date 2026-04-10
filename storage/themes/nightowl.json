@@ -1,0 +1,38 @@
+{
+    "name": "Night Owl",
+    "description": "A dark theme for night owls, by Sarah Drasner.",
+    "variables": {
+        "background": "#011627",
+        "foreground": "#d6deeb",
+        "card": "#011627",
+        "card-foreground": "#d6deeb",
+        "popover": "#01111d",
+        "popover-foreground": "#d6deeb",
+        "primary": "#d6deeb",
+        "primary-foreground": "#011627",
+        "secondary": "#0b2942",
+        "secondary-foreground": "#d6deeb",
+        "muted": "#0b2942",
+        "muted-foreground": "#637777",
+        "accent": "#0b2942",
+        "accent-foreground": "#d6deeb",
+        "destructive": "#ef5350",
+        "border": "#122d42",
+        "input": "#122d42",
+        "ring": "#1d3b53",
+        "sidebar": "#01111d",
+        "sidebar-foreground": "#d6deeb",
+        "sidebar-accent": "#0b2942",
+        "sidebar-accent-foreground": "#d6deeb",
+        "sidebar-border": "#122d42",
+        "brand": "#7fdbca",
+        "brand-foreground": "#011627",
+        "brand-muted": "rgba(127, 219, 202, 0.12)"
+    },
+    "light_variables": {
+        "brand": "#0c969b",
+        "brand-foreground": "#ffffff",
+        "brand-muted": "rgba(12, 150, 155, 0.1)"
+    },
+    "swatches": ["#7fdbca", "#011627", "#122d42", "#637777"]
+}
