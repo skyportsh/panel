@@ -615,6 +615,8 @@ export default function ServerConsole({ server }: Props) {
     const nextConsoleLineIdRef = useRef(0);
     const skipNextCloseRef = useRef(false);
     const consolePhaseTimeoutRef = useRef<number | null>(null);
+    const lastMessageAtRef = useRef<number>(Date.now());
+    const heartbeatIntervalRef = useRef<number | null>(null);
 
     const effectiveState = useMemo(() => {
         if (
@@ -747,6 +749,8 @@ export default function ServerConsole({ server }: Props) {
 
     const handleSocketPayload = useCallback(
         (payload: SocketPayload) => {
+            lastMessageAtRef.current = Date.now();
+
             switch (payload.event) {
                 case 'auth success': {
                     setSocketConnected(true);
@@ -886,12 +890,43 @@ export default function ServerConsole({ server }: Props) {
 
             socket.addEventListener('open', () => {
                 setSocketError(null);
+                lastMessageAtRef.current = Date.now();
                 socket.send(
                     JSON.stringify({
                         event: 'auth',
                         args: [credentials.token],
                     }),
                 );
+
+                // Start a heartbeat that checks for stale connections.
+                if (heartbeatIntervalRef.current) {
+                    window.clearInterval(heartbeatIntervalRef.current);
+                }
+
+                heartbeatIntervalRef.current = window.setInterval(() => {
+                    const elapsed = Date.now() - lastMessageAtRef.current;
+
+                    // If we haven't received anything in 15 seconds, the
+                    // connection is likely dead. Force a reconnect.
+                    if (elapsed > 15_000) {
+                        socket.close();
+                        return;
+                    }
+
+                    // Periodically request stats to keep the connection alive
+                    // and verify it's still responsive.
+                    if (
+                        socket.readyState === WebSocket.OPEN &&
+                        elapsed > 5_000
+                    ) {
+                        socket.send(
+                            JSON.stringify({
+                                event: 'send stats',
+                                args: [],
+                            }),
+                        );
+                    }
+                }, 5_000);
             });
 
             socket.addEventListener('message', (event) => {
@@ -910,6 +945,11 @@ export default function ServerConsole({ server }: Props) {
                 setSocketConnected(false);
                 setConsolePhase('connecting');
                 socketRef.current = null;
+
+                if (heartbeatIntervalRef.current) {
+                    window.clearInterval(heartbeatIntervalRef.current);
+                    heartbeatIntervalRef.current = null;
+                }
 
                 if (skipNextCloseRef.current) {
                     skipNextCloseRef.current = false;
@@ -977,20 +1017,55 @@ export default function ServerConsole({ server }: Props) {
                 window.clearTimeout(consolePhaseTimeoutRef.current);
                 consolePhaseTimeoutRef.current = null;
             }
+
+            if (heartbeatIntervalRef.current) {
+                window.clearInterval(heartbeatIntervalRef.current);
+                heartbeatIntervalRef.current = null;
+            }
         };
     }, [connect]);
 
     const consoleLineCount = consoleLines.length;
 
+    const isNearBottomRef = useRef(true);
+
     useEffect(() => {
-        void consoleLineCount;
         const viewport = consoleViewportRef.current;
 
         if (!viewport) {
             return;
         }
 
-        viewport.scrollTop = viewport.scrollHeight;
+        const handleScroll = () => {
+            const threshold = 80;
+            isNearBottomRef.current =
+                viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < threshold;
+        };
+
+        viewport.addEventListener('scroll', handleScroll, { passive: true });
+
+        return () => viewport.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    useEffect(() => {
+        void consoleLineCount;
+
+        if (!isNearBottomRef.current) {
+            return;
+        }
+
+        const viewport = consoleViewportRef.current;
+
+        if (!viewport) {
+            return;
+        }
+
+        // Use rAF to scroll after React has flushed DOM updates.
+        requestAnimationFrame(() => {
+            if (viewport && isNearBottomRef.current) {
+                viewport.scrollTop = viewport.scrollHeight;
+            }
+        });
     }, [consoleLineCount]);
 
     const sendPowerSignal = async (signal: ServerPowerSignal) => {
