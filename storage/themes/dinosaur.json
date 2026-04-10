@@ -22,7 +22,7 @@
         "ring": "hsl(211, 10%, 53%)",
         "sidebar": "hsl(210, 24%, 16%)",
         "sidebar-foreground": "hsl(210, 16%, 82%)",
-        "sidebar-accent": "hsl(209, 20%, 25%)",
+        "sidebar-accent": "hsl(209, 16%, 33%)",
         "sidebar-accent-foreground": "hsl(210, 16%, 82%)",
         "sidebar-border": "hsl(209, 14%, 37%)",
         "brand": "#2563eb",
