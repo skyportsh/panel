@@ -1,5 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { Link2, LogOut, Plus, Trash2, UserPlus } from 'lucide-react';
+import { Copy, Link2, LogOut, Plus, Trash2, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import {
     addServer,
@@ -78,6 +78,22 @@ type Props = {
     eligibleServers: ServerEntry[];
 };
 
+function slugify(name: string): string {
+    const slug = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+
+    return slug || 'server';
+}
+
+function copyToClipboard(text: string) {
+    void navigator.clipboard.writeText(text).then(() => {
+        toast.success('Copied to clipboard.');
+    });
+}
+
 function MemberRow({
     member,
     serverId,
@@ -90,12 +106,16 @@ function MemberRow({
     isSelf: boolean;
 }) {
     const [removing, setRemoving] = useState(false);
+    const alias = slugify(member.name);
 
     const handleRemove = () => {
         setRemoving(true);
 
         router.post(
-            removeServer.url({ server: serverId, interconnect: interconnectId }),
+            removeServer.url({
+                server: serverId,
+                interconnect: interconnectId,
+            }),
             { server_id: member.id },
             {
                 preserveScroll: true,
@@ -108,20 +128,36 @@ function MemberRow({
     };
 
     return (
-        <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background px-3 py-2">
-            <div className="flex items-center gap-2.5">
+        <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background px-3 py-2.5">
+            <div className="flex items-center gap-3 min-w-0">
                 <ServerStatusIndicator
                     status={member.status}
-                    className="h-3 w-3"
+                    className="h-3 w-3 shrink-0"
                 />
-                <span className="text-sm font-medium text-foreground">
-                    {member.name}
-                </span>
-                {isSelf && (
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-                        This server
-                    </span>
-                )}
+                <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-foreground">
+                            {member.name}
+                        </span>
+                        {isSelf && (
+                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                                This server
+                            </span>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                        <code className="text-xs text-muted-foreground">
+                            {alias}
+                        </code>
+                        <button
+                            type="button"
+                            onClick={() => copyToClipboard(alias)}
+                            className="text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                        >
+                            <Copy className="h-2.5 w-2.5" />
+                        </button>
+                    </div>
+                </div>
             </div>
             {!isSelf && (
                 <Tooltip>
@@ -173,7 +209,10 @@ function AddServerDialog({
         setSubmitting(true);
 
         router.post(
-            addServer.url({ server: serverId, interconnect: interconnect.id }),
+            addServer.url({
+                server: serverId,
+                interconnect: interconnect.id,
+            }),
             { server_id: Number(selectedId) },
             {
                 preserveScroll: true,
@@ -232,7 +271,13 @@ function AddServerDialog({
                                         key={s.id}
                                         value={String(s.id)}
                                     >
-                                        {s.name}
+                                        <span className="flex items-center gap-2">
+                                            <ServerStatusIndicator
+                                                status={s.status}
+                                                className="h-2.5 w-2.5"
+                                            />
+                                            {s.name}
+                                        </span>
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -328,7 +373,9 @@ function InterconnectCard({
                             </p>
                             <p className="text-xs text-muted-foreground">
                                 {interconnect.servers.length} server
-                                {interconnect.servers.length !== 1 ? 's' : ''}{' '}
+                                {interconnect.servers.length !== 1
+                                    ? 's'
+                                    : ''}{' '}
                                 connected
                             </p>
                         </div>
@@ -351,9 +398,7 @@ function InterconnectCard({
                                         )}
                                     </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>
-                                    Leave network
-                                </TooltipContent>
+                                <TooltipContent>Leave network</TooltipContent>
                             </Tooltip>
                         ) : (
                             <Button
@@ -419,6 +464,9 @@ function InterconnectCard({
 
                 {interconnect.servers.length > 0 && (
                     <div className="mt-4 space-y-1.5">
+                        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70 mb-2">
+                            Members — use the hostname below to connect
+                        </p>
                         {interconnect.servers.map((member) => (
                             <MemberRow
                                 key={member.id}
@@ -532,8 +580,8 @@ export default function ServerInterconnect({
                                     Private networks
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                    Servers on the same interconnect can
-                                    communicate over a private link.
+                                    Servers on the same interconnect can reach
+                                    each other by hostname over a private link.
                                 </p>
                             </div>
                             <CreateInterconnectDialog serverId={server.id} />
