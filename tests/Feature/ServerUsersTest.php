@@ -188,16 +188,29 @@ test('server owner can remove a subuser', function () {
     expect(ServerUser::query()->find($su->id))->toBeNull();
 });
 
-test('non-owner cannot add or remove subusers', function () {
+test('admin can add subusers to any server', function () {
     $deps = serverUsersTestDependencies();
     $admin = User::factory()->create(['is_admin' => true]);
+    $newUser = User::factory()->create(['email' => 'admin-added@example.com']);
 
     actingAs($admin);
 
     post("/server/{$deps['server']->id}/users", [
-        'email' => 'someone@example.com',
+        'email' => 'admin-added@example.com',
         'permissions' => ['console'],
-    ])->assertForbidden();
+    ])
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    expect(ServerUser::query()
+        ->where('server_id', $deps['server']->id)
+        ->where('user_id', $newUser->id)
+        ->exists())->toBeTrue();
+
+    get("/server/{$deps['server']->id}/users")
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('canManage', true));
 });
 
 test('must select at least one permission', function () {

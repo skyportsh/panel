@@ -66,6 +66,7 @@ type Props = {
     subusers: SubuserEntry[];
     availablePermissions: string[];
     isOwner: boolean;
+    canManage: boolean;
 };
 
 const permissionLabels: Record<string, { label: string; description: string }> =
@@ -343,12 +344,12 @@ function SubuserCard({
     subuser,
     serverId,
     availablePermissions,
-    isOwner,
+    canManage,
 }: {
     subuser: SubuserEntry;
     serverId: number;
     availablePermissions: string[];
-    isOwner: boolean;
+    canManage: boolean;
 }) {
     const [deleting, setDeleting] = useState(false);
 
@@ -399,7 +400,7 @@ function SubuserCard({
                     ))}
                 </div>
             </div>
-            {isOwner && (
+            {canManage && (
                 <div className="flex items-center gap-1 pr-2">
                     <EditPermissionsDialog
                         subuser={subuser}
@@ -455,6 +456,7 @@ export default function ServerUsers({
     subusers,
     availablePermissions,
     isOwner,
+    canManage,
 }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Home', href: home() },
@@ -482,10 +484,12 @@ export default function ServerUsers({
                                     description={
                                         isOwner
                                             ? 'People you have given access to this server.'
-                                            : "You're viewing this server's users as an admin."
+                                            : canManage
+                                              ? "You're managing this server's users as an admin."
+                                              : "You're viewing this server's users."
                                     }
                                 />
-                                {isOwner && (
+                                {canManage && (
                                     <AddUserDialog
                                         serverId={server.id}
                                         availablePermissions={
@@ -505,7 +509,7 @@ export default function ServerUsers({
                                             availablePermissions={
                                                 availablePermissions
                                             }
-                                            isOwner={isOwner}
+                                            canManage={canManage}
                                         />
                                     ))}
                                 </div>

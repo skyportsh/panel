@@ -77,6 +77,7 @@ type Props = {
     interconnects: InterconnectEntry[];
     eligibleServers: ServerEntry[];
     isOwner: boolean;
+    canManage: boolean;
 };
 
 function slugify(name: string): string {
@@ -100,13 +101,13 @@ function MemberRow({
     serverId,
     interconnectId,
     isSelf,
-    isOwner,
+    canManage,
 }: {
     member: ServerEntry;
     serverId: number;
     interconnectId: number;
     isSelf: boolean;
-    isOwner: boolean;
+    canManage: boolean;
 }) {
     const [removing, setRemoving] = useState(false);
     const alias = slugify(member.name);
@@ -158,7 +159,7 @@ function MemberRow({
                     </div>
                 </div>
             </div>
-            {isOwner && !isSelf && (
+            {canManage && !isSelf && (
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <Button
@@ -301,12 +302,12 @@ function InterconnectCard({
     interconnect,
     serverId,
     eligibleServers,
-    isOwner,
+    canManage,
 }: {
     interconnect: InterconnectEntry;
     serverId: number;
     eligibleServers: ServerEntry[];
-    isOwner: boolean;
+    canManage: boolean;
 }) {
     const [leaving, setLeaving] = useState(false);
     const [joining, setJoining] = useState(false);
@@ -375,7 +376,7 @@ function InterconnectCard({
             <div className="rounded-md border border-sidebar-accent bg-background p-1">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
-                        {isOwner && (
+                        {canManage && (
                             <>
                                 {interconnect.is_member ? (
                                     <Tooltip>
@@ -475,7 +476,7 @@ function InterconnectCard({
                                 serverId={serverId}
                                 interconnectId={interconnect.id}
                                 isSelf={member.id === serverId}
-                                isOwner={isOwner}
+                                canManage={canManage}
                             />
                         ))}
                     </div>
@@ -555,6 +556,7 @@ export default function ServerInterconnect({
     interconnects,
     eligibleServers,
     isOwner,
+    canManage,
 }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Home', href: home() },
@@ -583,12 +585,12 @@ export default function ServerInterconnect({
                                     Private networks
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                    {isOwner
+                                    {canManage
                                         ? 'Servers on the same interconnect can reach each other by hostname over a private link.'
-                                        : "You're viewing this server as an admin. Only the server owner can manage interconnects."}
+                                        : "You're viewing this server's interconnects. Only the server owner can manage them."}
                                 </p>
                             </div>
-                            {isOwner && (
+                            {canManage && (
                                 <CreateInterconnectDialog
                                     serverId={server.id}
                                 />
@@ -603,7 +605,7 @@ export default function ServerInterconnect({
                                 interconnect={ic}
                                 serverId={server.id}
                                 eligibleServers={eligibleServers}
-                                isOwner={isOwner}
+                                canManage={canManage}
                             />
                         ))
                     ) : (

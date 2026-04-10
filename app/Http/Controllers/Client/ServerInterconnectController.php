@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Client\StoreInterconnectRequest;
 use App\Models\Interconnect;
 use App\Models\Server;
+use App\Models\ServerUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -41,20 +42,22 @@ class ServerInterconnectController extends Controller
             ])
             ->all();
 
-        $eligibleServers = Server::query()
-            ->where('user_id', $server->user_id)
-            ->where('node_id', $server->node_id)
-            ->select(['id', 'name', 'status'])
-            ->orderBy('name')
-            ->get()
-            ->map(fn (Server $s): array => [
-                'id' => $s->id,
-                'name' => $s->name,
-                'status' => $s->status,
-            ])
-            ->all();
+        $canManage = $this->canManageInterconnects($request, $server);
 
-        $isOwner = $request->user()?->id === $server->user_id;
+        $eligibleServers = $canManage
+            ? Server::query()
+                ->where('user_id', $server->user_id)
+                ->where('node_id', $server->node_id)
+                ->select(['id', 'name', 'status'])
+                ->orderBy('name')
+                ->get()
+                ->map(fn (Server $s): array => [
+                    'id' => $s->id,
+                    'name' => $s->name,
+                    'status' => $s->status,
+                ])
+                ->all()
+            : [];
 
         return Inertia::render('server/networking/interconnect', [
             'server' => [
@@ -63,15 +66,16 @@ class ServerInterconnectController extends Controller
                 'status' => $server->status,
             ],
             'interconnects' => $interconnects,
-            'eligibleServers' => $isOwner ? $eligibleServers : [],
-            'isOwner' => $isOwner,
+            'eligibleServers' => $eligibleServers,
+            'isOwner' => $request->user()?->id === $server->user_id,
+            'canManage' => $canManage,
         ]);
     }
 
     public function store(StoreInterconnectRequest $request, Server $server): RedirectResponse
     {
         $this->authorizeServerAccess($request, $server);
-        $this->authorizeOwnership($request, $server);
+        $this->authorizeManagement($request, $server);
 
         $existing = Interconnect::query()
             ->where('user_id', $server->user_id)
@@ -99,7 +103,7 @@ class ServerInterconnectController extends Controller
     public function join(Request $request, Server $server, Interconnect $interconnect): RedirectResponse
     {
         $this->authorizeServerAccess($request, $server);
-        $this->authorizeOwnership($request, $server);
+        $this->authorizeManagement($request, $server);
         $this->authorizeInterconnectAccess($server, $interconnect);
 
         if ($interconnect->servers()->where('server_id', $server->id)->exists()) {
@@ -114,7 +118,7 @@ class ServerInterconnectController extends Controller
     public function leave(Request $request, Server $server, Interconnect $interconnect): RedirectResponse
     {
         $this->authorizeServerAccess($request, $server);
-        $this->authorizeOwnership($request, $server);
+        $this->authorizeManagement($request, $server);
         $this->authorizeInterconnectAccess($server, $interconnect);
 
         $interconnect->servers()->detach($server->id);
@@ -131,7 +135,7 @@ class ServerInterconnectController extends Controller
     public function addServer(Request $request, Server $server, Interconnect $interconnect): RedirectResponse
     {
         $this->authorizeServerAccess($request, $server);
-        $this->authorizeOwnership($request, $server);
+        $this->authorizeManagement($request, $server);
         $this->authorizeInterconnectAccess($server, $interconnect);
 
         $validated = $request->validate([
@@ -143,7 +147,7 @@ class ServerInterconnectController extends Controller
         abort_unless(
             $targetServer->user_id === $server->user_id && $targetServer->node_id === $server->node_id,
             422,
-            'The server must belong to you and be on the same node.',
+            'The server must belong to the same owner and be on the same node.',
         );
 
         if ($interconnect->servers()->where('server_id', $targetServer->id)->exists()) {
@@ -158,7 +162,7 @@ class ServerInterconnectController extends Controller
     public function removeServer(Request $request, Server $server, Interconnect $interconnect): RedirectResponse
     {
         $this->authorizeServerAccess($request, $server);
-        $this->authorizeOwnership($request, $server);
+        $this->authorizeManagement($request, $server);
         $this->authorizeInterconnectAccess($server, $interconnect);
 
         $validated = $request->validate([
@@ -179,7 +183,7 @@ class ServerInterconnectController extends Controller
     public function destroy(Request $request, Server $server, Interconnect $interconnect): RedirectResponse
     {
         $this->authorizeServerAccess($request, $server);
-        $this->authorizeOwnership($request, $server);
+        $this->authorizeManagement($request, $server);
         $this->authorizeInterconnectAccess($server, $interconnect);
 
         $interconnect->delete();
@@ -187,12 +191,30 @@ class ServerInterconnectController extends Controller
         return Redirect::back()->with('success', 'Interconnect deleted.');
     }
 
-    private function authorizeOwnership(Request $request, Server $server): void
+    private function canManageInterconnects(Request $request, Server $server): bool
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            return false;
+        }
+
+        if ($user->is_admin || $user->id === $server->user_id) {
+            return true;
+        }
+
+        return ServerUser::query()
+            ->where('server_id', $server->id)
+            ->where('user_id', $user->id)
+            ->exists();
+    }
+
+    private function authorizeManagement(Request $request, Server $server): void
     {
         abort_unless(
-            $request->user()?->id === $server->user_id,
+            $this->canManageInterconnects($request, $server),
             403,
-            'Only the server owner can manage interconnects.',
+            'You do not have permission to manage interconnects on this server.',
         );
     }
 
@@ -201,7 +223,7 @@ class ServerInterconnectController extends Controller
         abort_unless(
             $interconnect->user_id === $server->user_id && $interconnect->node_id === $server->node_id,
             422,
-            'This interconnect does not belong to you on this node.',
+            'This interconnect does not belong to this server\'s owner on this node.',
         );
     }
 }

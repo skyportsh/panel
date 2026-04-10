@@ -47,6 +47,7 @@ class ServerUsersController extends Controller
             'subusers' => $subusers,
             'availablePermissions' => ServerUser::availablePermissions(),
             'isOwner' => $request->user()?->id === $server->user_id,
+            'canManage' => $request->user()?->id === $server->user_id || $request->user()?->is_admin,
         ]);
     }
 
@@ -130,9 +131,9 @@ class ServerUsersController extends Controller
     private function authorizeOwnership(Request $request, Server $server): void
     {
         abort_unless(
-            $request->user()?->id === $server->user_id,
+            $request->user()?->id === $server->user_id || $request->user()?->is_admin,
             403,
-            'Only the server owner can manage users.',
+            'Only the server owner or an admin can manage users.',
         );
     }
 }

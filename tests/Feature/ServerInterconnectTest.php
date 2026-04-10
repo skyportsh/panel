@@ -7,6 +7,7 @@ use App\Models\Location;
 use App\Models\Node;
 use App\Models\NodeCredential;
 use App\Models\Server;
+use App\Models\ServerUser;
 use App\Models\User;
 use App\Services\ServerConfigurationService;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -266,7 +267,7 @@ test('server owner can delete an interconnect', function () {
     expect(Interconnect::query()->find($ic->id))->toBeNull();
 });
 
-test('admin can view interconnect page but cannot create', function () {
+test('admin can view and manage interconnects for any server', function () {
     $deps = interconnectTestDependencies();
     $admin = User::factory()->create(['is_admin' => true]);
 
@@ -276,30 +277,47 @@ test('admin can view interconnect page but cannot create', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('isOwner', false)
-            ->where('eligibleServers', []));
+            ->where('canManage', true)
+            ->has('eligibleServers', 2));
 
     post("/server/{$deps['server']->id}/networking/interconnect", [
         'name' => 'admin-net',
-    ])->assertForbidden();
+    ])
+        ->assertRedirect()
+        ->assertSessionHas('success', 'Interconnect created.');
 });
 
-test('admin cannot join or leave interconnects', function () {
+test('subuser can manage interconnects', function () {
     $deps = interconnectTestDependencies();
-    $admin = User::factory()->create(['is_admin' => true]);
-    $ic = Interconnect::factory()->create([
-        'user_id' => $deps['user']->id,
-        'node_id' => $deps['node']->id,
-        'name' => 'user-net',
+    $subuser = User::factory()->create();
+
+    ServerUser::factory()->create([
+        'server_id' => $deps['server']->id,
+        'user_id' => $subuser->id,
+        'permissions' => ['console'],
     ]);
-    $ic->servers()->attach($deps['server']->id);
 
-    actingAs($admin);
+    actingAs($subuser);
 
-    post("/server/{$deps['server']->id}/networking/interconnect/{$ic->id}/join")
-        ->assertForbidden();
+    get("/server/{$deps['server']->id}/networking/interconnect")
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('canManage', true));
 
-    delete("/server/{$deps['server']->id}/networking/interconnect/{$ic->id}")
-        ->assertForbidden();
+    post("/server/{$deps['server']->id}/networking/interconnect", [
+        'name' => 'subuser-net',
+    ])
+        ->assertRedirect()
+        ->assertSessionHas('success', 'Interconnect created.');
+});
+
+test('unauthorized user cannot manage interconnects', function () {
+    $deps = interconnectTestDependencies();
+    $stranger = User::factory()->create();
+
+    actingAs($stranger);
+
+    get("/server/{$deps['server']->id}/networking/interconnect")->assertForbidden();
 });
 
 test('interconnects are included in server sync payload', function () {
