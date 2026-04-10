@@ -1320,12 +1320,14 @@ export default function Nodes({ nodes, locations = [], filters }: Props) {
     }, []);
 
     useEffect(() => {
+        router.reload({ only: ['locations'] });
+
         const poller = window.setInterval(() => {
             router.get(
                 window.location.pathname + window.location.search,
                 {},
                 {
-                    only: ['nodes'],
+                    only: ['nodes', 'locations'],
                     preserveScroll: true,
                     preserveState: true,
                     replace: true,
