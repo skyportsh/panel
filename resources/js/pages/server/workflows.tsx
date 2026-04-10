@@ -83,8 +83,6 @@ const triggerOptions = [
     { value: 'backup_complete', label: 'On backup complete', desc: 'After a backup finishes' },
     { value: 'backup_failed', label: 'On backup failed', desc: 'When a backup fails' },
     { value: 'console_match', label: 'On console output', desc: 'When console matches a pattern' },
-    { value: 'player_join', label: 'On player join', desc: 'When a player joins' },
-    { value: 'player_leave', label: 'On player leave', desc: 'When a player leaves' },
     { value: 'high_cpu', label: 'On high CPU usage', desc: 'When CPU exceeds a threshold' },
     { value: 'high_memory', label: 'On high memory usage', desc: 'When memory exceeds a threshold' },
     { value: 'disk_full', label: 'On disk full', desc: 'When disk usage exceeds a threshold' },
@@ -94,8 +92,6 @@ const triggerOptions = [
 const conditionOptions = [
     { value: 'server_online', label: 'Server is online', desc: 'Only if the server is running' },
     { value: 'server_offline', label: 'Server is offline', desc: 'Only if the server is stopped' },
-    { value: 'player_count_above', label: 'Player count above', desc: 'Only if players exceed a number' },
-    { value: 'player_count_below', label: 'Player count below', desc: 'Only if players are below a number' },
     { value: 'cpu_above', label: 'CPU usage above', desc: 'Only if CPU exceeds a percentage' },
     { value: 'cpu_below', label: 'CPU usage below', desc: 'Only if CPU is below a percentage' },
     { value: 'memory_above', label: 'Memory usage above', desc: 'Only if memory exceeds a percentage' },
@@ -133,8 +129,7 @@ function summaryFor(step: StepData): string | null {
     if (step.kind === 'high_cpu' && c.threshold) return `> ${c.threshold}%`;
     if (step.kind === 'high_memory' && c.threshold) return `> ${c.threshold}%`;
     if (step.kind === 'disk_full' && c.threshold) return `> ${c.threshold}%`;
-    if (step.kind === 'player_count_above' && c.count) return `> ${c.count}`;
-    if (step.kind === 'player_count_below' && c.count) return `< ${c.count}`;
+
     if (step.kind === 'cpu_above' && c.threshold) return `> ${c.threshold}%`;
     if (step.kind === 'cpu_below' && c.threshold) return `< ${c.threshold}%`;
     if (step.kind === 'memory_above' && c.threshold) return `> ${c.threshold}%`;
@@ -208,14 +203,7 @@ function StepConfigFields({
                     <Input type="number" min={0} max={100} value={c.threshold ?? ''} onChange={(e) => set('threshold', e.target.value)} placeholder="90" />
                 </div>
             );
-        case 'player_count_above':
-        case 'player_count_below':
-            return (
-                <div className="grid gap-2">
-                    <Label>Player count</Label>
-                    <Input type="number" min={0} value={c.count ?? ''} onChange={(e) => set('count', e.target.value)} placeholder="5" />
-                </div>
-            );
+
         case 'time_between':
             return (
                 <div className="grid grid-cols-2 gap-3">

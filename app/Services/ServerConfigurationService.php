@@ -46,7 +46,7 @@ class ServerConfigurationService
      */
     public function payload(Server $server): array
     {
-        $server->loadMissing(['allocation', 'cargo', 'firewallRules', 'interconnects', 'node', 'user']);
+        $server->loadMissing(['allocation', 'cargo', 'firewallRules', 'interconnects', 'node', 'user', 'workflows']);
         $allocation = $server->allocation;
 
         if (! $allocation) {
@@ -110,6 +110,13 @@ class ServerConfigurationService
                     'name' => $ic->name,
                 ],
             )->all(),
+            'workflows' => $server->workflows
+                ->where('enabled', true)
+                ->map(fn ($w): array => [
+                    'id' => $w->id,
+                    'name' => $w->name,
+                    'nodes' => $w->nodes,
+                ])->values()->all(),
             'firewall_rules' => $server->firewallRules->map(
                 fn ($rule): array => [
                     'id' => $rule->id,
