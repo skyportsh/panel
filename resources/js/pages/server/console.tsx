@@ -308,11 +308,11 @@ function ansiClassName(codes: number[]): string {
 	} else if (codes.includes(36) || codes.includes(96)) {
 		classNames.add("text-cyan-300");
 	} else if (codes.includes(37) || codes.includes(97)) {
-		classNames.add("text-slate-100");
+		classNames.add("text-foreground");
 	} else if (codes.includes(90)) {
-		classNames.add("text-slate-400");
+		classNames.add("text-muted-foreground");
 	} else {
-		classNames.add("text-foreground dark:text-slate-200");
+		classNames.add("text-foreground");
 	}
 
 	return [...classNames].join(" ");
@@ -351,7 +351,7 @@ function ansiSegments(text: string): AnsiSegment[] {
 		? segments
 		: [
 				{
-					className: "text-foreground dark:text-slate-200",
+					className: "text-foreground",
 					text: stripAnsi(text),
 				},
 			];
@@ -389,9 +389,9 @@ function consoleLineClasses(tone: ConsoleLineTone): string {
 		case "system":
 			return "text-muted-foreground";
 		case "input":
-			return "text-foreground dark:text-slate-200";
+			return "text-foreground";
 		default:
-			return "text-foreground dark:text-slate-200";
+			return "text-foreground";
 	}
 }
 

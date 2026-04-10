@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import AuthPaneArt from '@/components/auth-pane-art';
+import { ThemeInjector } from '@/components/theme-injector';
 import type { AuthLayoutProps } from '@/types';
 
 export default function AuthSplitLayout({
@@ -11,6 +12,7 @@ export default function AuthSplitLayout({
 
     return (
         <div className="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0">
+            <ThemeInjector />
             <div className="relative hidden h-full flex-col overflow-hidden border-r border-black/8 p-10 text-[#1b1b18] lg:flex dark:border-white/8 dark:text-white">
                 <AuthPaneArt />
                 <div className="relative z-20 text-lg font-medium">{name}</div>

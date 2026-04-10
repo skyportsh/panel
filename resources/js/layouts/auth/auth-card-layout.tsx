@@ -1,4 +1,5 @@
 import type { PropsWithChildren } from 'react';
+import { ThemeInjector } from '@/components/theme-injector';
 import {
     Card,
     CardContent,
@@ -18,6 +19,7 @@ export default function AuthCardLayout({
 }>) {
     return (
         <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
+            <ThemeInjector />
             <div className="flex w-full max-w-md flex-col gap-6">
                 <div className="flex flex-col gap-6">
                     <Card className="rounded-xl">

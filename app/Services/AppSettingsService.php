@@ -336,6 +336,7 @@ class AppSettingsService
             'Playfair Display' => 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap',
             'Ubuntu' => 'https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap',
             'Ubuntu Mono' => 'https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap',
+            'Plus Jakarta Sans' => 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap',
         ];
 
         $links = [];

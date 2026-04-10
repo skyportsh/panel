@@ -156,13 +156,13 @@ it('includes 1994 theme in available themes', function () {
     expect($ids)->toContain('1994');
 
     $theme = collect($themes)->firstWhere('id', '1994');
-    expect($theme['name'])->toBe('1994');
+    expect($theme['name'])->toBe('Windows 95');
     expect($theme['swatches'])->toHaveCount(4);
 
     $variables = $service->themeVariables('1994');
     expect($variables)->not->toBeNull();
-    expect($variables['brand'])->toBe('#c89b3c');
-    expect($variables['background'])->toBe('#0d0f08');
+    expect($variables['brand'])->toBe('#008080');
+    expect($variables['background'])->toBe('#0b0b14');
 });
 
 it('includes moonlight theme in available themes', function () {
