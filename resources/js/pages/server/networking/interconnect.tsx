@@ -131,12 +131,8 @@ function MemberRow({
     };
 
     return (
-        <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background px-3 py-2.5">
+        <div className="flex items-center justify-between rounded border border-border/50 bg-background px-4 py-4">
             <div className="flex items-center gap-3 min-w-0">
-                <ServerStatusIndicator
-                    status={member.status}
-                    className="h-3 w-3 shrink-0"
-                />
                 <div className="min-w-0">
                     <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-foreground">
@@ -150,7 +146,7 @@ function MemberRow({
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
                         <code className="text-xs text-muted-foreground">
-                            {alias}
+                            [hostname] {alias}
                         </code>
                         <button
                             type="button"
@@ -362,16 +358,7 @@ function InterconnectCard({
 
     return (
         <div className="rounded-md bg-sidebar p-1">
-            <div className="rounded-md border border-sidebar-accent bg-background p-5">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-background text-muted-foreground shadow-xs ring-1 ring-border/60">
-                            <PlaceholderPattern
-                                patternSize={4}
-                                className="pointer-events-none absolute inset-0 size-full stroke-current opacity-[0.12]"
-                            />
-                            <Link2 className="relative h-4 w-4" />
-                        </div>
+                                <div className="flex items-center gap-3 p-3 pb-4">
                         <div>
                             <p className="text-sm font-medium text-foreground">
                                 {interconnect.name}
@@ -385,6 +372,8 @@ function InterconnectCard({
                             </p>
                         </div>
                     </div>
+            <div className="rounded-md border border-sidebar-accent bg-background p-1">
+                <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
                         {isOwner && (
                             <>
@@ -432,7 +421,7 @@ function InterconnectCard({
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                                    className="h-8 w-8 text-muted-foreground"
                                                     disabled={deleting}
                                                 >
                                                     {deleting ? (
@@ -478,10 +467,7 @@ function InterconnectCard({
                 </div>
 
                 {interconnect.servers.length > 0 && (
-                    <div className="mt-4 space-y-1.5">
-                        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70 mb-2">
-                            Members — use the hostname below to connect
-                        </p>
+                    <div className="space-y-1.5">
                         {interconnect.servers.map((member) => (
                             <MemberRow
                                 key={member.id}
