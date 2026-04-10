@@ -38,6 +38,7 @@ import {
     SelectContent,
     SelectItem,
     SelectTrigger,
+    SelectValue,
 } from '@/components/ui/select';
 import { SlidingTabs } from '@/components/ui/sliding-tabs';
 import type { Tab } from '@/components/ui/sliding-tabs';
