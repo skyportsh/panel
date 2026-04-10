@@ -129,9 +129,18 @@ class HandleInertiaRequests extends Middleware
     protected function buildThemeCSS(): ?string
     {
         $service = app(AppSettingsService::class);
-        $variables = $service->themeVariables();
+        $themeId = $service->theme();
+        $file = storage_path("themes/{$themeId}.json");
 
-        if (! $variables) {
+        if (! file_exists($file)) {
+            return null;
+        }
+
+        $data = json_decode((string) file_get_contents($file), true);
+        $variables = $data['variables'] ?? [];
+        $fonts = $data['fonts'] ?? [];
+
+        if (empty($variables) && empty($fonts)) {
             return null;
         }
 
@@ -141,7 +150,17 @@ class HandleInertiaRequests extends Middleware
             $lines[] = "--{$key}: {$value};";
         }
 
-        return '.dark { '.implode(' ', $lines).' }';
+        $css = '.dark { '.implode(' ', $lines).' }';
+
+        if (! empty($fonts['heading'])) {
+            $css .= ' h1,h2,h3,h4,h5,h6 { font-family: '.$fonts['heading'].'; }';
+        }
+
+        if (! empty($fonts['mono'])) {
+            $css .= ' code,pre,kbd,.font-mono { font-family: '.$fonts['mono'].' !important; }';
+        }
+
+        return $css;
     }
 
     protected function sharedUser(?User $user): ?array

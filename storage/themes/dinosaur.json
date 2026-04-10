@@ -29,5 +29,9 @@
         "brand-foreground": "#ffffff",
         "brand-muted": "rgba(37, 99, 235, 0.15)"
     },
+    "fonts": {
+        "heading": "'IBM Plex Sans', 'Inter', system-ui, sans-serif",
+        "mono": "'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace"
+    },
     "swatches": ["#2563eb", "#334155", "#3f4c5b", "#7a8391"]
 }
