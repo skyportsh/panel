@@ -3,6 +3,7 @@
 use App\Http\Controllers\Daemon\ConfigurationController;
 use App\Http\Controllers\Daemon\HeartbeatController;
 use App\Http\Controllers\Daemon\ServerRuntimeController;
+use App\Http\Controllers\Daemon\ServerSyncController;
 use App\Http\Controllers\Daemon\SftpAuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,6 +21,10 @@ Route::prefix('daemon')
             ServerRuntimeController::class,
             'store',
         ])->name('servers.runtime');
+        Route::get('servers/{server}/sync', [
+            ServerSyncController::class,
+            'show',
+        ])->name('servers.sync');
         Route::post('sftp/auth', [
             SftpAuthController::class,
             'store',

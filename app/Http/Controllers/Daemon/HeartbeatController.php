@@ -48,6 +48,7 @@ class HeartbeatController extends Controller
             'last_seen_at' => $payload[
                 'node'
             ]->last_seen_at?->toIso8601String(),
+            'server_ids' => $payload['server_ids'],
         ]);
     }
 }

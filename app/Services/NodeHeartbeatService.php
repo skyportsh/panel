@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Node;
 use App\Models\NodeCredential;
+use App\Models\Server;
 use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 
@@ -12,6 +13,7 @@ class NodeHeartbeatService
     public function __construct(
         private NodeConfigurationService $nodeConfigurationService,
         private PanelVersionService $panelVersionService,
+        private ServerRemoteUpdateService $serverRemoteUpdateService,
     ) {}
 
     /**
@@ -60,11 +62,17 @@ class NodeHeartbeatService
 
         $node = $node->fresh(['location']) ?? $node;
 
+        $serverIds = Server::query()
+            ->where('node_id', $node->id)
+            ->pluck('id')
+            ->all();
+
         return [
             'configuration' => $this->nodeConfigurationService->configurationPayload(
                 $node,
             ),
             'node' => $node,
+            'server_ids' => $serverIds,
         ];
     }
 }
