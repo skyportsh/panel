@@ -684,6 +684,16 @@ export default function ServerConsole({ server }: Props) {
 
 				return [...currentLines, ...appendedLines].slice(-MAX_CONSOLE_LINES);
 			});
+
+			const viewport = consoleViewportRef.current;
+
+			if (viewport && isAtBottomRef.current) {
+				requestAnimationFrame(() => {
+					requestAnimationFrame(() => {
+						viewport.scrollTop = viewport.scrollHeight;
+					});
+				});
+			}
 		},
 		[],
 	);
@@ -986,7 +996,7 @@ export default function ServerConsole({ server }: Props) {
 		};
 	}, [connect]);
 
-	const _lastConsoleLineId = consoleLines.at(-1)?.id ?? 0;
+	const isAtBottomRef = useRef(true);
 
 	useEffect(() => {
 		const viewport = consoleViewportRef.current;
@@ -995,12 +1005,14 @@ export default function ServerConsole({ server }: Props) {
 			return;
 		}
 
-		// Double rAF ensures the DOM has fully painted before scrolling.
-		requestAnimationFrame(() => {
-			requestAnimationFrame(() => {
-				viewport.scrollTop = viewport.scrollHeight;
-			});
-		});
+		const handleScroll = () => {
+			const { scrollTop, scrollHeight, clientHeight } = viewport;
+			isAtBottomRef.current = scrollHeight - scrollTop - clientHeight < 30;
+		};
+
+		viewport.addEventListener("scroll", handleScroll, { passive: true });
+
+		return () => viewport.removeEventListener("scroll", handleScroll);
 	}, []);
 
 	const sendPowerSignal = async (signal: ServerPowerSignal) => {
