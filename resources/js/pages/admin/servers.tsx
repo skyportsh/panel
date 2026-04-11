@@ -704,15 +704,17 @@ function StartupTab({ server }: { server: AdminServer }) {
 	return (
 		<form onSubmit={submitStartup} className="max-w-2xl space-y-6">
 			<div className="space-y-4">
-				<div className="grid gap-2">
-					<Label>Default startup command</Label>
-					<code className="rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-						{server.startup_command}
-					</code>
-					<p className="text-xs text-muted-foreground">
-						This is the cargo's default. Override it below if needed.
-					</p>
-				</div>
+				{server.startup_command ? (
+					<div className="grid gap-2">
+						<Label>Default startup command</Label>
+						<code className="rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+							{server.startup_command}
+						</code>
+						<p className="text-xs text-muted-foreground">
+							This is the cargo's default. Override it below if needed.
+						</p>
+					</div>
+				) : null}
 
 				<div className="grid gap-2">
 					<Label htmlFor="startup-override">Startup command override</Label>
@@ -1074,14 +1076,14 @@ function ServerModal({
 												the panel but not from the node.
 											</p>
 										</div>
-										<Button
-											variant="destructive"
-											className="cursor-pointer"
-											onClick={() => onDelete(server)}
-										>
-											<Trash2 className="h-4 w-4" />
-											Delete
-										</Button>
+									<Button
+										variant="destructive"
+										className="shrink-0 cursor-pointer"
+										onClick={() => onDelete(server)}
+									>
+										<Trash2 className="h-4 w-4" />
+										Delete
+									</Button>
 									</div>
 								</div>
 							</div>
