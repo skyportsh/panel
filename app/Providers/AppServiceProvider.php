@@ -47,7 +47,7 @@ class AppServiceProvider extends ServiceProvider
         DB::prohibitDestructiveCommands(app()->isProduction());
 
         RateLimiter::for('daemon', function (Request $request): Limit {
-            return Limit::perMinute(30)->by(
+            return Limit::perMinute(300)->by(
                 $request->bearerToken() ?: $request->ip(),
             );
         });
