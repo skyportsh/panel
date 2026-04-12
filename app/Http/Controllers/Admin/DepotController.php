@@ -56,6 +56,14 @@ class DepotController extends Controller
             );
         }
 
+        $serverCount = $cargo->servers()->count();
+
+        if ($serverCount > 0) {
+            return Redirect::back()->withErrors([
+                'key' => $item['name'].' is used by '.$serverCount.' '.Str::plural('server', $serverCount).'. Remove them first.',
+            ]);
+        }
+
         $cargo->delete();
 
         return Redirect::back()->with(

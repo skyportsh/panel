@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Cargo;
+use App\Models\Server;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -90,6 +91,25 @@ test('non-admin cannot install from depot', function () {
     actingAs($user);
 
     post('/admin/depot/minecraft-vanilla/install')->assertForbidden();
+});
+
+test('admin cannot remove a depot cargo that has servers', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    actingAs($admin);
+
+    post('/admin/depot/runtime-python/install')->assertRedirect();
+
+    $cargo = Cargo::query()->where('slug', 'python-generic')->first();
+    Server::factory()->create(['cargo_id' => $cargo->id]);
+
+    delete('/admin/depot/runtime-python')
+        ->assertRedirect()
+        ->assertSessionHasErrors('key');
+
+    expect(
+        Cargo::query()->where('slug', 'python-generic')->exists(),
+    )->toBeTrue();
 });
 
 test('depot installed map reflects already installed entries', function () {
