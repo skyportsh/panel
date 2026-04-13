@@ -200,20 +200,47 @@ class ServerFilesystemService
         UploadedFile $file,
     ): array {
         $filename = $file->getClientOriginalName() ?: $file->getFilename();
-        $contents = $file->get();
 
-        if ($contents === false) {
-            throw new InvalidArgumentException('The uploaded file could not be read.');
+        $server->loadMissing('node.credential');
+
+        $callbackToken = $server->node->credential?->daemon_callback_token;
+        $daemonUuid = $server->node->daemon_uuid;
+
+        if (! $callbackToken || ! $daemonUuid) {
+            throw new InvalidArgumentException(
+                'The filesystem is not available for this server yet.',
+            );
         }
 
-        return $this->send(fn () => $this->request($server)
-            ->withBody($contents, $file->getMimeType() ?: 'application/octet-stream')
-            ->post($this->url($server, '/files/upload').'?'.http_build_query([
-                'name' => $filename,
-                'panel_version' => config('app.version'),
-                'path' => $path,
-                'uuid' => $server->node->daemon_uuid,
-            ])));
+        $url = $this->url($server, '/files/upload').'?'.http_build_query([
+            'name' => $filename,
+            'panel_version' => config('app.version'),
+            'path' => $path,
+            'uuid' => $daemonUuid,
+        ]);
+
+        try {
+            $response = Http::timeout(300)
+                ->connectTimeout(10)
+                ->withToken($callbackToken)
+                ->withBody(
+                    file_get_contents($file->getRealPath()),
+                    $file->getMimeType() ?: 'application/octet-stream',
+                )
+                ->post($url);
+
+            $response->throw();
+        } catch (\Throwable $exception) {
+            $message = 'The file could not be uploaded to the server.';
+
+            if (method_exists($exception, 'response') && $exception->response) {
+                $message = $exception->response->json('message') ?: $message;
+            }
+
+            throw new InvalidArgumentException($message, previous: $exception);
+        }
+
+        return $response->json() ?: ['message' => 'File uploaded successfully.', 'ok' => true];
     }
 
     protected function request(Server $server): PendingRequest
@@ -229,7 +256,8 @@ class ServerFilesystemService
             );
         }
 
-        return Http::timeout(15)
+        return Http::timeout(60)
+            ->connectTimeout(10)
             ->acceptJson()
             ->asJson()
             ->withToken($callbackToken);
