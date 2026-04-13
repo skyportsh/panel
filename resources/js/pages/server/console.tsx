@@ -288,34 +288,56 @@ function splitConsoleLines(text: string): string[] {
 	return lines.length > 0 ? lines : [""];
 }
 
+const ANSI_FG_MAP: Record<number, string> = {
+	30: "text-zinc-500",       // black (dark gray in terminals)
+	31: "text-rose-400",       // red
+	32: "text-emerald-400",    // green
+	33: "text-amber-300",      // yellow
+	34: "text-sky-400",        // blue
+	35: "text-fuchsia-400",    // magenta
+	36: "text-cyan-300",       // cyan
+	37: "text-foreground",     // white
+	39: "text-foreground",     // default
+	90: "text-muted-foreground", // bright black (gray)
+	91: "text-rose-400",       // bright red
+	92: "text-emerald-400",    // bright green
+	93: "text-amber-300",      // bright yellow
+	94: "text-sky-400",        // bright blue
+	95: "text-fuchsia-400",    // bright magenta
+	96: "text-cyan-300",       // bright cyan
+	97: "text-foreground",     // bright white
+};
+
 function ansiClassName(codes: number[]): string {
-	const classNames = new Set<string>();
+	const classNames: string[] = [];
 
+	// Check for bold/dim
 	if (codes.includes(1)) {
-		classNames.add("font-semibold");
+		classNames.push("font-semibold");
+	}
+	if (codes.includes(3)) {
+		classNames.push("italic");
+	}
+	if (codes.includes(4)) {
+		classNames.push("underline");
+	}
+	if (codes.includes(9)) {
+		classNames.push("line-through");
 	}
 
-	if (codes.includes(31) || codes.includes(91)) {
-		classNames.add("text-rose-400");
-	} else if (codes.includes(32) || codes.includes(92)) {
-		classNames.add("text-emerald-400");
-	} else if (codes.includes(33) || codes.includes(93)) {
-		classNames.add("text-amber-300");
-	} else if (codes.includes(34) || codes.includes(94)) {
-		classNames.add("text-sky-400");
-	} else if (codes.includes(35) || codes.includes(95)) {
-		classNames.add("text-fuchsia-400");
-	} else if (codes.includes(36) || codes.includes(96)) {
-		classNames.add("text-cyan-300");
-	} else if (codes.includes(37) || codes.includes(97)) {
-		classNames.add("text-foreground");
-	} else if (codes.includes(90)) {
-		classNames.add("text-muted-foreground");
-	} else {
-		classNames.add("text-foreground");
+	// Find the last foreground color code
+	let fgClass = "";
+	for (let i = codes.length - 1; i >= 0; i--) {
+		const mapped = ANSI_FG_MAP[codes[i]];
+		if (mapped) {
+			fgClass = mapped;
+			break;
+		}
 	}
 
-	return [...classNames].join(" ");
+	classNames.push(fgClass || "text-foreground");
+
+	return classNames.join(" ");
 }
 
 function ansiSegments(text: string): AnsiSegment[] {
@@ -337,7 +359,25 @@ function ansiSegments(text: string): AnsiSegment[] {
 				.map((value) => Number.parseInt(value, 10))
 				.filter((value) => !Number.isNaN(value));
 
-			activeCodes = codes.length === 0 || codes.includes(0) ? [] : codes;
+			// Reset clears all codes; otherwise merge new codes in.
+			// Code 0 = reset, 22 = normal intensity, 23 = not italic, etc.
+			if (codes.length === 0 || codes.includes(0)) {
+				// Reset, then apply any non-zero codes in the same sequence
+				activeCodes = codes.filter((c) => c !== 0);
+			} else {
+				// Merge: replace color codes, add style codes
+				const newFg = codes.find((c) => (c >= 30 && c <= 39) || (c >= 90 && c <= 97));
+				if (newFg !== undefined) {
+					// Remove old fg codes
+					activeCodes = activeCodes.filter((c) => !((c >= 30 && c <= 39) || (c >= 90 && c <= 97)));
+				}
+				// Remove codes that are being turned off (22=unbold, 23=unitalic, etc)
+				if (codes.includes(22)) activeCodes = activeCodes.filter((c) => c !== 1);
+				if (codes.includes(23)) activeCodes = activeCodes.filter((c) => c !== 3);
+				if (codes.includes(24)) activeCodes = activeCodes.filter((c) => c !== 4);
+
+				activeCodes = [...activeCodes, ...codes.filter((c) => c !== 22 && c !== 23 && c !== 24)];
+			}
 			continue;
 		}
 
