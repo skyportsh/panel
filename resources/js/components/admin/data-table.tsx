@@ -507,44 +507,61 @@ export function DataTable<T extends { id: number }>({
             <div className="space-y-4">
                 <div className="overflow-hidden rounded-lg bg-muted/40">
                     {/* Header */}
-                    <div className="relative flex items-center px-4 py-2.5">
-                        {selectable ? (
-                            <div className="mr-3 flex items-center">
-                                <Checkbox
-                                    checked={
-                                        allSelected
-                                            ? true
-                                            : someSelected
-                                              ? 'indeterminate'
-                                              : false
-                                    }
-                                    onCheckedChange={toggleAll}
-                                    aria-label="Select all"
-                                />
-                            </div>
-                        ) : null}
-                        {columns.map((col, i) => (
-                            <span
-                                key={i}
-                                className={cn(
-                                    'block text-xs font-medium text-muted-foreground',
-                                    col.width,
-                                )}
-                            >
-                                {col.label}
-                            </span>
-                        ))}
-                        <div className="w-7 shrink-0" />
+                    <div className="flex flex-col gap-2 px-4 py-2.5 sm:flex-row sm:items-center">
+                        <div className="hidden flex-1 items-center sm:flex">
+                            {selectable ? (
+                                <div className="mr-3 flex items-center">
+                                    <Checkbox
+                                        checked={
+                                            allSelected
+                                                ? true
+                                                : someSelected
+                                                  ? 'indeterminate'
+                                                  : false
+                                        }
+                                        onCheckedChange={toggleAll}
+                                        aria-label="Select all"
+                                    />
+                                </div>
+                            ) : null}
+                            {columns.map((col, i) => (
+                                <span
+                                    key={i}
+                                    className={cn(
+                                        'block text-xs font-medium text-muted-foreground',
+                                        col.width,
+                                    )}
+                                >
+                                    {col.label}
+                                </span>
+                            ))}
+                            <div className="w-7 shrink-0" />
+                        </div>
 
-                        <div className="absolute top-1/2 right-4 flex -translate-y-1/2 items-center gap-2">
-                            <div className="relative">
+                        <div className="flex items-center gap-2 sm:ml-auto">
+                            {selectable ? (
+                                <div className="mr-1 flex items-center sm:hidden">
+                                    <Checkbox
+                                        checked={
+                                            allSelected
+                                                ? true
+                                                : someSelected
+                                                  ? 'indeterminate'
+                                                  : false
+                                        }
+                                        onCheckedChange={toggleAll}
+                                        aria-label="Select all"
+                                    />
+                                </div>
+                            ) : null}
+                            <div className="relative flex-1 sm:flex-none">
                                 <Search className="absolute top-1/2 left-2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
                                 <Input
                                     variant="table"
                                     value={searchValue}
                                     onChange={(e) => onSearch(e.target.value)}
                                     placeholder="Search..."
-                                    className="w-44 pl-7"
+                                    className="w-full pl-7 sm:w-44"
                                 />
                             </div>
                             {actions}

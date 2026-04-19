@@ -7,7 +7,6 @@ use App\Http\Requests\Settings\PasswordUpdateRequest;
 use App\Http\Requests\Settings\TwoFactorAuthenticationRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -20,13 +19,14 @@ class SecurityController extends Controller implements HasMiddleware
      */
     public static function middleware(): array
     {
-        return Features::canManageTwoFactorAuthentication() &&
-            Features::optionEnabled(
-                Features::twoFactorAuthentication(),
-                'confirmPassword',
-            )
-            ? [new Middleware('password.confirm', only: ['edit'])]
-            : [];
+        // Password confirmation is intentionally not applied to the edit
+        // (view) action. Viewing security settings is not destructive, and
+        // applying the password.confirm middleware to a GET route causes
+        // 405 errors on mobile browsers when Fortify redirects back after
+        // confirmation. The actual destructive 2FA operations (enable,
+        // disable, confirm) go through separate Fortify routes that handle
+        // their own confirmation flow.
+        return [];
     }
 
     /**

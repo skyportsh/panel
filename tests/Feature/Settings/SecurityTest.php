@@ -16,8 +16,8 @@ test('security page is displayed', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->withSession(['auth.password_confirmed_at' => time()])
         ->get(route('security.edit'))
+        ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('settings/security')
             ->where('canManageTwoFactor', true)
@@ -25,7 +25,7 @@ test('security page is displayed', function () {
         );
 });
 
-test('security page requires password confirmation when enabled', function () {
+test('security page does not require password confirmation', function () {
     $this->skipUnlessFortifyFeature(Features::twoFactorAuthentication());
 
     $user = User::factory()->create();
@@ -35,22 +35,9 @@ test('security page requires password confirmation when enabled', function () {
         'confirmPassword' => true,
     ]);
 
-    $response = $this->actingAs($user)
-        ->get(route('security.edit'));
-
-    $response->assertRedirect(route('password.confirm'));
-});
-
-test('security page does not require password confirmation when disabled', function () {
-    $this->skipUnlessFortifyFeature(Features::twoFactorAuthentication());
-
-    $user = User::factory()->create();
-
-    Features::twoFactorAuthentication([
-        'confirm' => true,
-        'confirmPassword' => false,
-    ]);
-
+    // The security page should not require password confirmation even when
+    // confirmPassword is enabled. The password.confirm middleware was removed
+    // from the view action because it caused 405 errors on mobile browsers.
     $this->actingAs($user)
         ->get(route('security.edit'))
         ->assertOk()
