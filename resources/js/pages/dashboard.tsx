@@ -139,6 +139,16 @@ export default function Home({ auth, filters, servers }: Props) {
 		setSearch(filters.search);
 	}, [filters.search]);
 
+	// Prefetch server console pages in the background so clicks feel instant
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			for (const server of servers.data.slice(0, 10)) {
+				router.prefetch(`/server/${server.id}/console`, { method: 'get' }, { cacheFor: '1m' });
+			}
+		}, 500);
+		return () => clearTimeout(timer);
+	}, [servers.data]);
+
 	useEffect(() => {
 		if (!auth.user.is_admin) {
 			return;

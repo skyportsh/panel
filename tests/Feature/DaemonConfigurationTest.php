@@ -200,7 +200,7 @@ test('daemon heartbeat rejects an invalid secret', function () {
 });
 
 test('daemon api routes are rate limited', function () {
-    foreach (range(1, 30) as $attempt) {
+    foreach (range(1, 300) as $attempt) {
         postJson(
             '/api/daemon/heartbeat',
             [

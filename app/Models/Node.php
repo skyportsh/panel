@@ -52,7 +52,7 @@ class Node extends Model
         }
 
         return $this->last_seen_at !== null
-            && $this->last_seen_at->isAfter(now()->subSeconds(15));
+            && $this->last_seen_at->isAfter(now()->subMinutes(2));
     }
 
     public function connectionStatus(): string

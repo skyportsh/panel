@@ -7,12 +7,12 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import '../css/app.css';
 import { initializeTheme } from '@/hooks/use-appearance';
 
-NProgress.configure({ showSpinner: false, trickleSpeed: 200 });
+NProgress.configure({ showSpinner: false, trickleSpeed: 200, minimum: 0.15 });
 
 let timeout: ReturnType<typeof setTimeout> | null = null;
 
 router.on('start', () => {
-    timeout = setTimeout(() => NProgress.start(), 100);
+    timeout = setTimeout(() => NProgress.start(), 250);
 });
 
 router.on('progress', (event) => {
@@ -98,3 +98,32 @@ createInertiaApp({
 
 // This will set light / dark mode on load...
 initializeTheme();
+
+// Global prefetch-on-hover: when the user hovers any internal link,
+// prefetch it so navigation feels instant.
+if (typeof document !== 'undefined') {
+    let hoverTimer: ReturnType<typeof setTimeout> | null = null;
+    let lastPrefetched = '';
+
+    document.addEventListener('pointerenter', (event) => {
+        const link = (event.target as HTMLElement).closest('a[href]') as HTMLAnchorElement | null;
+        if (!link) return;
+
+        const href = link.getAttribute('href');
+        if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('mailto:')) return;
+        if (href === lastPrefetched) return;
+
+        if (hoverTimer) clearTimeout(hoverTimer);
+        hoverTimer = setTimeout(() => {
+            lastPrefetched = href;
+            router.prefetch(href, { method: 'get' }, { cacheFor: '30s' });
+        }, 65);
+    }, { capture: true, passive: true });
+
+    document.addEventListener('pointerleave', () => {
+        if (hoverTimer) {
+            clearTimeout(hoverTimer);
+            hoverTimer = null;
+        }
+    }, { capture: true, passive: true });
+}

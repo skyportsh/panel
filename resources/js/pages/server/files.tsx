@@ -730,8 +730,14 @@ async function uploadWithProgress(
             }
         };
 
+        request.timeout = 300000; // 5 minutes
+
         request.onerror = () => {
-            reject(new Error('The file could not be uploaded.'));
+            reject(new Error('Upload failed. Check your connection and try again.'));
+        };
+
+        request.ontimeout = () => {
+            reject(new Error('Upload timed out. The file may be too large for the connection speed.'));
         };
 
         request.onload = () => {

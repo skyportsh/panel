@@ -257,7 +257,7 @@ test('admin nodes page shows derived connection status', function () {
     $location = Location::factory()->create();
     $node = Node::factory()->create([
         'daemon_uuid' => '550e8400-e29b-41d4-a716-446655440000',
-        'last_seen_at' => now()->subMinute(),
+        'last_seen_at' => now()->subMinutes(3),
         'location_id' => $location->id,
         'status' => 'online',
     ]);
