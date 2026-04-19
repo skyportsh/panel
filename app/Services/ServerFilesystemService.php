@@ -230,7 +230,7 @@ class ServerFilesystemService
                 ->post($url);
 
             $response->throw();
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             $message = 'The file could not be uploaded to the server.';
 
             if (method_exists($exception, 'response') && $exception->response) {
