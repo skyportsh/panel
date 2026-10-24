@@ -10,9 +10,10 @@ use JsonException;
 class ServerWebsocketTokenService
 {
     /**
+     * @param list<string> $permissions
      * @return array{expires_at: string, socket: string, token: string}
      */
-    public function issue(Server $server): array
+    public function issue(Server $server, array $permissions = []): array
     {
         $server->loadMissing('node.credential');
 
@@ -30,6 +31,7 @@ class ServerWebsocketTokenService
             'daemon_uuid' => $daemonUuid,
             'exp' => $expiresAt->timestamp,
             'panel_version' => config('app.version'),
+            'permissions' => $permissions,
             'server_id' => $server->id,
         ];
 

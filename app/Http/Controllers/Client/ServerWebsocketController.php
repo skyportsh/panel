@@ -24,8 +24,20 @@ class ServerWebsocketController extends Controller
     {
         $this->authorizeServerAccess($request, $server, ServerUser::PERMISSION_CONSOLE);
 
+        $user = $request->user();
+        $permissions = [];
+        if ($user?->is_admin || $server->user_id === $user?->id) {
+            $permissions = ['*'];
+        } else {
+            $serverUser = ServerUser::query()
+                ->where('server_id', $server->id)
+                ->where('user_id', $user?->id)
+                ->first();
+            $permissions = $serverUser?->permissionList() ?? [];
+        }
+
         try {
-            $payload = $this->serverWebsocketTokenService->issue($server);
+            $payload = $this->serverWebsocketTokenService->issue($server, $permissions);
         } catch (InvalidArgumentException $exception) {
             return response()->json(
                 [
