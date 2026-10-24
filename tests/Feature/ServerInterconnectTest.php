@@ -294,7 +294,7 @@ test('subuser can manage interconnects', function () {
     ServerUser::factory()->create([
         'server_id' => $deps['server']->id,
         'user_id' => $subuser->id,
-        'permissions' => ['console'],
+        'permissions' => [ServerUser::PERMISSION_SETTINGS],
     ]);
 
     actingAs($subuser);
