@@ -242,7 +242,7 @@ test('cannot set primary to allocation not belonging to server', function () {
     ])->assertUnprocessable();
 });
 
-test('server owner can delete a non-primary allocation', function () {
+test('server owner can release a non-primary allocation', function () {
     $deps = allocationTestDependencies();
     $secondAllocation = Allocation::factory()->create([
         'node_id' => $deps['node']->id,
@@ -254,9 +254,11 @@ test('server owner can delete a non-primary allocation', function () {
 
     delete("/server/{$deps['server']->id}/networking/allocations/{$secondAllocation->id}")
         ->assertRedirect()
-        ->assertSessionHas('success', 'Allocation deleted.');
+        ->assertSessionHas('success', 'Allocation released.');
 
-    expect(Allocation::query()->find($secondAllocation->id))->toBeNull();
+    $secondAllocation->refresh();
+    expect($secondAllocation->server_id)->toBeNull()
+        ->and(Allocation::query()->find($secondAllocation->id))->not->toBeNull();
 });
 
 test('cannot delete the primary allocation', function () {

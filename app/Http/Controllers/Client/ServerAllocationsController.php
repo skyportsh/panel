@@ -160,8 +160,8 @@ class ServerAllocationsController extends Controller
             'The primary allocation cannot be deleted.',
         );
 
-        $allocation->delete();
+        $allocation->update(['server_id' => null]);
 
-        return Redirect::back()->with('success', 'Allocation deleted.');
+        return Redirect::back()->with('success', 'Allocation released.');
     }
 }
