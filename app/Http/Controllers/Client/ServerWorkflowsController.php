@@ -5,13 +5,13 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Client\Concerns\AuthorizesServerAccess;
 use App\Http\Controllers\Controller;
 use App\Models\Server;
-use App\Models\ServerUser;
 use App\Models\Workflow;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class ServerWorkflowsController extends Controller
 {
@@ -19,7 +19,7 @@ class ServerWorkflowsController extends Controller
 
     public function index(Request $request, Server $server): Response
     {
-        $this->authorizeServerAccess($request, $server, ServerUser::PERMISSION_SETTINGS);
+        $this->authorizeOwnership($request, $server);
 
         $workflows = $server->workflows()
             ->orderByDesc('updated_at')
@@ -46,7 +46,7 @@ class ServerWorkflowsController extends Controller
 
     public function store(Request $request, Server $server): RedirectResponse
     {
-        $this->authorizeServerAccess($request, $server, ServerUser::PERMISSION_SETTINGS);
+        $this->authorizeOwnership($request, $server);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -64,7 +64,7 @@ class ServerWorkflowsController extends Controller
 
     public function update(Request $request, Server $server, Workflow $workflow): RedirectResponse
     {
-        $this->authorizeServerAccess($request, $server, ServerUser::PERMISSION_SETTINGS);
+        $this->authorizeOwnership($request, $server);
 
         abort_unless($workflow->server_id === $server->id, 422);
 
@@ -82,12 +82,21 @@ class ServerWorkflowsController extends Controller
 
     public function destroy(Request $request, Server $server, Workflow $workflow): RedirectResponse
     {
-        $this->authorizeServerAccess($request, $server, ServerUser::PERMISSION_SETTINGS);
+        $this->authorizeOwnership($request, $server);
 
         abort_unless($workflow->server_id === $server->id, 422);
 
         $workflow->delete();
 
         return Redirect::back()->with('success', 'Workflow deleted.');
+    }
+
+    private function authorizeOwnership(Request $request, Server $server): void
+    {
+        abort_unless(
+            $request->user()?->id === $server->user_id || $request->user()?->is_admin,
+            HttpResponse::HTTP_FORBIDDEN,
+            'Only the server owner or an administrator can manage workflows.',
+        );
     }
 }

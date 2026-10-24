@@ -22,7 +22,6 @@ export default defineConfig({
         react({
             babel: {
                 compact: true,
-                plugins: ['babel-plugin-react-compiler'],
             },
         }),
         tailwindcss(),

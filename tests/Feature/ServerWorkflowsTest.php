@@ -6,6 +6,7 @@ use App\Models\Location;
 use App\Models\Node;
 use App\Models\NodeCredential;
 use App\Models\Server;
+use App\Models\ServerUser;
 use App\Models\User;
 use App\Models\Workflow;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -51,12 +52,81 @@ test('server owner can view workflows page', function () {
             ->has('workflows', 0));
 });
 
+test('administrator can view workflows page', function () {
+    $deps = workflowTestDependencies();
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    actingAs($admin);
+
+    get("/server/{$deps['server']->id}/workflows")
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('server/workflows')
+            ->has('workflows', 0));
+});
+
+test('subuser with settings permission cannot access workflows', function () {
+    $deps = workflowTestDependencies();
+    $subuser = User::factory()->create();
+
+    ServerUser::factory()->create([
+        'server_id' => $deps['server']->id,
+        'user_id' => $subuser->id,
+        'permissions' => [ServerUser::PERMISSION_SETTINGS],
+    ]);
+
+    actingAs($subuser);
+
+    get("/server/{$deps['server']->id}/workflows")
+        ->assertForbidden();
+
+    post("/server/{$deps['server']->id}/workflows", ['name' => 'Exploit Workflow'])
+        ->assertForbidden();
+
+    $workflow = Workflow::factory()->create(['server_id' => $deps['server']->id]);
+
+    patch("/server/{$deps['server']->id}/workflows/{$workflow->id}", ['name' => 'Updated'])
+        ->assertForbidden();
+
+    delete("/server/{$deps['server']->id}/workflows/{$workflow->id}")
+        ->assertForbidden();
+});
+
+test('subuser with console permission cannot access workflows', function () {
+    $deps = workflowTestDependencies();
+    $subuser = User::factory()->create();
+
+    ServerUser::factory()->create([
+        'server_id' => $deps['server']->id,
+        'user_id' => $subuser->id,
+        'permissions' => [ServerUser::PERMISSION_CONSOLE, ServerUser::PERMISSION_SETTINGS],
+    ]);
+
+    actingAs($subuser);
+
+    get("/server/{$deps['server']->id}/workflows")->assertForbidden();
+    post("/server/{$deps['server']->id}/workflows", ['name' => 'Exploit Workflow'])->assertForbidden();
+});
+
 test('server owner can create a workflow', function () {
     $deps = workflowTestDependencies();
 
     actingAs($deps['user']);
 
     post("/server/{$deps['server']->id}/workflows", ['name' => 'Auto Restart'])
+        ->assertRedirect()
+        ->assertSessionHas('success', 'Workflow created.');
+
+    expect(Workflow::query()->where('server_id', $deps['server']->id)->count())->toBe(1);
+});
+
+test('administrator can create a workflow', function () {
+    $deps = workflowTestDependencies();
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    actingAs($admin);
+
+    post("/server/{$deps['server']->id}/workflows", ['name' => 'Admin Workflow'])
         ->assertRedirect()
         ->assertSessionHas('success', 'Workflow created.');
 
